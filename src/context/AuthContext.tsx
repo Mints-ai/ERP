@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider, signOut, signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, query, where, getDocs, deleteDoc } from "firebase/firestore";
 
 interface AppUser extends User {
   role?: string;
@@ -34,10 +34,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         // Fetch additional user data from Firestore
-        const userDocRef = doc(db, "employees", firebaseUser.uid);
-        const userDoc = await getDoc(userDocRef);
+        let userDocRef = doc(db, "employees", firebaseUser.uid);
+        let userDoc = await getDoc(userDocRef);
         
         let appUser: AppUser = firebaseUser;
+        
+        if (!userDoc.exists() && firebaseUser.email) {
+          // If not found by UID, search for manually onboarded profile by email!
+          const q = query(collection(db, "employees"), where("email", "==", firebaseUser.email));
+          const querySnap = await getDocs(q);
+          
+          if (!querySnap.empty) {
+            const oldDoc = querySnap.docs[0];
+            const data = oldDoc.data();
+            
+            // Re-key the manual profile under the user's authentic Auth UID!
+            await setDoc(userDocRef, {
+              ...data,
+              fullName: data.fullName || firebaseUser.displayName || "Mints Team Member",
+              updatedAt: new Date().toISOString()
+            });
+            
+            // Delete the old random-ID document to avoid duplication
+            if (oldDoc.id !== firebaseUser.uid) {
+              await deleteDoc(doc(db, "employees", oldDoc.id));
+            }
+            
+            // Reload the linked document
+            userDoc = await getDoc(userDocRef);
+          }
+        }
+
         if (userDoc.exists()) {
           const data = userDoc.data();
           appUser = { ...firebaseUser, role: data.role, department: data.department };
