@@ -8,9 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { getInitials } from "@/lib/utils";
-import { Hash, Send, Image as ImageIcon, Smile, MoreVertical } from "lucide-react";
+import { Hash, Send, Image as ImageIcon, Smile, MoreVertical, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 
 const CHANNELS = [

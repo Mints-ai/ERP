@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Target, TrendingUp, Plus, CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function OKRManagement() {
   const { user, role } = useAuth();

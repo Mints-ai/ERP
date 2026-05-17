@@ -199,7 +199,7 @@ export function GlobalTimer() {
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-500 uppercase">Project</label>
-                  <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                  <Select value={selectedProjectId} onValueChange={(val) => setSelectedProjectId(val || "")}>
                     <SelectTrigger className="h-8 text-sm">
                       <SelectValue placeholder="Select a project..." />
                     </SelectTrigger>

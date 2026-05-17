@@ -107,7 +107,7 @@ export default function CapacityPlanning() {
   const availableCount = teamCapacity.filter(t => t.status === "Available").length;
 
   return (
-    <RoleGuard permission="MANAGE_PROJECTS" fallback={<div>Access Denied.</div>}>
+    <RoleGuard permission="CREATE_PROJECT" fallback={<div>Access Denied.</div>}>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Resource Capacity</h1>

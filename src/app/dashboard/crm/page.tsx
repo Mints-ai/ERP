@@ -93,7 +93,7 @@ export default function CRMDashboard() {
   );
 
   return (
-    <RoleGuard permission="MANAGE_PROJECTS" fallback={<div>Access Denied.</div>}>
+    <RoleGuard permission="CREATE_PROJECT" fallback={<div>Access Denied.</div>}>
       <div className="space-y-6 h-[calc(100vh-120px)] flex flex-col">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
@@ -114,11 +114,13 @@ export default function CRMDashboard() {
             </div>
             
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-olive-600 hover:bg-olive-700 text-white shadow-md">
-                  <Plus className="mr-2 h-4 w-4" /> New Lead
-                </Button>
-              </DialogTrigger>
+              <DialogTrigger 
+                render={
+                  <Button className="bg-olive-600 hover:bg-olive-700 text-white shadow-md">
+                    <Plus className="mr-2 h-4 w-4" /> New Lead
+                  </Button>
+                }
+              />
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                   <DialogTitle>Add New Lead</DialogTitle>

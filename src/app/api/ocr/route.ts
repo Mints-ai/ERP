@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
-// Initialize OpenAI client
-// It will automatically use the OPENAI_API_KEY environment variable
-const openai = new OpenAI();
-
 export async function POST(req: NextRequest) {
   try {
     const { imageBase64 } = await req.json();
@@ -20,6 +16,8 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
+
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini", // Using gpt-4o-mini for fast, cheap vision tasks

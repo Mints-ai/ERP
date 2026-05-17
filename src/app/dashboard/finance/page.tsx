@@ -351,11 +351,13 @@ export default function FinanceDashboard() {
               <RoleGuard permission="SUBMIT_EXPENSE">
                 <div className="flex gap-2">
                   <Dialog open={isOcrModalOpen} onOpenChange={setIsOcrModalOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="bg-olive-100 hover:bg-olive-200 text-olive-900 border border-olive-200 shadow-sm">
-                        <Sparkles className="mr-2 h-4 w-4 text-olive-600" /> Smart Scan
-                      </Button>
-                    </DialogTrigger>
+                    <DialogTrigger 
+                      render={
+                        <Button className="bg-olive-100 hover:bg-olive-200 text-olive-900 border border-olive-200 shadow-sm">
+                          <Sparkles className="mr-2 h-4 w-4 text-olive-600" /> Smart Scan
+                        </Button>
+                      }
+                    />
                     <DialogContent className="sm:max-w-[425px]">
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">

@@ -35,9 +35,9 @@ const NAV_GROUPS = [
     items: [
       { name: "Dashboard", href: "/dashboard", icon: Home, permission: null },
       { name: "Team Chat", href: "/dashboard/chat", icon: MessageSquare, permission: null },
-      { name: "CRM & Sales", href: "/dashboard/crm", icon: LineChart, permission: "MANAGE_PROJECTS" },
+      { name: "CRM & Sales", href: "/dashboard/crm", icon: LineChart, permission: "CREATE_PROJECT" },
       { name: "Projects", href: "/dashboard/projects", icon: Briefcase, permission: null },
-      { name: "Capacity", href: "/dashboard/projects/capacity", icon: GanttChartSquare, permission: "MANAGE_PROJECTS" },
+      { name: "Capacity", href: "/dashboard/projects/capacity", icon: GanttChartSquare, permission: "CREATE_PROJECT" },
       { name: "Tasks", href: "/dashboard/tasks", icon: CheckSquare, permission: null },
       { name: "Cloud Drive", href: "/dashboard/files", icon: Cloud, permission: null },
     ]

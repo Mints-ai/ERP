@@ -32,8 +32,8 @@ export default function ClientDashboard() {
 
         const [projSnap, invSnap] = await Promise.all([getDocs(projQ), getDocs(invQ)]);
 
-        let fetchedProjects = projSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        let fetchedInvoices = invSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        let fetchedProjects = projSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
+        let fetchedInvoices = invSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
 
         // Simulate client filtering (only show their stuff)
         // If they are literally named "Client", show everything for the demo.
