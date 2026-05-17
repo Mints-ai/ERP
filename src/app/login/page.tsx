@@ -41,10 +41,14 @@ export default function LoginPage() {
     try {
       setIsLoggingIn(true);
       setError("");
-      await signInWithEmailAndPassword(auth, email, password);
+      
+      // Auto-append @mintsglobal.ae suffix if only a raw username is entered
+      const finalEmail = email.includes("@") ? email.trim() : `${email.trim()}@mintsglobal.ae`;
+      
+      await signInWithEmailAndPassword(auth, finalEmail, password);
       // Router push is handled by useEffect
     } catch (err: any) {
-      setError("Invalid email or password.");
+      setError("Invalid username or password.");
       setIsLoggingIn(false);
     }
   };
@@ -111,16 +115,22 @@ export default function LoginPage() {
 
             <form onSubmit={handleEmailLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">ERP Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="john.intern@erp.mintsglobal.ae" 
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoggingIn}
-                />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="email">Username or Email</Label>
+                  <span className="text-[10px] text-slate-400 font-medium">auto-appends @mintsglobal.ae</span>
+                </div>
+                <div className="relative flex items-center">
+                  <Input 
+                    id="email" 
+                    type="text" 
+                    placeholder="e.g. anand or username@mintsglobal.ae" 
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoggingIn}
+                    className="pr-12"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -139,7 +149,7 @@ export default function LoginPage() {
                 className="w-full h-12 text-base"
                 disabled={isLoggingIn}
               >
-                Sign In with Email
+                Sign In
               </Button>
             </form>
           </CardContent>
