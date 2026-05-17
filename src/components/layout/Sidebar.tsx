@@ -90,19 +90,19 @@ export function Sidebar() {
       className="fixed inset-y-0 left-0 z-50 glass-dark hidden lg:flex flex-col overflow-hidden"
     >
       <div className="h-16 flex items-center px-6 font-bold text-xl tracking-tight shrink-0">
-        <div className="w-8 h-8 rounded-md bg-olive-500 text-white flex items-center justify-center shrink-0 text-sm shadow-md">
-          MG
+        <div className="w-8 h-8 rounded-md bg-indigo-600 text-white flex items-center justify-center shrink-0 text-sm font-bold shadow-md">
+          M
         </div>
         <AnimatePresence>
           {isHovered && (
-            <motion.span 
+            <motion.div 
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
-              className="ml-3 whitespace-nowrap"
+              className="ml-3 flex items-center bg-white py-1 px-3 rounded-full shadow-sm border border-slate-200"
             >
-              MINTS GLOBAL
-            </motion.span>
+              <img src="/logo.png" alt="Mints Logo" className="h-5 w-auto object-contain" />
+            </motion.div>
           )}
         </AnimatePresence>
       </div>

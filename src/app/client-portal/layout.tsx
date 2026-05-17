@@ -60,9 +60,9 @@ export default function ClientPortalLayout({
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Client Portal Header */}
       <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-50 shadow-sm">
-        <div className="flex items-center gap-2">
-          <Hexagon className="h-6 w-6 text-indigo-600 fill-indigo-100" />
-          <span className="font-bold text-xl tracking-tight text-slate-900">Mints Global <span className="text-slate-400 font-normal">Client Portal</span></span>
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" alt="Mints Logo" className="h-6 w-auto object-contain" />
+          <span className="font-bold text-xl tracking-tight text-slate-900 border-l pl-3 border-slate-200"><span className="text-slate-400 font-normal">Client Portal</span></span>
         </div>
 
         <div className="flex items-center gap-4">

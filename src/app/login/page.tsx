@@ -55,12 +55,23 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen w-full">
-      {/* Left Panel - Olive Green Branding */}
-      <div className="hidden lg:flex flex-col justify-center items-center w-1/2 bg-primary p-12 text-primary-foreground">
-        <h1 className="text-5xl font-bold mb-4">Mints Global ERP</h1>
-        <p className="text-xl opacity-90 max-w-md text-center">
-          Centralized operations, project delivery, and people management platform.
-        </p>
+      {/* Left Panel - Premium Slate/Indigo Branding */}
+      <div className="hidden lg:flex flex-col justify-center items-center w-1/2 bg-slate-900 p-12 text-white relative overflow-hidden">
+        {/* Subtle background gradient shapes */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-indigo-900/40 blur-3xl" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-indigo-800/30 blur-3xl" />
+        
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="bg-white py-3.5 px-8 rounded-2xl shadow-xl border border-slate-100 mb-8">
+            <img src="/logo.png" alt="Mints Logo" className="h-12 w-auto object-contain" />
+          </div>
+          <h1 className="text-4xl font-extrabold mb-4 text-center tracking-tight bg-gradient-to-r from-white via-indigo-100 to-indigo-200 bg-clip-text text-transparent">
+            Agency Operating System
+          </h1>
+          <p className="text-lg text-slate-400 max-w-md text-center font-medium leading-relaxed">
+            Centralized operations, capacity planner, real-time chat, and automated payroll.
+          </p>
+        </div>
       </div>
 
       {/* Right Panel - Login Form */}
