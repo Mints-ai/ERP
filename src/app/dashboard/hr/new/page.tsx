@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { generateEmployeeId } from "@/lib/employeeUtils";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -55,6 +58,11 @@ export default function AddEmployee() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [nextEmpId, setNextEmpId] = useState("");
+
+  useEffect(() => {
+    generateEmployeeId().then(id => setNextEmpId(id));
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -77,20 +85,26 @@ export default function AddEmployee() {
     setIsSubmitting(true);
     setError(null);
     try {
-      // In a complete implementation, this calls the Firebase Cloud Function
-      // import { getFunctions, httpsCallable } from "firebase/functions";
-      // const functions = getFunctions();
-      // const createEmployee = httpsCallable(functions, "createEmployeeAccount");
-      // await createEmployee(values);
+      const generatedId = await generateEmployeeId();
       
-      console.log("Mock submission of employee data:", values);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await addDoc(collection(db, "employees"), {
+        fullName: values.fullName,
+        email: values.email,
+        role: values.role,
+        department: values.department,
+        jobTitle: values.jobTitle,
+        phone: values.phone || "",
+        isIntern: values.isIntern,
+        internEndDate: values.internEndDate || null,
+        employeeId: generatedId,
+        isActive: true,
+        dateJoined: new Date(),
+        createdAt: new Date().toISOString(),
+      });
+
       router.push("/dashboard/hr");
     } catch (err: any) {
-      setError(err.message || "Failed to create employee.");
+      setError(err.message || "Failed to create employee account.");
       setIsSubmitting(false);
     }
   }
@@ -107,7 +121,7 @@ export default function AddEmployee() {
           <CardHeader>
             <CardTitle>Employee Details</CardTitle>
             <CardDescription>
-              This will create a Firebase Auth account and send them a welcome email with their temporary password.
+              This will automatically assign the unique Employee ID: <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-xs">{nextEmpId || "Calculating..."}</span>
             </CardDescription>
           </CardHeader>
           <CardContent>

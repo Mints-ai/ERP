@@ -43,14 +43,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           appUser = { ...firebaseUser, role: data.role, department: data.department };
         } else {
           // Auto-create user doc if it doesn't exist (defaulting to founder)
+          const { generateEmployeeId } = await import("@/lib/employeeUtils");
+          const generatedId = await generateEmployeeId();
           const newUserData = {
             email: firebaseUser.email,
-            full_name: firebaseUser.displayName,
+            fullName: firebaseUser.displayName || "Mints Team Member",
             role: "founder", // Temporary: Default to founder for testing
-            created_at: new Date().toISOString(),
+            department: "Executive Office",
+            jobTitle: "Founder & CEO",
+            employeeId: generatedId,
+            isActive: true,
+            dateJoined: new Date(),
+            createdAt: new Date().toISOString(),
           };
           await setDoc(userDocRef, newUserData);
-          appUser = { ...firebaseUser, role: "employee" };
+          appUser = { ...firebaseUser, role: "founder", department: "Executive Office" };
         }
         setUser(appUser);
       } else {
