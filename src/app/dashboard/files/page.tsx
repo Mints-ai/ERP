@@ -27,6 +27,7 @@ export default function CloudDrive() {
   const { user } = useAuth();
   const [files, setFiles] = useState<StorageFile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
   // Upload State
   const [isUploading, setIsUploading] = useState(false);
@@ -35,6 +36,7 @@ export default function CloudDrive() {
 
   const fetchFiles = async () => {
     setLoading(true);
+    setErrorMsg(null);
     try {
       const storageRef = ref(storage, 'agency-assets');
       const result = await listAll(storageRef);
@@ -57,8 +59,9 @@ export default function CloudDrive() {
       // Sort newest first
       fetchedFiles.sort((a, b) => new Date(b.timeCreated).getTime() - new Date(a.timeCreated).getTime());
       setFiles(fetchedFiles);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching files:", error);
+      setErrorMsg(error.message || "Failed to load files.");
     } finally {
       setLoading(false);
     }
@@ -166,6 +169,24 @@ export default function CloudDrive() {
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
               <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mb-4" />
               <p>Loading files from cloud...</p>
+            </div>
+          ) : errorMsg ? (
+            <div className="flex flex-col items-center justify-center p-8 max-w-md mx-auto text-center h-80">
+              <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mb-4 border border-amber-100 shadow-sm animate-pulse">
+                <Cloud className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-slate-900 text-lg">Firebase Storage Connection Needed</h3>
+              <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+                Could not connect to cloud storage. This usually happens if the Storage service isn't activated yet or if the bucket URL is wrong.
+              </p>
+              <ul className="text-xs text-left text-slate-600 mt-3 space-y-1.5 list-disc pl-5">
+                <li>Ensure <strong>Storage</strong> is enabled in your Firebase Console.</li>
+                <li>Ensure rules are set to public/readable.</li>
+                <li>Try changing the bucket in <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[10px]">.env.local</code> to <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[10px]">mintserp.appspot.com</code>.</li>
+              </ul>
+              <Button onClick={fetchFiles} variant="outline" className="mt-6 border-slate-200 hover:bg-slate-50 h-9">
+                Retry Connection
+              </Button>
             </div>
           ) : files.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground border-2 border-dashed border-slate-200 rounded-xl">
