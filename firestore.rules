@@ -1,0 +1,136 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+    
+    // Helper function to get the current employee's record
+    function getEmployee() {
+      return get(/databases/$(database)/documents/employees/$(request.auth.uid)).data;
+    }
+
+    // Helper function to check if the user is a manager or above
+    function isManagerOrAbove() {
+      return getEmployee().role in ['founder', 'c_suite', 'manager'];
+    }
+
+    // Helper function to check if the user is finance admin
+    function isFinanceAdmin() {
+      return getEmployee().role in ['founder', 'c_suite', 'manager'];
+    }
+
+    // Employees Collection Rules
+    match /employees/{employeeId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && (request.auth.uid == employeeId || isManagerOrAbove());
+    }
+
+    // Leaves Collection Rules
+    match /leaves/{leaveId} {
+      allow read: if isAuth() && (resource.data.employeeId == request.auth.uid || isManagerOrAbove());
+      allow create: if isAuth() && request.resource.data.employeeId == request.auth.uid;
+      allow update: if isAuth() && isManagerOrAbove();
+      allow delete: if isAuth() && isManagerOrAbove();
+    }
+
+    // Leave Balances Collection Rules
+    match /leaveBalances/{balanceId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrAbove();
+    }
+
+    // Tasks Collection Rules
+    match /tasks/{taskId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && isManagerOrAbove();
+      allow update: if isAuth() && (resource.data.assignedTo == request.auth.uid || isManagerOrAbove());
+      allow delete: if isAuth() && isManagerOrAbove();
+    }
+
+    // Clients Collection Rules
+    match /clients/{clientId} {
+      allow read: if isAuth() && getEmployee().role != 'intern';
+      allow write: if isAuth() && isManagerOrAbove();
+    }
+
+    // Invoices Collection Rules
+    match /invoices/{invoiceId} {
+      allow read: if isAuth() && isFinanceAdmin();
+      allow write: if isAuth() && isFinanceAdmin();
+    }
+
+    // Expenses Collection Rules
+    match /expenses/{expenseId} {
+      allow read: if isAuth() && (resource.data.submittedBy == request.auth.uid || isManagerOrAbove());
+      allow create: if isAuth() && request.resource.data.submittedBy == request.auth.uid;
+      allow update: if isAuth() && isManagerOrAbove();
+      allow delete: if isAuth() && isManagerOrAbove();
+    }
+
+    // Attendance Collection Rules
+    match /attendance/{attendanceId} {
+      allow read: if isAuth() && (attendanceId.substring(0, request.auth.uid.size()) == request.auth.uid || isManagerOrAbove());
+      allow write: if isAuth() && (attendanceId.substring(0, request.auth.uid.size()) == request.auth.uid || isManagerOrAbove());
+    }
+
+    // Shoutouts Collection Rules
+    match /shoutouts/{shoutoutId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isAuth() && (resource.data.authorId == request.auth.uid || isManagerOrAbove());
+    }
+
+    // Projects Collection Rules
+    match /projects/{projectId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrAbove();
+    }
+
+    // Settings Collection Rules
+    match /settings/{settingId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrAbove();
+    }
+
+    // Audit Log Collection Rules
+    match /auditLog/{logId} {
+      allow read: if isAuth() && isManagerOrAbove();
+      allow create: if isAuth();
+    }
+
+    // Internal Mails Collection Rules
+    match /internal_mails/{mailId} {
+      allow read: if isAuth() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow create: if isAuth() && request.resource.data.senderId == request.auth.uid;
+      allow update, delete: if isAuth() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+    }
+
+    // Chat Messages Collection Rules
+    match /messages/{messageId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuth() && (resource.data.userId == request.auth.uid || isManagerOrAbove());
+    }
+
+    // Announcements Collection Rules
+    match /announcements/{announcementId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrAbove();
+    }
+
+    // OKRs Collection Rules
+    match /okrs/{okrId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrAbove();
+    }
+
+    // Assets Collection Rules
+    match /assets/{assetId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrAbove();
+    }
+  }
+}

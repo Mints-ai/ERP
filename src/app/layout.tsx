@@ -1,15 +1,21 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
+import { Plus_Jakarta_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 
-const outfit = Outfit({ 
+const plusJakartaSans = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
-  variable: "--font-outfit",
+  variable: "--font-sans",
+});
+
+const dmMono = DM_Mono({
+  weight: ["400", "500"],
+  subsets: ["latin"],
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
-  title: "Mints Global ERP | Premium Command Center",
+  title: "Mints Global ERP | Premium command center",
   description: "Advanced Agency Management System",
 };
 
@@ -19,8 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={outfit.variable}>
-      <body className={`${outfit.className} antialiased selection:bg-olive-300 selection:text-olive-900`}>
+    <html lang="en" suppressHydrationWarning className={`${plusJakartaSans.variable} ${dmMono.variable}`}>
+      <body className="antialiased">
         <AuthProvider>
           {children}
         </AuthProvider>

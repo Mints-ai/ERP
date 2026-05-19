@@ -1,20 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, where, onSnapshot, doc, updateDoc, orderBy } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
-import { canAccess } from "@/lib/permissions";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Clock, MessageSquare, CheckSquare, Target, Lock, Play } from "lucide-react";
+import { Plus, Clock, MessageSquare, CheckSquare, Target, Lock, Play, Kanban as KanbanIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-// Types
 type TaskStatus = "backlog" | "in_progress" | "review" | "done";
 type TaskPriority = "low" | "normal" | "high" | "urgent";
 
@@ -39,10 +36,10 @@ const COLUMNS: { id: TaskStatus; title: string }[] = [
 ];
 
 const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  urgent: "bg-red-500",
-  high: "bg-orange-500",
-  normal: "bg-olive-500",
-  low: "bg-olive-300",
+  urgent: "bg-rose-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]",
+  high: "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.6)]",
+  normal: "bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.6)]",
+  low: "bg-white/20",
 };
 
 export default function TaskBoard() {
@@ -146,7 +143,6 @@ export default function TaskBoard() {
            date.getFullYear() === today.getFullYear();
   };
 
-  // Get tasks due today or overdue for focus mode
   const focusTasks = [
     ...tasks.backlog,
     ...tasks.in_progress,
@@ -159,71 +155,76 @@ export default function TaskBoard() {
    });
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
+    <div className="flex flex-col h-[calc(100vh-8rem)] text-white pl-4 lg:pl-0">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-olive-900">Task Board</h1>
-          <p className="text-olive-600 mt-1">Manage tasks across all active projects.</p>
+          <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            <KanbanIcon className="h-5 w-5 text-blue-500" /> Tasks
+          </h1>
+          <p className="text-xs text-white/40 mt-1">Manage tasks across active projects.</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-4">
-          <Button 
+          <button 
             onClick={() => {
               setFocusMode(!focusMode);
               if (!focusMode && !myTasksOnly) setMyTasksOnly(true);
             }}
-            variant={focusMode ? "default" : "outline"}
-            className={cn("shadow-sm transition-all duration-300", focusMode ? "bg-olive-800 hover:bg-olive-900 text-white border-transparent" : "bg-white border-olive-200 text-olive-700 hover:bg-olive-50")}
+            className={cn("px-4 h-9 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-1.5 cursor-pointer border", 
+              focusMode 
+                ? "bg-blue-600 border-blue-500 text-white shadow-glow-blue" 
+                : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
+            )}
           >
-            <Target className={cn("mr-2 h-4 w-4", focusMode && "animate-pulse text-olive-300")} />
-            {focusMode ? "Exit Focus Mode" : "My Focus"}
-          </Button>
+            <Target className={cn("h-4 w-4", focusMode && "animate-pulse")} />
+            {focusMode ? "Exit Focus" : "Focus Mode"}
+          </button>
 
           {!focusMode && (
-            <div className="flex items-center space-x-2 bg-white px-3 py-1.5 rounded-full border border-olive-200 shadow-sm text-sm">
-              <span className={myTasksOnly ? "text-olive-400" : "font-semibold text-olive-900"}>Team</span>
+            <div className="flex items-center space-x-2 bg-white/[0.02] px-3.5 h-9 rounded-xl border border-white/10 text-xs">
+              <span className={myTasksOnly ? "text-white/40 font-bold" : "font-bold text-white"}>Team</span>
               <button 
-                className={`w-10 h-5 rounded-full relative transition-colors ${myTasksOnly ? 'bg-olive-500' : 'bg-olive-200'}`}
+                className={`w-9 h-5 rounded-full relative transition-colors cursor-pointer ${myTasksOnly ? 'bg-blue-600 shadow-glow-blue' : 'bg-white/10'}`}
                 onClick={() => {
                   if (role !== "intern") setMyTasksOnly(!myTasksOnly);
                 }}
                 disabled={role === "intern"}
               >
-                <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 shadow-sm transition-transform ${myTasksOnly ? 'left-5.5 right-0.5 translate-x-[18px]' : 'left-0.5'}`} />
+                <div className={`w-3.5 h-3.5 rounded-full bg-white absolute top-0.5 shadow-sm transition-all ${myTasksOnly ? 'left-5' : 'left-0.5'}`} />
               </button>
-              <span className={myTasksOnly ? "font-semibold text-olive-900" : "text-olive-400"}>Mine</span>
+              <span className={myTasksOnly ? "font-bold text-white" : "text-white/40 font-bold"}>Mine</span>
             </div>
           )}
 
-          <Button className="bg-olive-600 hover:bg-olive-700 text-white shadow-md">
-            <Plus className="mr-2 h-4 w-4" /> Add Task
-          </Button>
+          <button className="btn-primary h-9 py-0 px-4 text-xs font-bold flex items-center justify-center cursor-pointer">
+            <Plus className="mr-1.5 h-4 w-4" /> Add Task
+          </button>
         </div>
       </div>
 
       {loading ? (
         <div className="flex-1 flex justify-center items-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-olive-600"></div>
+          <Clock className="h-6 w-6 text-blue-500 animate-spin" />
         </div>
       ) : focusMode ? (
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex-1 bg-olive-50/50 rounded-2xl border border-olive-200 p-8 flex flex-col items-center overflow-y-auto"
+          className="flex-1 bg-white/[0.01] border border-white/[0.05] rounded-2xl p-6 flex flex-col items-center overflow-y-auto"
         >
           <div className="max-w-2xl w-full">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-olive-900">Your Focus for Today</h2>
-              <p className="text-olive-600 mt-2">Distraction-free mode. Complete these {focusTasks.length} high-priority tasks.</p>
+              <h2 className="text-base font-bold text-white">Your Focus for Today</h2>
+              <p className="text-xs text-white/40 mt-1">Complete these {focusTasks.length} high-priority items.</p>
             </div>
 
             <div className="space-y-4">
               <AnimatePresence>
                 {focusTasks.length === 0 ? (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 bg-white rounded-xl border border-olive-200 border-dashed">
-                    <CheckSquare className="h-12 w-12 text-olive-300 mx-auto mb-3" />
-                    <h3 className="text-lg font-bold text-olive-900">All caught up!</h3>
-                    <p className="text-olive-500">You have no urgent tasks due today.</p>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 bg-white/[0.01] border border-white/[0.05] border-dashed rounded-2xl">
+                    <CheckSquare className="h-10 w-10 text-white/20 mx-auto mb-3" />
+                    <h3 className="text-sm font-bold text-white/50 uppercase tracking-wider">All caught up!</h3>
+                    <p className="text-xs text-white/30 mt-1">You have no urgent tasks due today.</p>
                   </motion.div>
                 ) : (
                   focusTasks.map((task) => (
@@ -232,39 +233,43 @@ export default function TaskBoard() {
                       layout
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
                     >
-                      <Card className={cn("overflow-hidden hover:shadow-md transition-shadow group relative", 
-                        task.priority === "urgent" ? "border-red-300" : "border-olive-200",
-                        task.blocked ? "opacity-75 bg-slate-50" : "bg-white"
+                      <Card className={cn("glass-card overflow-hidden border-white/[0.08] bg-white/[0.02] relative group", 
+                        task.priority === "urgent" ? "border-rose-500/30" : "",
+                        task.blocked ? "opacity-60" : ""
                       )}>
                         {task.priority === "urgent" && !task.blocked && (
-                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-red-500 animate-pulse" />
+                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
                         )}
-                        <CardContent className="p-6">
+                        <CardContent className="p-5">
                           <div className="flex items-start gap-4">
-                            <button className="mt-1 w-6 h-6 rounded border-2 border-olive-300 flex items-center justify-center hover:border-olive-500 hover:bg-olive-50 transition-colors shrink-0">
+                            <button className="mt-1 w-5 h-5 rounded border-2 border-white/20 flex items-center justify-center hover:border-blue-500 hover:bg-blue-500/10 transition-colors shrink-0 cursor-pointer">
                             </button>
                             <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Badge variant="outline" className="text-[10px] uppercase bg-olive-50 text-olive-600 border-olive-200">{task.projectName || "Project"}</Badge>
-                                {task.priority === "urgent" && <Badge className="bg-red-100 text-red-700 hover:bg-red-200 shadow-none border-0 text-[10px] uppercase tracking-wider">Urgent</Badge>}
-                                {task.blocked && <Badge className="bg-slate-200 text-slate-700 shadow-none border-0 text-[10px] uppercase tracking-wider flex items-center gap-1"><Lock className="w-3 h-3" /> Blocked</Badge>}
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <span className="badge bg-white/5 border border-white/10 text-white/50 text-[9px] font-bold py-0.5 uppercase tracking-wider">
+                                  {task.projectName || "Project"}
+                                </span>
+                                {task.priority === "urgent" && <span className="badge status-critical font-bold text-[9px] py-0.5 uppercase tracking-wider">Urgent</span>}
+                                {task.blocked && <span className="badge status-draft font-bold text-[9px] py-0.5 uppercase tracking-wider flex items-center gap-1"><Lock className="w-2.5 h-2.5" /> Blocked</span>}
                               </div>
-                              <h3 className="text-lg font-bold text-olive-900 group-hover:text-olive-700 transition-colors">{task.title}</h3>
+                              <h3 className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors leading-snug">{task.title}</h3>
                               
-                              <div className="flex items-center gap-4 mt-4 text-xs font-medium">
+                              <div className="flex items-center gap-4 mt-4 text-xs font-bold uppercase tracking-wider">
                                 {task.dueDate && (
-                                  <div className={cn("flex items-center gap-1 px-2 py-1 rounded-md", isOverdue(task.dueDate) ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700")}>
-                                    <Clock className="w-3.5 h-3.5" />
+                                  <div className={cn("flex items-center gap-1 px-2.5 h-6 rounded-lg text-[9px] font-bold uppercase", 
+                                    isOverdue(task.dueDate) ? "bg-rose-950/40 border border-rose-500/20 text-rose-300" : "bg-amber-950/40 border border-amber-500/20 text-amber-300"
+                                  )}>
+                                    <Clock className="w-3 h-3" />
                                     {isOverdue(task.dueDate) ? "Overdue" : "Due Today"}
                                   </div>
                                 )}
-                                <div className="flex items-center gap-1 text-olive-500">
-                                  <CheckSquare className="w-3.5 h-3.5" /> 2/5 Subtasks
+                                <div className="flex items-center gap-1 text-white/30 text-[9px] font-bold">
+                                  <CheckSquare className="w-3 h-3 text-blue-400/80" /> 2/5 Subtasks
                                 </div>
-                                <button className="ml-auto text-olive-600 hover:text-olive-900 flex items-center gap-1 bg-olive-50 px-3 py-1.5 rounded-full transition-colors border border-olive-200 group-hover:bg-olive-100">
-                                  <Play className="w-3 h-3 fill-current" /> Start Timer
+                                <button className="ml-auto btn-ghost py-1 px-3 h-7 text-[10px] font-bold flex items-center gap-1 border-white/10 text-white/70 hover:text-white cursor-pointer">
+                                  <Play className="w-2.5 h-2.5 fill-current text-emerald-400" /> Start
                                 </button>
                               </div>
                             </div>
@@ -284,10 +289,10 @@ export default function TaskBoard() {
           <DragDropContext onDragEnd={onDragEnd}>
             <div className="flex h-full gap-6 min-w-max items-start">
               {COLUMNS.map(column => (
-                <div key={column.id} className="flex flex-col w-[320px] max-h-full bg-olive-50/50 rounded-xl border border-olive-100 shadow-sm shrink-0">
-                  <div className="p-3 border-b border-olive-200 bg-white/50 rounded-t-xl flex justify-between items-center backdrop-blur-sm">
-                    <h3 className="font-bold text-sm text-olive-900 uppercase tracking-wider">{column.title}</h3>
-                    <Badge variant="secondary" className="bg-white text-olive-700 shadow-sm">{tasks[column.id].length}</Badge>
+                <div key={column.id} className="flex flex-col w-[300px] max-h-full bg-white/[0.02] rounded-2xl border border-white/[0.06] shadow-sm shrink-0">
+                  <div className="p-3 border-b border-white/[0.06] bg-blue-950/30 rounded-t-2xl flex justify-between items-center backdrop-blur-sm shrink-0">
+                    <h3 className="font-bold text-xs text-white uppercase tracking-wider">{column.title}</h3>
+                    <Badge className="bg-white/5 border border-white/10 text-white/60 font-mono text-[10px]">{tasks[column.id].length}</Badge>
                   </div>
                   
                   <Droppable droppableId={column.id}>
@@ -295,7 +300,9 @@ export default function TaskBoard() {
                       <div 
                         {...provided.droppableProps} 
                         ref={provided.innerRef}
-                        className={cn("flex-1 p-3 overflow-y-auto min-h-[150px] transition-colors rounded-b-xl", snapshot.isDraggingOver ? "bg-olive-100/50 ring-2 ring-olive-300 ring-inset" : "")}
+                        className={cn("flex-1 p-3 overflow-y-auto min-h-[400px] transition-colors rounded-b-2xl max-h-[500px]", 
+                          snapshot.isDraggingOver ? "bg-blue-600/5 ring-1 ring-blue-500/10" : ""
+                        )}
                       >
                         {tasks[column.id].map((task, index) => (
                           <Draggable key={task.id} draggableId={task.id} index={index}>
@@ -305,52 +312,52 @@ export default function TaskBoard() {
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
                                 className={cn(
-                                  "mb-3 cursor-grab active:cursor-grabbing border-olive-200 hover:border-olive-300 transition-all relative overflow-hidden group", 
-                                  snapshot.isDragging ? 'shadow-lg ring-2 ring-olive-400 rotate-2' : 'shadow-sm',
-                                  task.priority === "urgent" && "border-red-300"
+                                  "mb-3 cursor-grab border-white/[0.08] bg-[#0c1322]/80 hover:bg-[#0c1322] transition-all relative overflow-hidden group", 
+                                  snapshot.isDragging ? 'shadow-xl ring-1 ring-blue-500/30 rotate-1 bg-blue-950/90' : 'shadow-sm',
+                                  task.priority === "urgent" && "border-rose-500/20"
                                 )}
                               >
                                 {task.priority === "urgent" && (
-                                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500 animate-pulse" />
+                                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500 animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.5)]" />
                                 )}
                                 <CardContent className="p-3 pl-4">
                                   <div className="flex justify-between items-start mb-2 gap-2">
                                     <div className="flex items-center gap-2">
-                                      <div className={`w-2 h-2 rounded-full ${PRIORITY_COLORS[task.priority]}`} title={`${task.priority} priority`} />
-                                      <Badge variant="outline" className="text-[9px] uppercase font-bold py-0 px-1.5 h-4 bg-olive-50 text-olive-600 border-olive-200">
+                                      <div className={`w-1.5 h-1.5 rounded-full ${PRIORITY_COLORS[task.priority]}`} title={`${task.priority} priority`} />
+                                      <Badge variant="outline" className="text-[9px] uppercase font-bold py-0 px-1.5 h-4 bg-white/5 text-white/50 border-white/10">
                                         {task.projectName || "Project"}
                                       </Badge>
-                                      {task.blocked && <span title="Blocked"><Lock className="w-3 h-3 text-slate-400" /></span>}
+                                      {task.blocked && <span title="Blocked"><Lock className="w-3 h-3 text-white/30" /></span>}
                                     </div>
                                   </div>
                                   
-                                  <p className="text-sm font-bold text-olive-900 mb-3 leading-snug line-clamp-2 group-hover:text-olive-700 transition-colors">
+                                  <p className="text-xs font-bold text-white mb-3 leading-snug line-clamp-2 group-hover:text-blue-400 transition-colors">
                                     {task.title}
                                   </p>
                                   
-                                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-olive-100">
-                                    <div className="flex gap-2 text-olive-500 text-xs font-medium">
-                                      <div className="flex items-center gap-1 hover:text-olive-700 transition-colors">
-                                        <CheckSquare className="w-3.5 h-3.5" /> 0/3
+                                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/[0.04]">
+                                    <div className="flex gap-2 text-white/40 text-[9px] font-bold">
+                                      <div className="flex items-center gap-1 hover:text-white/70 transition-colors">
+                                        <CheckSquare className="w-3 h-3 text-blue-400" /> 0/3
                                       </div>
-                                      <div className="flex items-center gap-1 hover:text-olive-700 transition-colors">
-                                        <MessageSquare className="w-3.5 h-3.5" /> 2
+                                      <div className="flex items-center gap-1 hover:text-white/70 transition-colors">
+                                        <MessageSquare className="w-3 h-3" /> 2
                                       </div>
                                     </div>
                                     
                                     <div className="flex items-center gap-2">
                                       {task.dueDate && (
-                                        <div className={cn("flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-bold", 
-                                          isOverdue(task.dueDate) ? 'bg-red-100 text-red-700' : 
-                                          isToday(task.dueDate) ? 'bg-orange-100 text-orange-700' : 
-                                          'bg-olive-100 text-olive-600'
+                                        <div className={cn("flex items-center gap-1 text-[8px] px-1.5 py-0.5 rounded font-bold uppercase", 
+                                          isOverdue(task.dueDate) ? 'bg-rose-950/40 border border-rose-500/20 text-rose-300' : 
+                                          isToday(task.dueDate) ? 'bg-amber-950/40 border border-amber-500/20 text-amber-300' : 
+                                          'bg-white/5 text-white/50 border border-white/10'
                                         )}>
-                                          <Clock className="w-3 h-3" />
+                                          <Clock className="w-2.5 h-2.5" />
                                           {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                         </div>
                                       )}
-                                      <Avatar className="w-6 h-6 border border-white shadow-sm">
-                                        <AvatarFallback className="bg-olive-100 text-[10px] font-bold text-olive-700">
+                                      <Avatar className="w-5 h-5 border border-white/10 shadow-sm">
+                                        <AvatarFallback className="bg-blue-800 text-[8px] font-bold text-blue-200">
                                           {task.assignedTo ? "JD" : "?"}
                                         </AvatarFallback>
                                       </Avatar>
@@ -363,9 +370,9 @@ export default function TaskBoard() {
                         ))}
                         {provided.placeholder}
                         
-                        <Button variant="ghost" className="w-full text-olive-500 justify-start h-8 px-2 text-sm mt-1 hover:bg-olive-200 hover:text-olive-800 font-medium border border-dashed border-transparent hover:border-olive-300">
-                          <Plus className="w-4 h-4 mr-2" /> Add a task
-                        </Button>
+                        <button className="w-full text-white/30 hover:text-white justify-start h-8 px-2 text-xs mt-1 hover:bg-white/5 rounded-xl transition-all font-bold border border-dashed border-white/5 hover:border-white/15 flex items-center cursor-pointer">
+                          <Plus className="w-3.5 h-3.5 mr-1.5" /> Add a task
+                        </button>
                       </div>
                     )}
                   </Droppable>

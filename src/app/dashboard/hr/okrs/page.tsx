@@ -32,6 +32,9 @@ export default function OKRManagement() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setOkrs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       setLoading(false);
+    }, (error) => {
+      console.error("Firestore onSnapshot error (okrs):", error);
+      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -64,46 +67,46 @@ export default function OKRManagement() {
   };
 
   return (
-    <RoleGuard permission="MANAGE_USERS" fallback={<div>Access Denied.</div>}>
+    <RoleGuard permission="MANAGE_USERS" fallback={<div className="p-8 text-center text-white/40 font-bold uppercase tracking-wider text-xs">Access Denied. Only authorized personnel from HR & Admin can manage corporate OKRs.</div>}>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-              <Target className="h-8 w-8 text-olive-600" /> Goal Tracking (OKRs)
+            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2 text-white">
+              <Target className="h-8 w-8 text-blue-400" /> Goal Tracking (OKRs)
             </h1>
-            <p className="text-muted-foreground mt-1">Set, track, and manage Objectives and Key Results.</p>
+            <p className="text-white/40 mt-1">Set, track, and manage Objectives and Key Results.</p>
           </div>
           
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-9 px-4 py-2 bg-olive-500 hover:bg-olive-600 text-white transition-colors">
+            <DialogTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold h-10 px-5 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all hover:translate-y-[-1px]">
               <Plus className="mr-2 h-4 w-4" /> New Goal
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="bg-[#0d1f3c] border-white/10 rounded-2xl shadow-xl text-white">
               <DialogHeader>
-                <DialogTitle>Create New Objective</DialogTitle>
+                <DialogTitle className="text-xl font-bold text-white">Create New Objective</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleAddOKR} className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Objective (The Goal)</label>
-                  <Input required placeholder="E.g., Increase organic website traffic" value={objective} onChange={e => setObjective(e.target.value)} />
+                  <label className="text-xs font-bold text-white/60 uppercase">Objective (The Goal)</label>
+                  <Input required placeholder="E.g., Increase organic website traffic" value={objective} onChange={e => setObjective(e.target.value)} className="bg-white/5 border-white/10 rounded-xl text-white" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Key Result (How to measure it)</label>
-                  <Input required placeholder="E.g., Reach 50k monthly visitors" value={keyResult} onChange={e => setKeyResult(e.target.value)} />
+                  <label className="text-xs font-bold text-white/60 uppercase">Key Result (How to measure it)</label>
+                  <Input required placeholder="E.g., Reach 50k monthly visitors" value={keyResult} onChange={e => setKeyResult(e.target.value)} className="bg-white/5 border-white/10 rounded-xl text-white" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Target Value (Numeric)</label>
-                    <Input required type="number" placeholder="50000" value={targetValue} onChange={e => setTargetValue(e.target.value)} />
+                    <label className="text-xs font-bold text-white/60 uppercase">Target Value (Numeric)</label>
+                    <Input required type="number" placeholder="50000" value={targetValue} onChange={e => setTargetValue(e.target.value)} className="bg-white/5 border-white/10 rounded-xl text-white" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Assign To</label>
-                    <Input placeholder="Employee Name or Dept" value={assignedTo} onChange={e => setAssignedTo(e.target.value)} />
+                    <label className="text-xs font-bold text-white/60 uppercase">Assign To</label>
+                    <Input placeholder="Employee Name or Dept" value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className="bg-white/5 border-white/10 rounded-xl text-white" />
                   </div>
                 </div>
-                <DialogFooter className="pt-4">
-                  <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-                  <Button type="submit" disabled={isSubmitting} className="bg-olive-600 text-white">Save OKR</Button>
+                <DialogFooter className="pt-4 gap-2 sm:gap-0">
+                  <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)} className="rounded-xl border-white/10 text-white bg-transparent hover:bg-white/5">Cancel</Button>
+                  <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold">Save OKR</Button>
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -111,13 +114,13 @@ export default function OKRManagement() {
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-muted-foreground">Loading goals...</div>
+          <div className="p-8 text-center text-white/40">Loading goals...</div>
         ) : okrs.length === 0 ? (
-          <Card className="border-dashed shadow-none">
+          <Card className="border-dashed border-white/10 bg-white/[0.01] rounded-2xl">
             <CardContent className="p-12 text-center flex flex-col items-center justify-center">
-              <TrendingUp className="h-12 w-12 text-muted-foreground/30 mb-3" />
-              <h3 className="text-lg font-medium text-olive-900">No Goals Set</h3>
-              <p className="text-sm text-muted-foreground mt-1">Start by adding a company-wide or department OKR.</p>
+              <TrendingUp className="h-12 w-12 text-white/20 mb-3" />
+              <h3 className="text-lg font-bold text-white">No Goals Set</h3>
+              <p className="text-sm text-white/40 mt-1">Start by adding a company-wide or department OKR.</p>
             </CardContent>
           </Card>
         ) : (
@@ -128,14 +131,14 @@ export default function OKRManagement() {
               const progress = Math.min(100, Math.round((current / target) * 100));
               
               return (
-                <Card key={okr.id} className="border-olive-200 shadow-sm hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3 border-b border-olive-100 bg-olive-50/50">
+                <Card key={okr.id} className="border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300 rounded-2xl overflow-hidden shadow-sm hover:shadow-md">
+                  <CardHeader className="pb-3 border-b border-white/5 bg-white/[0.01]">
                     <div className="flex justify-between items-start gap-4">
-                      <CardTitle className="text-lg leading-tight text-olive-900">{okr.objective}</CardTitle>
+                      <CardTitle className="text-lg font-bold leading-tight text-white">{okr.objective}</CardTitle>
                       <Badge variant="outline" className={cn(
-                        "whitespace-nowrap capitalize",
-                        progress >= 100 ? "border-green-200 text-green-700 bg-green-50" : 
-                        progress > 30 ? "border-blue-200 text-blue-700 bg-blue-50" : "border-amber-200 text-amber-700 bg-amber-50"
+                        "whitespace-nowrap capitalize font-semibold shadow-none rounded-lg",
+                        progress >= 100 ? "border-emerald-500/20 text-emerald-400 bg-emerald-500/10" : 
+                        progress > 30 ? "border-blue-500/20 text-blue-400 bg-blue-500/10" : "border-amber-500/20 text-amber-400 bg-amber-500/10"
                       )}>
                         {progress >= 100 ? "Completed" : okr.status.replace("_", " ")}
                       </Badge>
@@ -143,21 +146,21 @@ export default function OKRManagement() {
                   </CardHeader>
                   <CardContent className="pt-4 space-y-4">
                     <div>
-                      <p className="text-xs font-semibold text-olive-500 uppercase tracking-wider mb-1">Key Result</p>
-                      <p className="text-sm text-olive-800">{okr.keyResult}</p>
+                      <p className="text-xs font-bold text-white/40 uppercase tracking-wider mb-1">Key Result</p>
+                      <p className="text-sm text-white/80 font-medium">{okr.keyResult}</p>
                     </div>
                     
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground font-medium">{current} / {target}</span>
-                        <span className="font-bold text-olive-700">{progress}%</span>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-white/40 font-medium">{current} / {target}</span>
+                        <span className="font-bold text-blue-400">{progress}%</span>
                       </div>
-                      <Progress value={progress} className="h-2" />
+                      <Progress value={progress} className="h-2 bg-white/10" />
                     </div>
                     
-                    <div className="pt-3 border-t flex justify-between items-center text-xs">
-                      <span className="text-muted-foreground">Assigned: <strong className="text-olive-700">{okr.assignedTo}</strong></span>
-                      <button className="text-olive-600 hover:text-olive-800 font-medium hover:underline">Update Progress</button>
+                    <div className="pt-3 border-t border-white/5 flex justify-between items-center text-xs">
+                      <span className="text-white/40">Assigned: <strong className="text-blue-300">{okr.assignedTo}</strong></span>
+                      <button className="text-blue-400 hover:text-blue-300 font-semibold hover:underline">Update Progress</button>
                     </div>
                   </CardContent>
                 </Card>

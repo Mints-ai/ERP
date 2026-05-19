@@ -1,22 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, orderBy, onSnapshot, addDoc, doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { RoleGuard } from "@/components/layout/RoleGuard";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Monitor, Laptop, Key, Search, Plus, CheckCircle2, AlertCircle } from "lucide-react";
+import { Monitor, Laptop, Key, Search, Plus, AlertCircle, Laptop2, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Mock types
 type AssetType = "laptop" | "monitor" | "software" | "other";
-type AssetStatus = "active" | "maintenance" | "retired";
 
 export default function AssetManagement() {
   const { user } = useAuth();
@@ -36,6 +32,9 @@ export default function AssetManagement() {
     const q = query(collection(db, "assets"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setAssets(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setLoading(false);
+    }, (error) => {
+      console.error("Firestore onSnapshot error (assets):", error);
       setLoading(false);
     });
     return () => unsubscribe();
@@ -66,69 +65,95 @@ export default function AssetManagement() {
   };
 
   const filteredAssets = assets.filter(a => 
-    a.name.toLowerCase().includes(search.toLowerCase()) || 
+    a.name?.toLowerCase().includes(search.toLowerCase()) || 
     a.assignedTo?.toLowerCase().includes(search.toLowerCase()) ||
-    a.serialNumber.toLowerCase().includes(search.toLowerCase())
+    a.serialNumber?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <RoleGuard permission="MANAGE_USERS" fallback={<div>Access Denied.</div>}>
-      <div className="space-y-6">
+    <RoleGuard permission="MANAGE_USERS" fallback={<div className="p-8 text-center text-white/40 font-bold uppercase tracking-wider text-xs">Access Denied.</div>}>
+      <div className="space-y-6 pb-12 text-white pl-4 lg:pl-0">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Asset Management</h1>
-            <p className="text-muted-foreground mt-1">Track company devices, software licenses, and physical assets.</p>
+            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              <Laptop2 className="h-5 w-5 text-blue-500" /> Asset Management
+            </h1>
+            <p className="text-xs text-white/40 mt-1">Track company devices, software licenses, and physical corporate assets.</p>
           </div>
           
-          <div className="flex items-center gap-4 w-full sm:w-auto">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-white/30" />
               <Input
-                placeholder="Search assets..."
-                className="pl-9 bg-white"
+                placeholder="Search inventory..."
+                className="pl-9 glass-input h-9 text-xs border-white/10 placeholder:text-white/20 focus:border-blue-500/60 focus:ring-0 w-full"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-              <DialogTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-9 px-4 py-2 bg-olive-500 hover:bg-olive-600 text-white transition-colors">
-                <Plus className="mr-2 h-4 w-4" /> Add Asset
-              </DialogTrigger>
-              <DialogContent>
+              <DialogTrigger 
+                render={
+                  <button className="btn-primary h-9 py-0 px-4 text-xs font-bold flex items-center justify-center cursor-pointer">
+                    <Plus className="mr-1.5 h-4 w-4" /> Add Asset
+                  </button>
+                }
+              />
+              <DialogContent className="sm:max-w-[425px] bg-[#0d1f3c] border border-white/[0.08] text-white p-6 rounded-2xl shadow-xl">
                 <DialogHeader>
-                  <DialogTitle>Register New Asset</DialogTitle>
+                  <DialogTitle className="text-base font-bold text-white">Register Corporate Asset</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleAddAsset} className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Asset Name / Model</label>
-                    <Input required placeholder="MacBook Pro M2 16inch" value={name} onChange={e => setName(e.target.value)} />
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-white/50 uppercase tracking-wider">Asset Name / Model</label>
+                    <Input 
+                      required 
+                      placeholder="e.g. MacBook Pro M3 Max" 
+                      value={name} 
+                      onChange={e => setName(e.target.value)} 
+                      className="glass-input h-9 text-xs border-white/10 placeholder:text-white/20 focus:border-blue-500/60 focus:ring-0 w-full"
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Asset Type</label>
-                      <Select value={type} onValueChange={(val: any) => setType(val)}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="laptop">Laptop / PC</SelectItem>
-                          <SelectItem value="monitor">Monitor / Display</SelectItem>
-                          <SelectItem value="software">Software License</SelectItem>
-                          <SelectItem value="other">Other Peripheral</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-white/50 uppercase tracking-wider">Asset Type</label>
+                      <select 
+                        value={type} 
+                        onChange={(e) => setType(e.target.value as AssetType)}
+                        className="w-full h-9 border border-white/10 rounded-xl px-3 text-xs focus:border-blue-500/60 focus:ring-0 bg-[#0d1f3c] text-white"
+                      >
+                        <option value="laptop">Laptop / PC</option>
+                        <option value="monitor">Monitor / Display</option>
+                        <option value="software">Software License</option>
+                        <option value="other">Other Peripheral</option>
+                      </select>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Serial / License Key</label>
-                      <Input required placeholder="SN-123456789" value={serialNumber} onChange={e => setSerialNumber(e.target.value)} />
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-white/50 uppercase tracking-wider">Serial / License Key</label>
+                      <Input 
+                        required 
+                        placeholder="SN-9823485" 
+                        value={serialNumber} 
+                        onChange={e => setSerialNumber(e.target.value)} 
+                        className="glass-input h-9 text-xs border-white/10 placeholder:text-white/20 focus:border-blue-500/60 focus:ring-0 w-full font-mono"
+                      />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Assigned To (Employee Name)</label>
-                    <Input placeholder="Leave blank if unassigned" value={assignedTo} onChange={e => setAssignedTo(e.target.value)} />
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-white/50 uppercase tracking-wider">Assigned To (Employee Name)</label>
+                    <Input 
+                      placeholder="Leave blank if unassigned" 
+                      value={assignedTo} 
+                      onChange={e => setAssignedTo(e.target.value)} 
+                      className="glass-input h-9 text-xs border-white/10 placeholder:text-white/20 focus:border-blue-500/60 focus:ring-0 w-full"
+                    />
                   </div>
-                  <DialogFooter className="pt-4">
-                    <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-                    <Button type="submit" disabled={isSubmitting} className="bg-olive-600 text-white">Save Asset</Button>
+                  <DialogFooter className="pt-4 border-t border-white/[0.06] gap-2 sm:gap-0 mt-4">
+                    <button type="button" onClick={() => setIsAddOpen(false)} className="btn-ghost h-9 py-0 px-4 text-xs font-semibold border-white/10 text-white/70 hover:text-white cursor-pointer">Cancel</button>
+                    <button type="submit" disabled={isSubmitting} className="btn-primary h-9 py-0 px-4 text-xs font-bold flex items-center justify-center cursor-pointer">
+                      {isSubmitting ? "Saving..." : "Save Asset"}
+                    </button>
                   </DialogFooter>
                 </form>
               </DialogContent>
@@ -136,48 +161,57 @@ export default function AssetManagement() {
           </div>
         </div>
 
-        <Card>
+        <Card className="glass-card overflow-hidden border-white/[0.08] bg-white/[0.02]">
           <CardContent className="p-0">
             {loading ? (
-              <div className="p-8 text-center text-muted-foreground">Loading assets...</div>
+              <div className="p-16 text-center text-white/30 bg-white/[0.01]">
+                <p className="text-xs font-bold uppercase tracking-wider animate-pulse">Loading inventory assets...</p>
+              </div>
             ) : filteredAssets.length === 0 ? (
-              <div className="p-12 text-center flex flex-col items-center justify-center border-dashed border-2 m-4 rounded-xl">
-                <Laptop className="h-12 w-12 text-muted-foreground/30 mb-3" />
-                <h3 className="text-lg font-medium text-olive-900">No Assets Found</h3>
-                <p className="text-sm text-muted-foreground">Add your first company asset to start tracking.</p>
+              <div className="text-center py-16 text-white/30 bg-white/[0.01]">
+                <Laptop className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                <p className="text-xs font-bold uppercase tracking-wider text-white/40">No matching assets found.</p>
               </div>
             ) : (
-              <div className="divide-y">
-                {filteredAssets.map(asset => (
-                  <div key={asset.id} className="p-4 flex items-center justify-between hover:bg-olive-50/50 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-olive-100 p-3 rounded-lg text-olive-600">
-                        {asset.type === 'laptop' && <Laptop className="w-5 h-5" />}
-                        {asset.type === 'monitor' && <Monitor className="w-5 h-5" />}
-                        {asset.type === 'software' && <Key className="w-5 h-5" />}
-                        {asset.type === 'other' && <AlertCircle className="w-5 h-5" />}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-olive-900">{asset.name}</h4>
-                        <p className="text-xs text-muted-foreground font-mono mt-1">SN: {asset.serialNumber}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-6">
-                      <div className="text-right hidden md:block">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Assigned To</p>
-                        <p className="text-sm font-medium text-olive-900 mt-1">{asset.assignedTo || "Unassigned"}</p>
-                      </div>
-                      
-                      <Badge variant="outline" className={cn(
-                        "w-24 justify-center capitalize",
-                        asset.status === 'active' ? "border-green-200 text-green-700 bg-green-50" : "border-amber-200 text-amber-700 bg-amber-50"
-                      )}>
-                        {asset.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
+              <div className="overflow-x-auto">
+                <table className="glass-table">
+                  <thead>
+                    <tr>
+                      <th>Device / Resource</th>
+                      <th>Identification</th>
+                      <th>Assigned To</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAssets.map((asset) => (
+                      <tr key={asset.id} className="hover:bg-white/[0.02] transition-colors">
+                        <td>
+                          <div className="flex items-center gap-3">
+                            <div className="bg-blue-500/10 p-2.5 rounded-xl text-blue-400 border border-blue-500/20 shrink-0">
+                              {asset.type === 'laptop' && <Laptop className="w-4 h-4" />}
+                              {asset.type === 'monitor' && <Monitor className="w-4 h-4" />}
+                              {asset.type === 'software' && <Key className="w-4 h-4" />}
+                              {asset.type === 'other' && <AlertCircle className="w-4 h-4" />}
+                              {!['laptop', 'monitor', 'software', 'other'].includes(asset.type) && <HelpCircle className="w-4 h-4" />}
+                            </div>
+                            <span className="font-bold text-white text-xs">{asset.name}</span>
+                          </div>
+                        </td>
+                        <td className="text-white/50 font-mono text-[11px] font-semibold">{asset.serialNumber}</td>
+                        <td className="text-white/60 font-semibold">{asset.assignedTo || <span className="text-white/30 italic">Unassigned</span>}</td>
+                        <td>
+                          <Badge variant="outline" className={cn(
+                            "font-bold text-[9px] py-0.5 tracking-wider uppercase shadow-none",
+                            asset.status === 'active' ? "bg-emerald-600/15 text-emerald-300 border-emerald-500/20" : "bg-amber-600/15 text-amber-300 border-amber-500/20"
+                          )}>
+                            {asset.status || 'ACTIVE'}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </CardContent>

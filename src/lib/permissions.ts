@@ -33,10 +33,10 @@ export function canAccess(role: string | null | undefined, permission: keyof typ
 
 // Role display names and badge colors
 export const ROLE_META: Record<string, { label: string; color: string }> = {
-  founder:         { label: "Founder",         color: "bg-olive-700 text-white" },
-  c_suite:         { label: "C-Suite",          color: "bg-olive-600 text-white" },
-  manager:         { label: "Manager",          color: "bg-olive-500 text-white" },
-  senior_employee: { label: "Senior Employee",  color: "bg-olive-300 text-olive-900" },
-  employee:        { label: "Employee",         color: "bg-olive-100 text-olive-700" },
-  intern:          { label: "Intern",           color: "bg-gray-100 text-gray-600" },
+  founder:         { label: "Founder",         color: "bg-blue-500/10 text-blue-300 border border-blue-500/20" },
+  c_suite:         { label: "C-Suite",          color: "bg-purple-500/10 text-purple-300 border border-purple-500/20" },
+  manager:         { label: "Manager",          color: "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20" },
+  senior_employee: { label: "Senior Employee",  color: "bg-cyan-500/10 text-cyan-300 border border-cyan-500/20" },
+  employee:        { label: "Employee",         color: "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20" },
+  intern:          { label: "Intern",           color: "bg-slate-500/10 text-slate-300 border border-slate-500/20" },
 };

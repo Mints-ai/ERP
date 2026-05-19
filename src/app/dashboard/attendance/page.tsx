@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Play, Square, Coffee, Clock, CalendarIcon, ChevronRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-// Helper for formatting time
+// Helpers for formatting time
 const formatTime = (date: Date) => {
   return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 };
@@ -22,19 +24,73 @@ const formatDate = (date: Date) => {
 export default function AttendancePage() {
   const { user } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Attendance State Machine Variables
   const [status, setStatus] = useState<"out" | "in" | "break">("out");
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [totalWorkingSeconds, setTotalWorkingSeconds] = useState(0);
+  const [totalBreakSeconds, setTotalBreakSeconds] = useState(0);
+  const [lastActionTimestamp, setLastActionTimestamp] = useState<number>(0);
+  const [loadingDoc, setLoadingDoc] = useState(true);
+  const [tickingSeconds, setTickingSeconds] = useState(0);
 
-  // Live Clock
+  // 1. Live Ticking Calendar Time
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-      if (status === "in") {
-        setElapsedSeconds(prev => prev + 1);
-      }
     }, 1000);
     return () => clearInterval(timer);
-  }, [status]);
+  }, []);
+
+  // 2. Fetch and Subscribe to Today's Attendance State
+  useEffect(() => {
+    if (!user) return;
+
+    const dateString = new Date().toISOString().split('T')[0];
+    const docRef = doc(db, "attendance", `${user.uid}_${dateString}`);
+
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setStatus(data.status || "out");
+        setLogs(data.logs || []);
+        setTotalWorkingSeconds(data.totalWorkingSeconds || 0);
+        setTotalBreakSeconds(data.totalBreakSeconds || 0);
+        setLastActionTimestamp(data.lastActionTimestamp || 0);
+      } else {
+        setStatus("out");
+        setLogs([]);
+        setTotalWorkingSeconds(0);
+        setTotalBreakSeconds(0);
+        setLastActionTimestamp(0);
+      }
+      setLoadingDoc(false);
+    }, (error) => {
+      console.error("Error subscribing to attendance session:", error);
+      setLoadingDoc(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // 3. Precise Ticking Working Seconds Ticker
+  useEffect(() => {
+    const getLiveElapsedSeconds = () => {
+      if (status === "in" && lastActionTimestamp > 0) {
+        return totalWorkingSeconds + Math.floor((Date.now() - lastActionTimestamp) / 1000);
+      }
+      return totalWorkingSeconds;
+    };
+
+    // Initialize ticker
+    setTickingSeconds(getLiveElapsedSeconds());
+
+    const ticker = setInterval(() => {
+      setTickingSeconds(getLiveElapsedSeconds());
+    }, 1000);
+
+    return () => clearInterval(ticker);
+  }, [status, totalWorkingSeconds, lastActionTimestamp]);
 
   // Format elapsed time (HH:MM:SS)
   const formatElapsed = (totalSeconds: number) => {
@@ -44,187 +100,329 @@ export default function AttendancePage() {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Mock Logs
-  const mockLogs = [
-    { type: "in", time: "09:00 AM", label: "Clocked In" },
-    { type: "break", time: "01:00 PM", label: "Lunch Break Start" },
-    { type: "in", time: "02:00 PM", label: "Lunch Break End" },
-  ];
+  const formatTickingHours = (totalSecs: number) => {
+    const h = Math.floor(totalSecs / 3600);
+    const m = Math.floor((totalSecs % 3600) / 60);
+    return `${h}h ${m}m`;
+  };
+
+  // State Machine Action Commands
+  const handleClockIn = async () => {
+    if (!user) return;
+    const dateString = new Date().toISOString().split('T')[0];
+    const docRef = doc(db, "attendance", `${user.uid}_${dateString}`);
+    
+    const now = new Date();
+    const newLog = {
+      type: "in",
+      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: now.toISOString(),
+      label: "Clocked In"
+    };
+
+    try {
+      const { setDoc } = await import("firebase/firestore");
+      await setDoc(docRef, {
+        uid: user.uid,
+        employeeName: user.displayName || "Employee",
+        date: dateString,
+        status: "in",
+        logs: [newLog],
+        totalWorkingSeconds: 0,
+        totalBreakSeconds: 0,
+        lastActionTimestamp: Date.now()
+      });
+    } catch (err) {
+      console.error("Error creating attendance clock-in:", err);
+    }
+  };
+
+  const handleTakeBreak = async () => {
+    if (!user) return;
+    const dateString = new Date().toISOString().split('T')[0];
+    const docRef = doc(db, "attendance", `${user.uid}_${dateString}`);
+    
+    const now = new Date();
+    const newLog = {
+      type: "break",
+      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: now.toISOString(),
+      label: "Lunch Break Start"
+    };
+
+    const elapsedWorking = lastActionTimestamp > 0 ? Math.floor((Date.now() - lastActionTimestamp) / 1000) : 0;
+
+    try {
+      const { updateDoc } = await import("firebase/firestore");
+      await updateDoc(docRef, {
+        status: "break",
+        logs: [...logs, newLog],
+        totalWorkingSeconds: totalWorkingSeconds + elapsedWorking,
+        lastActionTimestamp: Date.now()
+      });
+    } catch (err) {
+      console.error("Error starting break:", err);
+    }
+  };
+
+  const handleResume = async () => {
+    if (!user) return;
+    const dateString = new Date().toISOString().split('T')[0];
+    const docRef = doc(db, "attendance", `${user.uid}_${dateString}`);
+    
+    const now = new Date();
+    const newLog = {
+      type: "in",
+      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: now.toISOString(),
+      label: "Lunch Break End"
+    };
+
+    const elapsedBreak = lastActionTimestamp > 0 ? Math.floor((Date.now() - lastActionTimestamp) / 1000) : 0;
+
+    try {
+      const { updateDoc } = await import("firebase/firestore");
+      await updateDoc(docRef, {
+        status: "in",
+        logs: [...logs, newLog],
+        totalBreakSeconds: totalBreakSeconds + elapsedBreak,
+        lastActionTimestamp: Date.now()
+      });
+    } catch (err) {
+      console.error("Error resuming work:", err);
+    }
+  };
+
+  const handleClockOut = async () => {
+    if (!user) return;
+    const dateString = new Date().toISOString().split('T')[0];
+    const docRef = doc(db, "attendance", `${user.uid}_${dateString}`);
+    
+    const now = new Date();
+    const newLog = {
+      type: "out",
+      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: now.toISOString(),
+      label: "Clocked Out"
+    };
+
+    const elapsedWorking = status === "in" && lastActionTimestamp > 0 ? Math.floor((Date.now() - lastActionTimestamp) / 1000) : 0;
+
+    try {
+      const { updateDoc } = await import("firebase/firestore");
+      await updateDoc(docRef, {
+        status: "out",
+        logs: [...logs, newLog],
+        totalWorkingSeconds: totalWorkingSeconds + elapsedWorking,
+        lastActionTimestamp: Date.now()
+      });
+    } catch (err) {
+      console.error("Error clocking out:", err);
+    }
+  };
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 shrink-0">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-olive-900">Attendance</h1>
-          <p className="text-olive-600 mt-1">Track your daily working hours and breaks.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-white">Attendance</h1>
+          <p className="text-white/40 mt-1">Track your daily working hours, break schedules, and overtime metrics live.</p>
         </div>
         
-        <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-xl border border-olive-200 shadow-sm">
-          <CalendarIcon className="w-5 h-5 text-olive-500" />
-          <span className="font-semibold text-olive-900">{formatDate(currentTime)}</span>
+        <div className="flex items-center gap-4 glass px-4 py-2 rounded-xl">
+          <CalendarIcon className="w-5 h-5 text-blue-400" />
+          <span className="font-semibold text-white">{formatDate(currentTime)}</span>
         </div>
       </div>
 
-      <div className="flex-1 grid lg:grid-cols-3 gap-6 overflow-hidden">
-        {/* Main Clock Section */}
-        <div className="lg:col-span-2 flex flex-col h-full gap-6">
-          <Card className="flex-1 border-olive-200 shadow-card flex flex-col items-center justify-center relative overflow-hidden bg-gradient-to-b from-white to-olive-50">
-            {/* Background animated rings based on status */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
-              {status === "in" && (
-                <motion.div 
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.1, 0.3] }}
-                  transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                  className="w-96 h-96 rounded-full border-4 border-green-500"
-                />
-              )}
-            </div>
-
-            <CardContent className="p-8 flex flex-col items-center z-10 w-full">
-              <div className="mb-8 text-center space-y-2">
-                <Badge variant="outline" className={cn("text-xs font-bold uppercase tracking-widest border-2 px-4 py-1.5", 
-                  status === "in" ? "bg-green-100 text-green-700 border-green-200" : 
-                  status === "break" ? "bg-amber-100 text-amber-700 border-amber-200" : 
-                  "bg-slate-100 text-slate-700 border-slate-200"
-                )}>
-                  {status === "in" ? "Currently Working" : status === "break" ? "On Break" : "Clocked Out"}
-                </Badge>
-              </div>
-
-              {/* Huge Clock */}
-              <div className="text-7xl md:text-8xl font-black text-olive-900 tracking-tighter mb-2 tabular-nums">
-                {formatTime(currentTime)}
-              </div>
-
-              {/* Elapsed Time */}
-              <div className="flex items-center gap-2 text-olive-500 font-bold text-xl mb-12">
-                <Clock className="w-5 h-5" />
-                <span className="tabular-nums">Today: {formatElapsed(status === "out" ? 28800 : elapsedSeconds + 14400)}</span> {/* Mock starting hours if clocked in */}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap justify-center gap-4 w-full max-w-md">
-                {status === "out" ? (
-                  <Button 
-                    size="lg" 
-                    className="w-full h-16 text-lg bg-olive-600 hover:bg-olive-700 text-white shadow-md hover:shadow-lg transition-all rounded-xl"
-                    onClick={() => { setStatus("in"); setElapsedSeconds(0); }}
-                  >
-                    <Play className="w-6 h-6 mr-3" /> Clock In
-                  </Button>
-                ) : (
-                  <>
-                    <Button 
-                      size="lg" 
-                      variant={status === "break" ? "default" : "outline"}
-                      className={cn("flex-1 h-16 text-lg transition-all rounded-xl", 
-                        status === "break" ? "bg-amber-500 hover:bg-amber-600 text-white shadow-md border-transparent" : "bg-white text-amber-600 border-amber-200 hover:bg-amber-50"
-                      )}
-                      onClick={() => setStatus(status === "break" ? "in" : "break")}
-                    >
-                      {status === "break" ? <Play className="w-5 h-5 mr-2" /> : <Coffee className="w-5 h-5 mr-2" />}
-                      {status === "break" ? "Resume" : "Take Break"}
-                    </Button>
-                    <Button 
-                      size="lg" 
-                      variant="destructive"
-                      className="flex-1 h-16 text-lg bg-red-500 hover:bg-red-600 text-white shadow-md transition-all rounded-xl"
-                      onClick={() => setStatus("out")}
-                    >
-                      <Square className="w-5 h-5 mr-2" /> Clock Out
-                    </Button>
-                  </>
+      {loadingDoc ? (
+        <div className="flex-1 flex flex-col justify-center items-center text-olive-600 font-medium gap-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-olive-600"></div>
+          <span>Syncing with secure attendance terminal...</span>
+        </div>
+      ) : (
+        <div className="flex-1 grid lg:grid-cols-3 gap-6 overflow-hidden">
+          {/* Main Clock Section */}
+          <div className="lg:col-span-2 flex flex-col h-full gap-6">
+            <Card className="flex-1 border-olive-200 shadow-card flex flex-col items-center justify-center relative overflow-hidden bg-gradient-to-b from-white to-olive-50">
+              {/* Background animated rings based on status */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                {status === "in" && (
+                  <motion.div 
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.1, 0.3] }}
+                    transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                    className="w-96 h-96 rounded-full border-4 border-olive-500"
+                  />
                 )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* Right Rail - Logs & Summary */}
-        <div className="space-y-6 overflow-y-auto">
-          {/* User Profile Summary */}
-          <Card className="border-olive-200 shadow-sm bg-olive-900 text-white border-0">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4 mb-6">
-                <Avatar className="h-16 w-16 border-2 border-olive-700 shadow-sm">
-                  <AvatarImage src={user?.photoURL || undefined} />
-                  <AvatarFallback className="bg-olive-800 text-olive-100 text-xl font-bold">
-                    {user?.displayName?.substring(0, 2).toUpperCase() || "JD"}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="font-bold text-xl">{user?.displayName || "John Doe"}</h3>
-                  <p className="text-olive-400 font-medium">{user?.role?.replace("_", " ").toUpperCase() || "EMPLOYEE"}</p>
+              <CardContent className="p-8 flex flex-col items-center z-10 w-full">
+                <div className="mb-8 text-center space-y-2">
+                  <Badge variant="outline" className={cn("text-xs font-bold uppercase tracking-widest border-2 px-4 py-1.5 rounded-xl shadow-none", 
+                    status === "in" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : 
+                    status === "break" ? "bg-amber-50 text-amber-700 border-amber-200" : 
+                    "bg-slate-50 text-slate-700 border-slate-200"
+                  )}>
+                    {status === "in" ? "Currently Clocked In" : status === "break" ? "On Lunch Break" : "Offline / Clocked Out"}
+                  </Badge>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-olive-800 rounded-lg p-3">
-                  <p className="text-xs text-olive-400 uppercase tracking-wider font-bold mb-1">Required</p>
-                  <p className="text-lg font-bold">8h 00m</p>
+                {/* Huge Clock */}
+                <div className="text-7xl md:text-8xl font-black text-olive-900 tracking-tighter mb-2 tabular-nums">
+                  {formatTime(currentTime)}
                 </div>
-                <div className="bg-olive-800 rounded-lg p-3">
-                  <p className="text-xs text-olive-400 uppercase tracking-wider font-bold mb-1">Overtime</p>
-                  <p className="text-lg font-bold text-green-400">+1h 15m</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Activity Log */}
-          <Card className="border-olive-200 shadow-sm flex-1">
-            <CardHeader className="pb-4 border-b border-olive-100 flex flex-row items-center justify-between">
-              <h3 className="font-bold text-olive-900 text-lg">Today's Log</h3>
-              <Button variant="ghost" size="sm" className="text-olive-500 hover:text-olive-900 h-8">
-                History <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-olive-100">
-                {mockLogs.map((log, idx) => (
-                  <div key={idx} className="p-4 flex gap-4 hover:bg-olive-50/50 transition-colors">
-                    <div className="shrink-0 pt-1">
-                      {log.type === "in" ? (
-                        <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-                          <Play className="w-4 h-4" />
+                {/* Elapsed Time */}
+                <div className="flex items-center gap-2 text-olive-500 font-bold text-xl mb-12">
+                  <Clock className="w-5 h-5 shrink-0" />
+                  <span className="tabular-nums">Worked Today: {formatElapsed(tickingSeconds)}</span>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap justify-center gap-4 w-full max-w-md">
+                  {status === "out" ? (
+                    <Button 
+                      size="lg" 
+                      className="w-full h-16 text-lg bg-olive-600 hover:bg-olive-700 text-white shadow-md hover:shadow-lg transition-all rounded-xl font-bold"
+                      onClick={handleClockIn}
+                    >
+                      <Play className="w-6 h-6 mr-3" /> Clock In
+                    </Button>
+                  ) : (
+                    <>
+                      <Button 
+                        size="lg" 
+                        variant={status === "break" ? "default" : "outline"}
+                        className={cn("flex-1 h-16 text-lg transition-all rounded-xl font-bold border-slate-200", 
+                          status === "break" 
+                            ? "bg-amber-500 hover:bg-amber-600 text-white shadow-md border-transparent" 
+                            : "bg-white text-amber-600 hover:bg-amber-50 border-amber-200"
+                        )}
+                        onClick={status === "break" ? handleResume : handleTakeBreak}
+                      >
+                        {status === "break" ? <Play className="w-5 h-5 mr-2" /> : <Coffee className="w-5 h-5 mr-2" />}
+                        {status === "break" ? "Resume" : "Take Break"}
+                      </Button>
+                      <Button 
+                        size="lg" 
+                        variant="destructive"
+                        className="flex-1 h-16 text-lg bg-red-500 hover:bg-red-600 text-white shadow-md transition-all rounded-xl font-bold"
+                        onClick={handleClockOut}
+                      >
+                        <Square className="w-5 h-5 mr-2" /> Clock Out
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Rail - Logs & Summary */}
+          <div className="space-y-6 overflow-y-auto">
+            {/* User Profile Summary */}
+            <Card className="border-olive-200 shadow-sm bg-olive-900 text-white border-0 rounded-2xl overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4 mb-6">
+                  <Avatar className="h-16 w-16 border-2 border-olive-700 shadow-sm">
+                    <AvatarImage src={user?.photoURL || undefined} />
+                    <AvatarFallback className="bg-olive-800 text-olive-100 text-xl font-bold">
+                      {user?.displayName?.substring(0, 2).toUpperCase() || "JD"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-bold text-xl">{user?.displayName || "Mints Team Member"}</h3>
+                    <p className="text-olive-400 font-bold uppercase tracking-wider text-xs mt-0.5">{user?.role?.replace("_", " ") || "EMPLOYEE"}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div className="bg-olive-800 rounded-xl p-3">
+                    <p className="text-[10px] text-olive-400 uppercase tracking-wider font-bold mb-1">Shift Target</p>
+                    <p className="text-lg font-black tabular-nums">8h 00m</p>
+                  </div>
+                  <div className="bg-olive-800 rounded-xl p-3">
+                    <p className="text-[10px] text-olive-400 uppercase tracking-wider font-bold mb-1">Shift Total</p>
+                    <p className="text-lg font-black text-emerald-400 tabular-nums">
+                      {formatTickingHours(tickingSeconds)}
+                    </p>
+                  </div>
+                </div>
+
+                {tickingSeconds > 28800 && (
+                  <div className="mt-4 bg-emerald-800/40 border border-emerald-700 p-2.5 rounded-xl text-center text-xs font-bold text-emerald-300">
+                    🎉 Overtime accumulated: {formatTickingHours(tickingSeconds - 28800)}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Activity Log */}
+            <Card className="border-slate-200 bg-white shadow-sm flex-grow rounded-2xl overflow-hidden flex flex-col justify-between">
+              <div>
+                <CardHeader className="pb-4 border-b border-olive-100 flex flex-row items-center justify-between">
+                  <h3 className="font-bold text-olive-900 text-lg">Today's Log</h3>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {logs.length === 0 ? (
+                    <div className="text-center py-12 p-6 flex flex-col items-center">
+                      <Clock className="h-10 w-10 text-slate-300 mb-3" />
+                      <p className="text-sm font-semibold text-slate-800">Terminal Idle</p>
+                      <p className="text-xs text-slate-500 mt-1">Log in using the terminal clock to begin tracking your work shift.</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-olive-100">
+                      {logs.map((log, idx) => (
+                        <div key={idx} className="p-4 flex gap-4 hover:bg-olive-50/50 transition-colors">
+                          <div className="shrink-0 pt-1">
+                            {log.type === "in" ? (
+                              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                <Play className="w-4 h-4" />
+                              </div>
+                            ) : log.type === "break" ? (
+                              <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
+                                <Coffee className="w-4 h-4" />
+                              </div>
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center">
+                                <Square className="w-4 h-4" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 flex justify-between items-center">
+                            <div>
+                              <p className="font-bold text-olive-900">{log.label}</p>
+                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Verified session</p>
+                            </div>
+                            <span className="font-bold text-olive-700 text-sm tabular-nums">{log.time}</span>
+                          </div>
                         </div>
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
-                          <Coffee className="w-4 h-4" />
+                      ))}
+                      
+                      {status === "in" && (
+                        <div className="p-4 flex gap-4 bg-olive-50/30">
+                          <div className="shrink-0 pt-1">
+                            <div className="w-8 h-8 rounded-full border-2 border-olive-300 border-dashed flex items-center justify-center animate-spin">
+                              <div className="w-1.5 h-1.5 bg-olive-500 rounded-full" />
+                            </div>
+                          </div>
+                          <div className="flex-1 flex justify-between items-center opacity-70">
+                            <div>
+                              <p className="font-bold text-olive-900 italic">Working shift active...</p>
+                            </div>
+                            <span className="font-bold text-olive-700 text-sm tabular-nums">{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
                         </div>
                       )}
                     </div>
-                    <div className="flex-1 flex justify-between items-center">
-                      <div>
-                        <p className="font-bold text-olive-900">{log.label}</p>
-                        <p className="text-xs text-olive-500 font-medium">Verified by IP Address</p>
-                      </div>
-                      <span className="font-bold text-olive-700 text-sm tabular-nums">{log.time}</span>
-                    </div>
-                  </div>
-                ))}
-                
-                {status !== "out" && (
-                  <div className="p-4 flex gap-4 bg-olive-50/50">
-                    <div className="shrink-0 pt-1">
-                      <div className="w-8 h-8 rounded-full border-2 border-olive-300 border-dashed flex items-center justify-center animate-spin-slow">
-                        <div className="w-2 h-2 bg-olive-400 rounded-full" />
-                      </div>
-                    </div>
-                    <div className="flex-1 flex justify-between items-center opacity-60">
-                      <div>
-                        <p className="font-bold text-olive-900 italic">Current Session...</p>
-                      </div>
-                      <span className="font-bold text-olive-700 text-sm tabular-nums">{formatTime(currentTime)}</span>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </CardContent>
               </div>
-            </CardContent>
-          </Card>
+            </Card>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

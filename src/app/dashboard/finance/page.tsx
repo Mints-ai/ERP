@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, orderBy, onSnapshot, where } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { generateInvoice } from "@/lib/pdfGenerator";
 import { useAuth } from "@/context/AuthContext";
@@ -14,10 +14,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Banknote, FileText, Receipt, TrendingUp, AlertCircle, Plus, FileDown, ArrowUpRight, ArrowDownRight, DollarSign, Upload, Loader2, Sparkles } from "lucide-react";
+import { Banknote, FileText, Receipt, TrendingUp, AlertCircle, Plus, FileDown, ArrowUpRight, DollarSign, Upload, Loader2, Sparkles, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
+import { CHART_COLORS, CHART_STYLE } from "@/lib/chartTheme";
+import { cn } from "@/lib/utils";
 
-// Enhanced Mock Data for Area Chart
 const mockFinancialData = [
   { name: "Jan", revenue: 125000, expenses: 85000, profit: 40000 },
   { name: "Feb", revenue: 142000, expenses: 90000, profit: 52000 },
@@ -34,12 +35,11 @@ const mockExpenseData = [
   { name: "Office", value: 8000 },
 ];
 
-const COLORS = ["#4a5c2b", "#6b7c3e", "#8fa651", "#b0c485"];
 const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-700 border-slate-200",
-  sent: "bg-blue-100 text-blue-700 border-blue-200",
-  paid: "bg-green-100 text-green-700 border-green-200",
-  overdue: "bg-red-100 text-red-700 border-red-200",
+  draft: "bg-white/5 text-white/50 border-white/10",
+  sent: "bg-blue-600/15 text-blue-300 border-blue-500/20",
+  paid: "bg-emerald-600/15 text-emerald-300 border-emerald-500/20",
+  overdue: "bg-rose-600/15 text-rose-300 border-rose-500/20",
 };
 
 export default function FinanceDashboard() {
@@ -53,6 +53,28 @@ export default function FinanceDashboard() {
   const [isScanning, setIsScanning] = useState(false);
   const [ocrResult, setOcrResult] = useState<{ amount?: number; date?: string; vendor?: string } | null>(null);
   const [receiptImage, setReceiptImage] = useState<string | null>(null);
+
+  // OCR Form States
+  const [ocrVendor, setOcrVendor] = useState("");
+  const [ocrAmount, setOcrAmount] = useState("");
+  const [ocrDate, setOcrDate] = useState("");
+
+  // Manual Log Expense State
+  const [isManualOpen, setIsManualOpen] = useState(false);
+  const [manualVendor, setManualVendor] = useState("");
+  const [manualCategory, setManualCategory] = useState("Software");
+  const [manualAmount, setManualAmount] = useState("");
+  const [manualDate, setManualDate] = useState(new Date().toISOString().split('T')[0]);
+  const [savingManual, setSavingManual] = useState(false);
+
+  // Sync OCR results to editable fields
+  useEffect(() => {
+    if (ocrResult) {
+      setOcrVendor(ocrResult.vendor || "");
+      setOcrAmount(ocrResult.amount?.toString() || "");
+      setOcrDate(ocrResult.date || new Date().toISOString().split('T')[0]);
+    }
+  }, [ocrResult]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -111,79 +133,149 @@ export default function FinanceDashboard() {
     };
   }, [user]);
 
+  const handleSaveManualExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualVendor.trim() || !manualAmount) return;
+    
+    setSavingManual(true);
+    try {
+      const { addDoc, collection, serverTimestamp } = await import("firebase/firestore");
+      await addDoc(collection(db, "expenses"), {
+        submittedBy: user?.displayName || "Mints Team Member",
+        submittedById: user?.uid || "",
+        vendor: manualVendor.trim(),
+        category: manualCategory,
+        amount: Number(manualAmount),
+        currency: "AED",
+        status: "pending",
+        date: manualDate,
+        createdAt: serverTimestamp()
+      });
+      
+      setManualVendor("");
+      setManualCategory("Software");
+      setManualAmount("");
+      setManualDate(new Date().toISOString().split('T')[0]);
+      setIsManualOpen(false);
+    } catch (err) {
+      console.error("Error saving manual expense:", err);
+    } finally {
+      setSavingManual(false);
+    }
+  };
+
+  const handleSaveOcrExpense = async () => {
+    if (!ocrVendor.trim() || !ocrAmount) return;
+    
+    try {
+      const { addDoc, collection, serverTimestamp } = await import("firebase/firestore");
+      await addDoc(collection(db, "expenses"), {
+        submittedBy: user?.displayName || "Mints Team Member",
+        submittedById: user?.uid || "",
+        vendor: ocrVendor.trim(),
+        category: "Software", 
+        amount: Number(ocrAmount),
+        currency: "AED",
+        status: "pending",
+        date: ocrDate,
+        createdAt: serverTimestamp()
+      });
+      
+      setOcrResult(null);
+      setReceiptImage(null);
+      setIsOcrModalOpen(false);
+    } catch (err) {
+      console.error("Error saving OCR expense:", err);
+    }
+  };
+
+  const handleUpdateExpenseStatus = async (id: string, newStatus: "approved" | "rejected") => {
+    try {
+      const { doc, updateDoc } = await import("firebase/firestore");
+      await updateDoc(doc(db, "expenses", id), {
+        status: newStatus,
+        reviewedBy: user?.displayName || "Finance Manager",
+        updatedAt: new Date().toISOString()
+      });
+    } catch (err) {
+      console.error("Error updating expense status:", err);
+    }
+  };
+
   return (
-    <RoleGuard permission="VIEW_DEPT_FINANCE" fallback={<div className="p-8 text-center text-olive-600">Access Denied.</div>}>
-      <div className="space-y-6 pb-12">
+    <RoleGuard permission="VIEW_DEPT_FINANCE" fallback={<div className="p-8 text-center text-white/40 font-bold uppercase tracking-wider text-xs">Access Denied.</div>}>
+      <div className="space-y-6 pb-12 text-white pl-4 lg:pl-0">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-olive-900">Finance & Reporting</h1>
-            <p className="text-olive-600 mt-1">Manage agency revenue, cash flow, invoices, and expenses.</p>
+            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              <Wallet className="h-5 w-5 text-blue-500" /> Finance Hub
+            </h1>
+            <p className="text-xs text-white/40 mt-1">Manage agency revenue, cash flow, invoices, and expenses.</p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="border-olive-200 text-olive-700 hover:bg-olive-50 shadow-sm">
+            <button className="btn-ghost py-0 px-4 h-9 text-xs font-bold border-white/10 text-white/70 hover:text-white flex items-center justify-center cursor-pointer">
               <FileDown className="w-4 h-4 mr-2" /> Export CSV
-            </Button>
+            </button>
           </div>
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="mb-6 bg-white border border-olive-200 shadow-sm p-1">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-olive-100 data-[state=active]:text-olive-900">Executive Summary</TabsTrigger>
-            <TabsTrigger value="invoices" className="data-[state=active]:bg-olive-100 data-[state=active]:text-olive-900">Invoices</TabsTrigger>
-            <TabsTrigger value="expenses" className="data-[state=active]:bg-olive-100 data-[state=active]:text-olive-900">Expenses</TabsTrigger>
+          <TabsList className="mb-6 bg-white/[0.02] border border-white/[0.08] shadow-inner p-1 rounded-xl">
+            <TabsTrigger value="overview" className="text-xs py-1.5 px-4 font-bold rounded-lg text-white/40 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-glow-blue transition-all cursor-pointer">Executive Summary</TabsTrigger>
+            <TabsTrigger value="invoices" className="text-xs py-1.5 px-4 font-bold rounded-lg text-white/40 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-glow-blue transition-all cursor-pointer">Invoices</TabsTrigger>
+            <TabsTrigger value="expenses" className="text-xs py-1.5 px-4 font-bold rounded-lg text-white/40 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-glow-blue transition-all cursor-pointer">Expenses</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            
             {/* Executive Summary Bar */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card className="border-olive-200 shadow-sm bg-gradient-to-br from-white to-olive-50">
+              <Card className="glass-card overflow-hidden border-white/[0.08] bg-white/[0.02]">
                 <CardContent className="p-5">
                   <div className="flex justify-between items-start mb-2">
-                    <p className="text-xs font-bold text-olive-500 uppercase tracking-wider">Gross Revenue</p>
-                    <div className="p-1.5 bg-olive-100 text-olive-600 rounded-md"><DollarSign className="w-4 h-4" /></div>
+                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Gross Revenue</p>
+                    <div className="p-1.5 bg-blue-500/10 text-blue-400 rounded-lg border border-blue-500/20"><DollarSign className="w-4 h-4" /></div>
                   </div>
-                  <h3 className="text-2xl font-black text-olive-900 tabular-nums">920.0K <span className="text-sm font-bold text-olive-400">AED</span></h3>
-                  <div className="flex items-center gap-1 mt-2 text-xs font-bold text-green-600">
-                    <ArrowUpRight className="w-3 h-3" /> 12.5% YoY
+                  <h3 className="text-xl font-bold text-white tracking-tight font-mono">920.0K <span className="text-[10px] text-white/30 uppercase tracking-wider font-sans font-bold ml-1">AED</span></h3>
+                  <div className="flex items-center gap-1 mt-2 text-[10px] font-bold text-emerald-400">
+                    <ArrowUpRight className="w-3.5 h-3.5" /> 12.5% YoY
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-olive-200 shadow-sm">
+              <Card className="glass-card overflow-hidden border-white/[0.08] bg-white/[0.02]">
                 <CardContent className="p-5">
                   <div className="flex justify-between items-start mb-2">
-                    <p className="text-xs font-bold text-olive-500 uppercase tracking-wider">Net Profit</p>
-                    <div className="p-1.5 bg-green-50 text-green-600 rounded-md"><TrendingUp className="w-4 h-4" /></div>
+                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Net Profit</p>
+                    <div className="p-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20"><TrendingUp className="w-4 h-4" /></div>
                   </div>
-                  <h3 className="text-2xl font-black text-olive-900 tabular-nums">340.0K <span className="text-sm font-bold text-olive-400">AED</span></h3>
-                  <div className="flex items-center gap-1 mt-2 text-xs font-bold text-green-600">
-                    <ArrowUpRight className="w-3 h-3" /> 8.2% YoY
+                  <h3 className="text-xl font-bold text-white tracking-tight font-mono">340.0K <span className="text-[10px] text-white/30 uppercase tracking-wider font-sans font-bold ml-1">AED</span></h3>
+                  <div className="flex items-center gap-1 mt-2 text-[10px] font-bold text-emerald-400">
+                    <ArrowUpRight className="w-3.5 h-3.5" /> 8.2% YoY
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-olive-200 shadow-sm">
+              <Card className="glass-card overflow-hidden border-white/[0.08] bg-white/[0.02]">
                 <CardContent className="p-5">
                   <div className="flex justify-between items-start mb-2">
-                    <p className="text-xs font-bold text-olive-500 uppercase tracking-wider">AR (Outstanding)</p>
-                    <div className="p-1.5 bg-amber-50 text-amber-600 rounded-md"><Banknote className="w-4 h-4" /></div>
+                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">AR (Outstanding)</p>
+                    <div className="p-1.5 bg-amber-500/10 text-amber-400 rounded-lg border border-amber-500/20"><Banknote className="w-4 h-4" /></div>
                   </div>
-                  <h3 className="text-2xl font-black text-olive-900 tabular-nums">45.5K <span className="text-sm font-bold text-olive-400">AED</span></h3>
-                  <div className="flex items-center gap-1 mt-2 text-xs font-bold text-red-500">
-                    <AlertCircle className="w-3 h-3" /> 3 Invoices Overdue
+                  <h3 className="text-xl font-bold text-white tracking-tight font-mono">45.5K <span className="text-[10px] text-white/30 uppercase tracking-wider font-sans font-bold ml-1">AED</span></h3>
+                  <div className="flex items-center gap-1 mt-2 text-[10px] font-bold text-rose-400">
+                    <AlertCircle className="w-3.5 h-3.5" /> 3 Overdue
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-olive-200 shadow-sm">
+              <Card className="glass-card overflow-hidden border-white/[0.08] bg-white/[0.02]">
                 <CardContent className="p-5">
                   <div className="flex justify-between items-start mb-2">
-                    <p className="text-xs font-bold text-olive-500 uppercase tracking-wider">Run Rate</p>
-                    <div className="p-1.5 bg-blue-50 text-blue-600 rounded-md"><ArrowUpRight className="w-4 h-4" /></div>
+                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Run Rate</p>
+                    <div className="p-1.5 bg-violet-500/10 text-violet-400 rounded-lg border border-violet-500/20"><ArrowUpRight className="w-4 h-4" /></div>
                   </div>
-                  <h3 className="text-2xl font-black text-olive-900 tabular-nums">1.84M <span className="text-sm font-bold text-olive-400">AED</span></h3>
-                  <div className="flex items-center gap-1 mt-2 text-xs font-bold text-olive-400">
+                  <h3 className="text-xl font-bold text-white tracking-tight font-mono">1.84M <span className="text-[10px] text-white/30 uppercase tracking-wider font-sans font-bold ml-1">AED</span></h3>
+                  <div className="text-[10px] font-semibold text-white/30 mt-2">
                     Projected FY2026
                   </div>
                 </CardContent>
@@ -192,34 +284,36 @@ export default function FinanceDashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Stacked Area Chart */}
-              <Card className="lg:col-span-2 border-olive-200 shadow-card">
-                <CardHeader>
-                  <CardTitle className="text-lg text-olive-900">Cash Flow (H1 2026)</CardTitle>
-                  <CardDescription>Revenue vs Expenses vs Net Profit over the last 6 months.</CardDescription>
+              <Card className="lg:col-span-2 glass-card overflow-hidden border-white/[0.08] bg-white/[0.02] p-5">
+                <CardHeader className="p-0 mb-6">
+                  <CardTitle className="text-sm font-bold text-white">Cash Flow (H1 2026)</CardTitle>
+                  <CardDescription className="text-[11px] text-white/40 mt-1">Revenue vs Expenses vs Net Profit over the last 6 months.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-[340px]">
+                <CardContent className="p-0">
+                  <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={mockFinancialData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <AreaChart data={mockFinancialData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#8fa651" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="#8fa651" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25}/>
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                           </linearGradient>
                           <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#4a5c2b" stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor="#4a5c2b" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4}/>
+                            <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
-                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} tickFormatter={(value) => `${value / 1000}k`} />
+                        <CartesianGrid strokeDasharray={CHART_STYLE.grid.strokeDasharray} vertical={false} stroke={CHART_STYLE.grid.stroke} />
+                        <XAxis dataKey="name" axisLine={CHART_STYLE.axis.axisLine} tickLine={CHART_STYLE.axis.tickLine} tick={CHART_STYLE.axis.tick} dy={10} />
+                        <YAxis axisLine={CHART_STYLE.axis.axisLine} tickLine={CHART_STYLE.axis.tickLine} tick={CHART_STYLE.axis.tick} tickFormatter={(value) => `${value / 1000}k`} />
                         <RechartsTooltip 
-                          contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                          formatter={(value) => [`${value} AED`, '']}
+                          contentStyle={CHART_STYLE.tooltip.contentStyle}
+                          labelStyle={CHART_STYLE.tooltip.labelStyle}
+                          cursor={CHART_STYLE.tooltip.cursor}
+                          formatter={(value) => [`${Number(value).toLocaleString()} AED`, '']}
                         />
-                        <Area type="monotone" dataKey="revenue" stackId="1" stroke="#8fa651" strokeWidth={2} fill="url(#colorRevenue)" name="Revenue" />
-                        <Area type="monotone" dataKey="profit" stackId="2" stroke="#4a5c2b" strokeWidth={3} fill="url(#colorProfit)" name="Profit" />
+                        <Area type="monotone" dataKey="revenue" stackId="1" stroke="#3b82f6" strokeWidth={2} fill="url(#colorRevenue)" name="Revenue" />
+                        <Area type="monotone" dataKey="profit" stackId="2" stroke="#06b6d4" strokeWidth={2.5} fill="url(#colorProfit)" name="Profit" />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
@@ -227,46 +321,49 @@ export default function FinanceDashboard() {
               </Card>
 
               {/* Expenses Donut */}
-              <Card className="border-olive-200 shadow-card">
-                <CardHeader>
-                  <CardTitle className="text-lg text-olive-900">Expense Distribution</CardTitle>
-                  <CardDescription>Breakdown by category (Current Month)</CardDescription>
+              <Card className="glass-card overflow-hidden border-white/[0.08] bg-white/[0.02] p-5 flex flex-col">
+                <CardHeader className="p-0 mb-4">
+                  <CardTitle className="text-sm font-bold text-white">Expense Distribution</CardTitle>
+                  <CardDescription className="text-[11px] text-white/40 mt-1">Breakdown by category (Current Month)</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-[250px] flex flex-col justify-center relative">
+                <CardContent className="p-0 flex-1 flex flex-col justify-between">
+                  <div className="h-[180px] flex flex-col justify-center relative my-2">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={mockExpenseData}
                           cx="50%"
                           cy="50%"
-                          innerRadius={70}
-                          outerRadius={95}
-                          paddingAngle={2}
+                          innerRadius={55}
+                          outerRadius={75}
+                          paddingAngle={3}
                           dataKey="value"
                           stroke="none"
                         >
                           {mockExpenseData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                           ))}
                         </Pie>
-                        <RechartsTooltip formatter={(value) => `${value} AED`} />
+                        <RechartsTooltip 
+                          contentStyle={CHART_STYLE.tooltip.contentStyle}
+                          formatter={(value) => [`${value} AED`, '']}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                     {/* Inner Text for Donut */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-2xl font-black text-olive-900">93K</span>
-                      <span className="text-[10px] uppercase font-bold text-olive-400">Total Exp</span>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-1">
+                      <span className="text-lg font-black text-white font-mono leading-none">93K</span>
+                      <span className="text-[8px] uppercase font-bold text-white/30 tracking-widest mt-1">Total Exp</span>
                     </div>
                   </div>
-                  <div className="flex flex-col gap-2 mt-4">
+                  <div className="flex flex-col gap-2 mt-2">
                     {mockExpenseData.map((entry, index) => (
-                      <div key={entry.name} className="flex items-center justify-between text-xs font-medium">
-                        <div className="flex items-center text-olive-700">
-                          <div className="w-3 h-3 rounded-sm mr-2" style={{backgroundColor: COLORS[index]}}></div>
+                      <div key={entry.name} className="flex items-center justify-between text-xs font-semibold">
+                        <div className="flex items-center text-white/60">
+                          <div className="w-2.5 h-2.5 rounded-sm mr-2" style={{backgroundColor: CHART_COLORS[index % CHART_COLORS.length]}}></div>
                           {entry.name}
                         </div>
-                        <span className="text-olive-900 tabular-nums">{entry.value.toLocaleString()} AED</span>
+                        <span className="text-white font-mono text-[11px]">{entry.value.toLocaleString()} AED</span>
                       </div>
                     ))}
                   </div>
@@ -278,50 +375,48 @@ export default function FinanceDashboard() {
           {/* Invoices List */}
           <TabsContent value="invoices" className="space-y-4">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-olive-900">Accounts Receivable</h2>
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider">Accounts Receivable</h2>
               <RoleGuard permission="CREATE_INVOICE">
-                <Button className="bg-olive-600 hover:bg-olive-700 text-white shadow-md">
-                  <Plus className="mr-2 h-4 w-4" /> Create Invoice
+                <Button className="btn-primary h-9 py-0 px-4 text-xs font-bold flex items-center justify-center cursor-pointer">
+                  <Plus className="mr-1.5 h-4 w-4" /> Create Invoice
                 </Button>
               </RoleGuard>
             </div>
-            <Card className="border-olive-200 shadow-sm overflow-hidden">
+            <Card className="glass-card overflow-hidden border-white/[0.08] bg-white/[0.02]">
               <CardContent className="p-0">
                 {invoices.length === 0 ? (
-                  <div className="text-center py-16 text-olive-500 bg-olive-50/50">
-                    <Banknote className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                    <p className="font-medium text-olive-900">No invoices generated yet.</p>
+                  <div className="text-center py-16 text-white/30 bg-white/[0.01]">
+                    <Banknote className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                    <p className="text-xs font-bold uppercase tracking-wider text-white/40">No invoices generated yet.</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                      <thead className="bg-olive-50 text-olive-700 text-xs uppercase tracking-wider font-bold border-b border-olive-200">
+                    <table className="glass-table">
+                      <thead>
                         <tr>
-                          <th className="px-6 py-4">Invoice #</th>
-                          <th className="px-6 py-4">Client</th>
-                          <th className="px-6 py-4">Amount</th>
-                          <th className="px-6 py-4">Due Date</th>
-                          <th className="px-6 py-4">Status</th>
-                          <th className="px-6 py-4 text-right">Action</th>
+                          <th>Invoice #</th>
+                          <th>Client</th>
+                          <th>Amount</th>
+                          <th>Due Date</th>
+                          <th>Status</th>
+                          <th className="text-right">Action</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-olive-100">
+                      <tbody>
                         {invoices.map((inv) => (
-                          <tr key={inv.id} className="hover:bg-olive-50/50 transition-colors">
-                            <td className="px-6 py-4 font-bold text-olive-900">{inv.invoiceNumber}</td>
-                            <td className="px-6 py-4 text-olive-600 font-medium">{inv.clientId}</td>
-                            <td className="px-6 py-4 font-bold text-olive-900 tabular-nums">{inv.total?.toLocaleString()} {inv.currency || 'AED'}</td>
-                            <td className="px-6 py-4 text-olive-500 font-medium">{inv.dueDate}</td>
-                            <td className="px-6 py-4">
-                              <Badge variant="outline" className={`font-bold shadow-none ${STATUS_COLORS[inv.status] || STATUS_COLORS.draft}`}>
+                          <tr key={inv.id} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="font-bold text-white">{inv.invoiceNumber}</td>
+                            <td className="text-white/60 font-semibold">{inv.clientId}</td>
+                            <td className="font-bold text-white font-mono text-xs">{inv.total?.toLocaleString()} {inv.currency || 'AED'}</td>
+                            <td className="text-white/40 font-semibold">{inv.dueDate}</td>
+                            <td>
+                              <Badge variant="outline" className={cn("font-bold text-[9px] py-0.5 tracking-wider uppercase shadow-none", STATUS_COLORS[inv.status] || STATUS_COLORS.draft)}>
                                 {inv.status.toUpperCase()}
                               </Badge>
                             </td>
-                            <td className="px-6 py-4 text-right">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-olive-600 hover:text-olive-900 hover:bg-olive-100"
+                            <td className="text-right">
+                              <button 
+                                className="btn-ghost p-1.5 hover:text-white text-white/50 cursor-pointer rounded-lg border-white/5 border hover:border-white/10"
                                 onClick={() => generateInvoice({
                                   invoiceNumber: inv.invoiceNumber,
                                   date: inv.date || new Date().toISOString().split('T')[0],
@@ -332,7 +427,7 @@ export default function FinanceDashboard() {
                                 })}
                               >
                                 <FileDown className="h-4 w-4" />
-                              </Button>
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -347,37 +442,37 @@ export default function FinanceDashboard() {
           {/* Expenses List */}
           <TabsContent value="expenses" className="space-y-4">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-olive-900">Accounts Payable</h2>
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider">Accounts Payable</h2>
               <RoleGuard permission="SUBMIT_EXPENSE">
                 <div className="flex gap-2">
                   <Dialog open={isOcrModalOpen} onOpenChange={setIsOcrModalOpen}>
                     <DialogTrigger 
                       render={
-                        <Button className="bg-olive-100 hover:bg-olive-200 text-olive-900 border border-olive-200 shadow-sm">
-                          <Sparkles className="mr-2 h-4 w-4 text-olive-600" /> Smart Scan
-                        </Button>
+                        <button className="px-4 h-9 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-1.5 cursor-pointer bg-blue-600/10 border border-blue-500/20 text-blue-300 hover:bg-blue-600/20">
+                          <Sparkles className="h-4 w-4 text-blue-400 animate-pulse" /> Smart Scan
+                        </button>
                       }
                     />
-                    <DialogContent className="sm:max-w-[425px]">
+                    <DialogContent className="sm:max-w-[425px] bg-[#0d1f3c] border border-white/[0.08] text-white p-6 rounded-2xl shadow-xl">
                       <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                          <Sparkles className="h-5 w-5 text-olive-600" /> AI Receipt Scanner
+                        <DialogTitle className="text-base font-bold text-white flex items-center gap-2">
+                          <Sparkles className="h-5 w-5 text-blue-400" /> AI Receipt Scanner
                         </DialogTitle>
                       </DialogHeader>
                       <div className="grid gap-4 py-4">
                         {!ocrResult ? (
-                          <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-olive-200 rounded-xl bg-olive-50/50">
+                          <div className="flex flex-col items-center justify-center p-8 border border-white/10 border-dashed rounded-xl bg-white/[0.01]">
                             {isScanning ? (
-                              <div className="flex flex-col items-center gap-3 text-olive-600">
-                                <Loader2 className="h-8 w-8 animate-spin" />
-                                <p className="text-sm font-medium">Extracting data...</p>
+                              <div className="flex flex-col items-center gap-3 text-blue-400">
+                                <Loader2 className="h-7 w-7 animate-spin" />
+                                <p className="text-xs font-bold uppercase tracking-wider">Extracting details...</p>
                               </div>
                             ) : (
                               <>
-                                <Upload className="h-10 w-10 text-olive-400 mb-3" />
-                                <p className="text-sm font-medium text-olive-900 mb-1">Upload Receipt Image</p>
-                                <p className="text-xs text-olive-500 mb-4 text-center">JPG, PNG up to 5MB</p>
-                                <Label htmlFor="receipt-upload" className="cursor-pointer bg-olive-600 hover:bg-olive-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                <Upload className="h-8 w-8 text-white/30 mb-3" />
+                                <p className="text-xs font-bold text-white mb-1 uppercase tracking-wider">Upload Receipt Image</p>
+                                <p className="text-[10px] text-white/20 mb-4 text-center">JPG, PNG up to 5MB</p>
+                                <Label htmlFor="receipt-upload" className="cursor-pointer btn-primary h-8 py-0 px-4 text-xs font-bold flex items-center justify-center">
                                   Select File
                                 </Label>
                                 <Input id="receipt-upload" type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
@@ -386,27 +481,42 @@ export default function FinanceDashboard() {
                           </div>
                         ) : (
                           <div className="space-y-4">
-                            <div className="bg-green-50 border border-green-200 text-green-800 p-3 rounded-lg text-sm flex items-start gap-2">
-                              <Sparkles className="h-4 w-4 mt-0.5 shrink-0" />
-                              <p>Data extracted successfully! Review and save.</p>
+                            <div className="bg-emerald-950/40 border border-emerald-500/20 text-emerald-300 p-3 rounded-xl text-xs flex items-start gap-2">
+                              <Sparkles className="h-4 w-4 shrink-0 text-emerald-400" />
+                              <p className="font-semibold leading-normal">Data extracted successfully! Review and save.</p>
                             </div>
                             <div className="grid gap-2">
-                              <Label>Vendor Name</Label>
-                              <Input defaultValue={ocrResult.vendor} className="bg-white" />
+                              <Label className="text-xs font-bold text-white/50 uppercase tracking-wider">Vendor Name</Label>
+                              <Input 
+                                value={ocrVendor} 
+                                onChange={(e) => setOcrVendor(e.target.value)} 
+                                className="glass-input h-9 text-xs border-white/10 placeholder:text-white/20 focus:border-blue-500/60 focus:ring-0 w-full" 
+                              />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div className="grid gap-2">
-                                <Label>Amount</Label>
-                                <Input defaultValue={ocrResult.amount} type="number" step="0.01" className="bg-white" />
+                                <Label className="text-xs font-bold text-white/50 uppercase tracking-wider">Amount (AED)</Label>
+                                <Input 
+                                  value={ocrAmount} 
+                                  onChange={(e) => setOcrAmount(e.target.value)} 
+                                  type="number" 
+                                  step="0.01" 
+                                  className="glass-input h-9 text-xs border-white/10 placeholder:text-white/20 focus:border-blue-500/60 focus:ring-0 w-full font-mono" 
+                                />
                               </div>
                               <div className="grid gap-2">
-                                <Label>Date</Label>
-                                <Input defaultValue={ocrResult.date} type="date" className="bg-white" />
+                                <Label className="text-xs font-bold text-white/50 uppercase tracking-wider">Date</Label>
+                                <Input 
+                                  value={ocrDate} 
+                                  onChange={(e) => setOcrDate(e.target.value)} 
+                                  type="date" 
+                                  className="glass-input h-9 text-xs border-white/10 placeholder:text-white/20 focus:border-blue-500/60 focus:ring-0 w-full" 
+                                />
                               </div>
                             </div>
-                            <div className="flex justify-end gap-2 mt-2">
-                              <Button variant="outline" onClick={() => {setOcrResult(null); setReceiptImage(null);}}>Scan Another</Button>
-                              <Button className="bg-olive-600 text-white hover:bg-olive-700">Save Expense</Button>
+                            <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-white/[0.06]">
+                              <button onClick={() => {setOcrResult(null); setReceiptImage(null);}} className="btn-ghost h-9 py-0 px-4 text-xs font-semibold border-white/10 text-white/70 hover:text-white cursor-pointer">Scan Another</button>
+                              <button onClick={handleSaveOcrExpense} className="btn-primary h-9 py-0 px-4 text-xs font-bold flex items-center justify-center cursor-pointer">Save Expense</button>
                             </div>
                           </div>
                         )}
@@ -414,48 +524,140 @@ export default function FinanceDashboard() {
                     </DialogContent>
                   </Dialog>
 
-                  <Button className="bg-olive-600 hover:bg-olive-700 text-white shadow-md">
-                    <Plus className="mr-2 h-4 w-4" /> Log Expense
-                  </Button>
+                  <Dialog open={isManualOpen} onOpenChange={setIsManualOpen}>
+                    <DialogTrigger 
+                      render={
+                        <button className="btn-primary h-9 py-0 px-4 text-xs font-bold flex items-center justify-center cursor-pointer">
+                          <Plus className="mr-1.5 h-4 w-4" /> Log Expense
+                        </button>
+                      }
+                    />
+                    <DialogContent className="sm:max-w-[425px] bg-[#0d1f3c] border border-white/[0.08] text-white p-6 rounded-2xl shadow-xl">
+                      <DialogHeader>
+                        <DialogTitle className="text-base font-bold text-white">Log Corporate Expense</DialogTitle>
+                      </DialogHeader>
+                      <form onSubmit={handleSaveManualExpense} className="space-y-4 py-4">
+                        <div className="grid gap-2">
+                          <Label className="text-xs font-bold text-white/50 uppercase tracking-wider">Vendor Name</Label>
+                          <Input 
+                            required 
+                            placeholder="e.g., Amazon Web Services" 
+                            value={manualVendor} 
+                            onChange={(e) => setManualVendor(e.target.value)} 
+                            className="glass-input h-9 text-xs border-white/10 placeholder:text-white/20 focus:border-blue-500/60 focus:ring-0 w-full" 
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label className="text-xs font-bold text-white/50 uppercase tracking-wider">Expense Category</Label>
+                          <select 
+                            value={manualCategory} 
+                            onChange={(e) => setManualCategory(e.target.value)} 
+                            className="w-full h-9 border border-white/10 rounded-xl px-3 text-xs focus:border-blue-500/60 focus:ring-0 bg-[#0d1f3c] text-white"
+                          >
+                            <option value="Software">Software & Subscriptions</option>
+                            <option value="Marketing">Marketing & Advertising</option>
+                            <option value="Freelancers">Freelancers & Outsourcing</option>
+                            <option value="Office">Office Supplies & Utilities</option>
+                            <option value="Travel">Business Travel</option>
+                            <option value="Meals">Meals & Client Entertainment</option>
+                            <option value="Other">Other Expenses</option>
+                          </select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="grid gap-2">
+                            <Label className="text-xs font-bold text-white/50 uppercase tracking-wider">Amount (AED)</Label>
+                            <Input 
+                              required 
+                              type="number" 
+                              step="0.01" 
+                              placeholder="0.00" 
+                              value={manualAmount} 
+                              onChange={(e) => setManualAmount(e.target.value)} 
+                              className="glass-input h-9 text-xs border-white/10 placeholder:text-white/20 focus:border-blue-500/60 focus:ring-0 w-full font-mono" 
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label className="text-xs font-bold text-white/50 uppercase tracking-wider">Date</Label>
+                            <Input 
+                              required 
+                              type="date" 
+                              value={manualDate} 
+                              onChange={(e) => setManualDate(e.target.value)} 
+                              className="glass-input h-9 text-xs border-white/10 placeholder:text-white/20 focus:border-blue-500/60 focus:ring-0 w-full" 
+                            />
+                          </div>
+                        </div>
+                        <DialogFooter className="pt-4 border-t border-white/[0.06] gap-2 sm:gap-0 mt-4">
+                          <button type="button" onClick={() => setIsManualOpen(false)} className="btn-ghost h-9 py-0 px-4 text-xs font-semibold border-white/10 text-white/70 hover:text-white cursor-pointer">Cancel</button>
+                          <button type="submit" disabled={savingManual} className="btn-primary h-9 py-0 px-4 text-xs font-bold flex items-center justify-center cursor-pointer">
+                            {savingManual ? "Saving..." : "Log Expense"}
+                          </button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </RoleGuard>
             </div>
-            <Card className="border-olive-200 shadow-sm overflow-hidden">
+            <Card className="glass-card overflow-hidden border-white/[0.08] bg-white/[0.02]">
               <CardContent className="p-0">
                 {expenses.length === 0 ? (
-                  <div className="text-center py-16 text-olive-500 bg-olive-50/50">
-                    <Receipt className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                    <p className="font-medium text-olive-900">No expenses logged yet.</p>
+                  <div className="text-center py-16 text-white/30 bg-white/[0.01]">
+                    <Receipt className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                    <p className="text-xs font-bold uppercase tracking-wider text-white/40">No expenses logged yet.</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                      <thead className="bg-olive-50 text-olive-700 text-xs uppercase tracking-wider font-bold border-b border-olive-200">
+                    <table className="glass-table">
+                      <thead>
                         <tr>
-                          <th className="px-6 py-4">Employee</th>
-                          <th className="px-6 py-4">Category</th>
-                          <th className="px-6 py-4">Amount</th>
-                          <th className="px-6 py-4">Date</th>
-                          <th className="px-6 py-4">Status</th>
+                          <th>Employee</th>
+                          <th>Vendor</th>
+                          <th>Category</th>
+                          <th>Amount</th>
+                          <th>Date</th>
+                          <th>Status</th>
+                          <th className="text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-olive-100">
+                      <tbody>
                         {expenses.map((exp) => (
-                          <tr key={exp.id} className="hover:bg-olive-50/50 transition-colors">
-                            <td className="px-6 py-4 font-bold text-olive-900">{exp.submittedBy}</td>
-                            <td className="px-6 py-4 text-olive-600 font-medium">{exp.category}</td>
-                            <td className="px-6 py-4 font-bold text-olive-900 tabular-nums">{exp.amount?.toLocaleString()} {exp.currency || 'AED'}</td>
-                            <td className="px-6 py-4 text-olive-500 font-medium">
-                              {exp.createdAt?.seconds ? new Date(exp.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}
+                          <tr key={exp.id} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="font-bold text-white">{exp.submittedBy}</td>
+                            <td className="text-white/60 font-semibold">{exp.vendor || 'General Vendor'}</td>
+                            <td className="text-white/60 font-semibold">{exp.category}</td>
+                            <td className="font-bold text-white font-mono text-xs">{exp.amount?.toLocaleString()} {exp.currency || 'AED'}</td>
+                            <td className="text-white/40 font-mono text-xs">
+                              {exp.date || (exp.createdAt?.seconds ? new Date(exp.createdAt.seconds * 1000).toLocaleDateString() : 'N/A')}
                             </td>
-                            <td className="px-6 py-4">
-                              <Badge variant="outline" className={`font-bold shadow-none ${
-                                exp.status === 'approved' ? 'bg-green-100 text-green-700 border-green-200' :
-                                exp.status === 'rejected' ? 'bg-red-100 text-red-700 border-red-200' :
-                                'bg-amber-100 text-amber-700 border-amber-200'
-                              }`}>
+                            <td>
+                              <Badge variant="outline" className={cn("font-bold text-[9px] py-0.5 tracking-wider uppercase shadow-none", 
+                                exp.status === 'approved' ? 'bg-emerald-600/15 text-emerald-300 border-emerald-500/20' :
+                                exp.status === 'rejected' ? 'bg-rose-600/15 text-rose-300 border-rose-500/20' :
+                                'bg-amber-600/15 text-amber-300 border-amber-500/20 animate-pulse'
+                              )}>
                                 {exp.status?.toUpperCase() || 'PENDING'}
                               </Badge>
+                            </td>
+                            <td className="text-right">
+                              {exp.status === 'pending' || !exp.status ? (
+                                <div className="flex justify-end gap-1.5">
+                                  <button 
+                                    onClick={() => handleUpdateExpenseStatus(exp.id, "approved")}
+                                    className="h-7 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg transition-colors cursor-pointer shadow-glow-emerald"
+                                  >
+                                    Approve
+                                  </button>
+                                  <button 
+                                    onClick={() => handleUpdateExpenseStatus(exp.id, "rejected")}
+                                    className="h-7 px-3 bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/20 text-rose-300 text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-[10px] text-white/30 font-bold uppercase tracking-wider italic">Reviewed</span>
+                              )}
                             </td>
                           </tr>
                         ))}

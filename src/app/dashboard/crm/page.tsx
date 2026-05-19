@@ -93,21 +93,21 @@ export default function CRMDashboard() {
   );
 
   return (
-    <RoleGuard permission="CREATE_PROJECT" fallback={<div>Access Denied.</div>}>
+    <RoleGuard permission="CREATE_PROJECT" fallback={<div className="p-8 text-center text-white/40 font-bold uppercase tracking-wider text-xs">Access Denied. Only staff with project management authorization can access the CRM.</div>}>
       <div className="space-y-6 h-[calc(100vh-120px)] flex flex-col">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-olive-900">CRM & Pipeline</h1>
-            <p className="text-muted-foreground mt-1">Track leads, generate quotes, and close deals.</p>
+            <h1 className="text-3xl font-bold tracking-tight text-white">CRM & Pipeline</h1>
+            <p className="text-white/40 mt-1">Track leads, generate quotes, and close deals.</p>
           </div>
           
           <div className="flex items-center gap-4 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/40" />
               <Input
                 placeholder="Search leads..."
-                className="pl-9 glass-card"
+                className="pl-9 glass-card border-white/10 text-white placeholder:text-white/30"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -116,7 +116,7 @@ export default function CRMDashboard() {
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <DialogTrigger 
                 render={
-                  <Button className="bg-olive-600 hover:bg-olive-700 text-white shadow-md">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md rounded-xl font-semibold h-10 px-5">
                     <Plus className="mr-2 h-4 w-4" /> New Lead
                   </Button>
                 }
@@ -144,7 +144,7 @@ export default function CRMDashboard() {
                   </div>
                   <DialogFooter className="pt-4">
                     <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-                    <Button type="submit" disabled={isSubmitting} className="bg-olive-600 text-white">Save Lead</Button>
+                    <Button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white">Save Lead</Button>
                   </DialogFooter>
                 </form>
               </DialogContent>
@@ -159,16 +159,16 @@ export default function CRMDashboard() {
               const stageLeads = filteredLeads.filter(l => l.stage === stage);
               
               return (
-                <div key={stage} className="w-80 flex flex-col h-full bg-olive-50/50 rounded-xl p-3 border border-olive-100">
+                <div key={stage} className="w-80 flex flex-col h-full bg-white/[0.02] border border-white/[0.06] rounded-2xl p-3">
                   <div className="flex items-center justify-between mb-4 px-2">
-                    <h3 className="font-bold text-olive-900 tracking-tight uppercase text-sm flex items-center gap-2">
+                    <h3 className="font-bold text-white tracking-tight uppercase text-sm flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${
                         stage === 'Won' ? 'bg-green-500' : 
-                        stage === 'Lost' ? 'bg-red-500' : 'bg-olive-500'
+                        stage === 'Lost' ? 'bg-red-500' : 'bg-blue-400'
                       }`} />
                       {stage}
                     </h3>
-                    <Badge variant="secondary" className="bg-white border-olive-200">{stageLeads.length}</Badge>
+                    <Badge variant="secondary" className="bg-white/5 text-white/80 border-white/10">{stageLeads.length}</Badge>
                   </div>
 
                   <div className="flex-1 overflow-y-auto space-y-3 pr-1">
@@ -180,20 +180,20 @@ export default function CRMDashboard() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
                           key={lead.id}
-                          className="glass-card p-4 rounded-lg group hover:border-olive-300 transition-colors relative"
+                          className="glass-card p-4 rounded-xl group hover:border-blue-500/30 transition-colors relative"
                         >
                           <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-bold text-olive-900 truncate pr-6">{lead.company}</h4>
+                            <h4 className="font-bold text-white truncate pr-6">{lead.company}</h4>
                             
                             {/* Action Menu */}
                             <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                               <DropdownMenu>
-                                <DropdownMenuTrigger className="p-1 hover:bg-olive-100 rounded-md">
-                                  <MoreHorizontal className="h-4 w-4 text-olive-600" />
+                                <DropdownMenuTrigger className="p-1 hover:bg-white/5 rounded-md">
+                                  <MoreHorizontal className="h-4 w-4 text-white/60" />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => handleGenerateQuote(lead)}>
-                                    <FileText className="mr-2 h-4 w-4 text-blue-600" /> Generate Quote
+                                    <FileText className="mr-2 h-4 w-4 text-blue-400" /> Generate Quote
                                   </DropdownMenuItem>
                                   {STAGES.map(s => s !== stage && (
                                     <DropdownMenuItem key={s} onClick={() => updateLeadStage(lead.id, s)}>
@@ -205,17 +205,17 @@ export default function CRMDashboard() {
                             </div>
                           </div>
                           
-                          <div className="space-y-1.5 text-xs text-olive-600">
+                          <div className="space-y-1.5 text-xs text-white/60">
                             <p className="flex items-center gap-1.5">
-                              <Building className="h-3 w-3" /> {lead.contactName}
+                              <Building className="h-3 w-3 text-white/40" /> {lead.contactName}
                             </p>
                             {lead.email && (
                               <p className="flex items-center gap-1.5">
-                                <Mail className="h-3 w-3" /> <span className="truncate">{lead.email}</span>
+                                <Mail className="h-3 w-3 text-white/40" /> <span className="truncate">{lead.email}</span>
                               </p>
                             )}
-                            <p className="flex items-center gap-1.5 font-semibold text-olive-800 mt-2">
-                              <DollarSign className="h-3 w-3 text-green-600" /> 
+                            <p className="flex items-center gap-1.5 font-semibold text-blue-300 mt-2">
+                              <DollarSign className="h-3 w-3 text-emerald-400" /> 
                               {lead.value ? `${lead.value.toLocaleString()} AED` : 'TBD'}
                             </p>
                           </div>

@@ -87,12 +87,39 @@ export default function Announcements() {
     return () => unsubscribe();
   }, [user, role]);
 
+  const triggerNotificationHook = async (announcementData: any) => {
+    console.log("🔔 [Notification Trigger Stub] Invoked Resend/Cloud Functions email trigger hook:", {
+      service: "Resend",
+      recipientGroup: announcementData.audience === "all" 
+        ? "All Employees <all@mintsglobal.ae>" 
+        : `${announcementData.targetValue} Audience <group@mintsglobal.ae>`,
+      subject: `📢 New Mints Global Announcement: ${announcementData.title}`,
+      meta: {
+        pinned: announcementData.isPinned,
+        postedBy: announcementData.creatorName
+      }
+    });
+    
+    // Simulate endpoint call
+    /*
+    try {
+      await fetch("/api/notifications/announcement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(announcementData)
+      });
+    } catch (e) {
+      console.error(e);
+    }
+    */
+  };
+
   const handlePost = async () => {
     if (!user || !title || !editor) return;
     setIsSubmitting(true);
     
     try {
-      await addDoc(collection(db, "announcements"), {
+      const docRef = await addDoc(collection(db, "announcements"), {
         title,
         content: editor.getHTML(),
         audience,
@@ -105,6 +132,18 @@ export default function Announcements() {
         createdAt: serverTimestamp(),
       });
       
+      // Trigger notification hook
+      if (sendEmail) {
+        await triggerNotificationHook({
+          id: docRef.id,
+          title,
+          audience,
+          targetValue: audience !== "all" ? targetValue : "",
+          isPinned,
+          creatorName: user.displayName
+        });
+      }
+
       setIsPostOpen(false);
       setTitle("");
       editor.commands.setContent('<p>Enter your announcement here...</p>');
@@ -131,45 +170,45 @@ export default function Announcements() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-5xl mx-auto pb-12">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Megaphone className="h-8 w-8 text-olive-500" />
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2 text-white">
+            <Megaphone className="h-8 w-8 text-blue-400" />
             Notice Board
           </h1>
-          <p className="text-muted-foreground mt-1">Company-wide and department announcements.</p>
+          <p className="text-white/40 mt-1">Company-wide and department announcements.</p>
         </div>
         
         {isManagerOrAbove && (
           <Dialog open={isPostOpen} onOpenChange={setIsPostOpen}>
-            <DialogTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-9 px-4 py-2 bg-olive-500 hover:bg-olive-600 text-white transition-colors">
+            <DialogTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold h-10 px-5 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all hover:translate-y-[-1px]">
               Post Announcement
             </DialogTrigger>
-            <DialogContent className="max-w-3xl">
+            <DialogContent className="max-w-3xl bg-[#0d1f3c] border-white/10 rounded-2xl shadow-xl text-white">
               <DialogHeader>
-                <DialogTitle>New Announcement</DialogTitle>
+                <DialogTitle className="text-xl font-bold text-white">New Announcement</DialogTitle>
               </DialogHeader>
               
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label>Announcement Title</Label>
-                  <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="E.g. Q3 Town Hall Meeting" />
+                  <Label className="text-xs font-bold text-white/60 uppercase">Announcement Title</Label>
+                  <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="E.g. Q3 Town Hall Meeting" className="bg-white/5 border-white/10 rounded-xl text-white" />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label>Message Content</Label>
-                  <EditorContent editor={editor} />
+                  <Label className="text-xs font-bold text-white/60 uppercase">Message Content</Label>
+                  <EditorContent editor={editor} className="bg-white/5 border border-white/10 rounded-xl text-white overflow-hidden" />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Target Audience</Label>
+                    <Label className="text-xs font-bold text-white/60 uppercase">Target Audience</Label>
                     <Select value={audience} onValueChange={(val) => setAudience(val || "all")}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white/5 border-white/10 rounded-xl text-white">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-[#0d1f3c] border-white/10 text-white">
                         <SelectItem value="all">All Staff</SelectItem>
                         <SelectItem value="department">Specific Department</SelectItem>
                         <SelectItem value="role">Specific Role</SelectItem>
@@ -179,10 +218,10 @@ export default function Announcements() {
                   
                   {audience === "department" && (
                     <div className="space-y-2">
-                      <Label>Select Department</Label>
+                      <Label className="text-xs font-bold text-white/60 uppercase">Select Department</Label>
                       <Select value={targetValue} onValueChange={(val) => setTargetValue(val || "")}>
-                        <SelectTrigger><SelectValue placeholder="Choose department" /></SelectTrigger>
-                        <SelectContent>
+                        <SelectTrigger className="bg-white/5 border-white/10 rounded-xl text-white"><SelectValue placeholder="Choose department" /></SelectTrigger>
+                        <SelectContent className="bg-[#0d1f3c] border-white/10 text-white">
                           {DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                         </SelectContent>
                       </Select>
@@ -191,10 +230,10 @@ export default function Announcements() {
                   
                   {audience === "role" && (
                     <div className="space-y-2">
-                      <Label>Select Role</Label>
+                      <Label className="text-xs font-bold text-white/60 uppercase">Select Role</Label>
                       <Select value={targetValue} onValueChange={(val) => setTargetValue(val || "")}>
-                        <SelectTrigger><SelectValue placeholder="Choose role" /></SelectTrigger>
-                        <SelectContent>
+                        <SelectTrigger className="bg-white/5 border-white/10 rounded-xl text-white"><SelectValue placeholder="Choose role" /></SelectTrigger>
+                        <SelectContent className="bg-[#0d1f3c] border-white/10 text-white">
                           {Object.entries(ROLE_META).map(([key, meta]) => (
                             <SelectItem key={key} value={key}>{meta.label}</SelectItem>
                           ))}
@@ -204,21 +243,21 @@ export default function Announcements() {
                   )}
                 </div>
                 
-                <div className="flex gap-6 pt-4 border-t">
+                <div className="flex gap-6 pt-4 border-t border-white/5">
                   <div className="flex items-center space-x-2">
-                    <Checkbox id="pin" checked={isPinned} onCheckedChange={(c) => setIsPinned(!!c)} />
-                    <Label htmlFor="pin" className="cursor-pointer">Pin to top</Label>
+                    <Checkbox id="pin" checked={isPinned} onCheckedChange={(c) => setIsPinned(!!c)} className="border-white/20 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600" />
+                    <Label htmlFor="pin" className="cursor-pointer text-xs font-semibold text-white/60 uppercase">Pin to top</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Checkbox id="email" checked={sendEmail} onCheckedChange={(c) => setSendEmail(!!c)} />
-                    <Label htmlFor="email" className="cursor-pointer">Send Email Notification</Label>
+                    <Checkbox id="email" checked={sendEmail} onCheckedChange={(c) => setSendEmail(!!c)} className="border-white/20 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600" />
+                    <Label htmlFor="email" className="cursor-pointer text-xs font-semibold text-white/60 uppercase">Send Email Notification</Label>
                   </div>
                 </div>
               </div>
               
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsPostOpen(false)}>Cancel</Button>
-                <Button onClick={handlePost} disabled={isSubmitting || !title} className="bg-olive-500 hover:bg-olive-600 text-white">
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button variant="outline" onClick={() => setIsPostOpen(false)} className="rounded-xl border-white/10 text-white bg-transparent hover:bg-white/5">Cancel</Button>
+                <Button onClick={handlePost} disabled={isSubmitting || !title} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold">
                   {isSubmitting ? "Posting..." : "Publish Announcement"}
                 </Button>
               </DialogFooter>
@@ -229,53 +268,53 @@ export default function Announcements() {
 
       <div className="space-y-4">
         {loading ? (
-          <div className="text-center py-12">Loading announcements...</div>
+          <div className="text-center py-12 text-white/40">Loading announcements...</div>
         ) : announcements.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-xl border border-dashed flex flex-col items-center">
-             <Megaphone className="h-12 w-12 text-muted-foreground/30 mb-4" />
-             <h3 className="text-lg font-medium text-muted-foreground">No Announcements</h3>
-             <p className="text-sm text-muted-foreground mt-1">Check back later for updates from management.</p>
+          <div className="text-center py-16 glass rounded-2xl shadow-xl flex flex-col items-center border-dashed border-white/10 bg-white/[0.01] p-12">
+             <Megaphone className="h-12 w-12 text-white/20 mb-4" />
+             <h3 className="text-lg font-bold text-white">No Announcements</h3>
+             <p className="text-sm text-white/40 mt-1">Check back later for updates from management.</p>
           </div>
         ) : (
           announcements.map((ann) => {
             const isRead = ann.readBy?.includes(user?.uid);
             
             return (
-              <Card key={ann.id} className={`overflow-hidden transition-all ${ann.isPinned ? 'border-l-4 border-l-olive-500 shadow-sm' : 'border-border/50'}`}>
-                <CardHeader className="pb-2 bg-muted/10 flex flex-row items-start justify-between">
+              <Card key={ann.id} className={`overflow-hidden border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300 rounded-2xl shadow-sm hover:shadow-md ${ann.isPinned ? 'border-l-4 border-l-blue-500' : ''}`}>
+                <CardHeader className="pb-2 bg-white/[0.01] flex flex-row items-start justify-between">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      {ann.isPinned && <Pin className="h-4 w-4 text-olive-500 fill-olive-500" />}
-                      <CardTitle className="text-xl">{ann.title}</CardTitle>
+                      {ann.isPinned && <Pin className="h-4 w-4 text-blue-400 fill-blue-400" />}
+                      <CardTitle className="text-xl font-bold text-white">{ann.title}</CardTitle>
                       
                       {ann.audience !== "all" && (
-                        <Badge variant="outline" className="ml-2 bg-background font-normal text-xs">
+                        <Badge variant="outline" className="ml-2 bg-white/5 border-white/10 text-white/60 font-medium text-xs rounded-lg">
                           {ann.audience === "department" ? "Dept: " : "Role: "} 
                           {ann.audience === "role" ? ROLE_META[ann.targetValue]?.label : ann.targetValue}
                         </Badge>
                       )}
                     </div>
-                    <div className="text-sm text-muted-foreground flex items-center gap-2">
-                      <span>Posted by <strong>{ann.creatorName || "Management"}</strong></span>
+                    <div className="text-sm text-white/40 flex items-center gap-2">
+                      <span>Posted by <strong className="text-white/60">{ann.creatorName || "Management"}</strong></span>
                       <span>•</span>
                       <span>{ann.createdAt ? new Date(ann.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}</span>
                     </div>
                   </div>
                   
                   {isRead ? (
-                    <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 shadow-none">
+                    <Badge variant="secondary" className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 shadow-none rounded-lg font-semibold">
                       <CheckCircle2 className="h-3 w-3 mr-1" /> Read
                     </Badge>
                   ) : (
-                    <Badge className="bg-olive-50 text-olive-700 hover:bg-olive-100 shadow-none border-0 group cursor-pointer transition-colors"
+                    <Badge className="bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/10 shadow-none group cursor-pointer transition-colors rounded-lg font-semibold"
                            onClick={() => markAsRead(ann.id)}>
-                      <AlertCircle className="h-3 w-3 mr-1 fill-olive-500 text-white" /> 
+                      <AlertCircle className="h-3 w-3 mr-1 fill-blue-500 text-[#0d1f3c]" /> 
                       <span className="group-hover:underline">Mark as Read</span>
                     </Badge>
                   )}
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <div className="prose prose-sm max-w-none prose-a:text-olive-600" 
+                  <div className="prose prose-invert prose-sm max-w-none text-white/80" 
                        dangerouslySetInnerHTML={{ __html: ann.content }} />
                 </CardContent>
               </Card>

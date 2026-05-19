@@ -22,11 +22,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { UserPlus, Sparkles, Wand2, ShieldAlert, Key } from "lucide-react";
 
-// In a real app, this would be fetched from Firestore /departments
 const DEPARTMENTS = [
   "Executive Office", "Operations", "HR & Admin", "Finance", 
   "Cyber Security", "Performance Marketing", "SEO", 
@@ -75,21 +74,62 @@ export default function AddEmployee() {
       phone: "",
       isIntern: false,
       internEndDate: "",
-      temporaryPassword: Math.random().toString(36).slice(-8) + "Aa1!", // Generate random pass
+      temporaryPassword: Math.random().toString(36).slice(-8) + "Aa1!",
     },
   });
 
   const isIntern = form.watch("isIntern");
+  const fullNameValue = form.watch("fullName");
+
+  // Generate static internal corporate email based on full name slugifier!
+  const handleGenerateStaticEmail = () => {
+    if (!fullNameValue || fullNameValue.trim().length < 2) {
+      setError("Please input the employee's Full Name first to generate a static email.");
+      return;
+    }
+    
+    setError(null);
+    const slug = fullNameValue
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s.-]/g, '') // remove special chars
+      .replace(/\s+/g, '.');         // replace spaces with dots
+      
+    const staticEmail = `${slug}@mintsglobal.ae`;
+    form.setValue("email", staticEmail, { shouldValidate: true });
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     setError(null);
+    let tempApp: any = null;
     try {
       const generatedId = await generateEmployeeId();
       
-      await addDoc(collection(db, "employees"), {
-        fullName: values.fullName,
-        email: values.email,
+      // Initialize a temporary secondary Firebase app context
+      // This allows us to register the auth credentials client-side without logging out the current admin!
+      const { initializeApp } = await import("firebase/app");
+      const { getAuth, createUserWithEmailAndPassword } = await import("firebase/auth");
+      const { setDoc, doc } = await import("firebase/firestore");
+      const { firebaseConfig } = await import("@/lib/firebase");
+      
+      const appName = `tempOnboarding_${Date.now()}`;
+      tempApp = initializeApp(firebaseConfig, appName);
+      const tempAuth = getAuth(tempApp);
+      
+      // 1. Create firebase auth credentials
+      const userCred = await createUserWithEmailAndPassword(
+        tempAuth,
+        values.email.trim(),
+        values.temporaryPassword
+      );
+      
+      const newUid = userCred.user.uid;
+      
+      // 2. Set doc with new UID as key
+      await setDoc(doc(db, "employees", newUid), {
+        fullName: values.fullName.trim(),
+        email: values.email.toLowerCase().trim(),
         role: values.role,
         department: values.department,
         jobTitle: values.jobTitle,
@@ -98,7 +138,7 @@ export default function AddEmployee() {
         internEndDate: values.internEndDate || null,
         employeeId: generatedId,
         isActive: true,
-        dateJoined: new Date(),
+        dateJoined: new Date().toISOString(),
         createdAt: new Date().toISOString(),
       });
 
@@ -106,27 +146,42 @@ export default function AddEmployee() {
     } catch (err: any) {
       setError(err.message || "Failed to create employee account.");
       setIsSubmitting(false);
+    } finally {
+      if (tempApp) {
+        try {
+          await tempApp.delete();
+        } catch (e) {
+          console.error("Error deleting tempApp:", e);
+        }
+      }
     }
   }
 
   return (
-    <RoleGuard permission="MANAGE_USERS" fallback={<div>Access Denied. You do not have permission to add employees.</div>}>
-      <div className="space-y-6 max-w-3xl mx-auto">
+    <RoleGuard permission="MANAGE_USERS" fallback={<div className="p-8 text-center text-white/40 font-bold uppercase tracking-wider text-xs">Access Denied. You do not have permission to add employees.</div>}>
+      <div className="space-y-6 max-w-3xl pb-12 text-white pl-4 lg:pl-0">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Add New Employee</h1>
-          <p className="text-muted-foreground mt-1">Create a new ERP account and profile for a team member.</p>
+          <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-blue-500" /> Add New Employee
+          </h1>
+          <p className="text-xs text-white/40 mt-1">Onboard a team member by creating their secure ERP login credentials.</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Employee Details</CardTitle>
-            <CardDescription>
-              This will automatically assign the unique Employee ID: <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-xs">{nextEmpId || "Calculating..."}</span>
+        <Card className="glass-card overflow-hidden border-white/[0.08] bg-white/[0.02]">
+          <CardHeader className="p-6 border-b border-white/[0.06]">
+            <CardTitle className="text-sm font-bold text-white uppercase tracking-wider flex justify-between items-center w-full">
+              <span>Employee Onboarding Sheet</span>
+              <span className="text-[10px] font-mono font-bold text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20 shadow-glow-blue shrink-0 uppercase tracking-widest">
+                ID: {nextEmpId || "Calculating..."}
+              </span>
+            </CardTitle>
+            <CardDescription className="text-xs text-white/40 mt-1.5">
+              Input system details. Generates encrypted Firebase credentials automatically.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             {error && (
-              <div className="p-3 mb-6 text-sm text-destructive-foreground bg-destructive/20 border border-destructive rounded-md">
+              <div className="p-3 mb-6 text-xs text-red-300 bg-red-950/40 border border-red-500/20 rounded-xl text-center font-medium">
                 {error}
               </div>
             )}
@@ -139,12 +194,16 @@ export default function AddEmployee() {
                     control={form.control}
                     name="fullName"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
+                      <FormItem className="space-y-1.5">
+                        <FormLabel className="text-xs font-bold text-white/60 uppercase tracking-wider">Full Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="John Doe" {...field} />
+                          <Input 
+                            placeholder="e.g. John Doe" 
+                            className="glass-input h-10 text-xs border-white/10 placeholder:text-white/20 focus:border-blue-500/60 focus:ring-0 w-full" 
+                            {...field} 
+                          />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-rose-400 font-bold text-[10px]" />
                       </FormItem>
                     )}
                   />
@@ -153,12 +212,29 @@ export default function AddEmployee() {
                     control={form.control}
                     name="email"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email Address</FormLabel>
+                      <FormItem className="space-y-1.5">
+                        <div className="flex justify-between items-center">
+                          <FormLabel className="text-xs font-bold text-white/60 uppercase tracking-wider">Email Address</FormLabel>
+                          <button 
+                            type="button" 
+                            onClick={handleGenerateStaticEmail}
+                            className="text-[10px] text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1 uppercase tracking-wider transition-colors cursor-pointer bg-blue-500/5 hover:bg-blue-500/10 px-2 py-0.5 rounded-lg border border-blue-500/20"
+                          >
+                            <Wand2 className="h-3 w-3" /> Static internal mail
+                          </button>
+                        </div>
                         <FormControl>
-                          <Input placeholder="john.doe@mintsglobal.ae" type="email" {...field} />
+                          <Input 
+                            placeholder="e.g. john.doe@mintsglobal.ae or personal@gmail.com" 
+                            type="email" 
+                            className="glass-input h-10 text-xs border-white/10 placeholder:text-white/20 focus:border-blue-500/60 focus:ring-0 w-full" 
+                            {...field} 
+                          />
                         </FormControl>
-                        <FormMessage />
+                        <FormDescription className="text-[10px] text-white/30 leading-relaxed">
+                          💡 <strong>Static Accounts:</strong> Auto-generating an @mintsglobal.ae email lets users log in using their username slug (e.g. `john.doe`) without needing a real Google Account!
+                        </FormDescription>
+                        <FormMessage className="text-rose-400 font-bold text-[10px]" />
                       </FormItem>
                     )}
                   />
@@ -169,22 +245,22 @@ export default function AddEmployee() {
                     control={form.control}
                     name="role"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>System Role</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a role" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
+                      <FormItem className="space-y-1.5">
+                        <FormLabel className="text-xs font-bold text-white/60 uppercase tracking-wider">System Role</FormLabel>
+                        <FormControl>
+                          <select 
+                            onChange={field.onChange} 
+                            value={field.value || ""} 
+                            className="w-full h-10 border border-white/10 rounded-xl px-3 text-xs focus:border-blue-500/60 focus:ring-0 bg-[#0d1f3c] text-white"
+                          >
+                            <option value="">Select role...</option>
                             {Object.entries(ROLE_META).map(([key, meta]) => (
-                              <SelectItem key={key} value={key}>{meta.label}</SelectItem>
+                              <option key={key} value={key}>{meta.label}</option>
                             ))}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>Determines permissions and access levels.</FormDescription>
-                        <FormMessage />
+                          </select>
+                        </FormControl>
+                        <FormDescription className="text-[9px] text-white/30 uppercase tracking-wider">Determines permissions and access levels.</FormDescription>
+                        <FormMessage className="text-rose-400 font-bold text-[10px]" />
                       </FormItem>
                     )}
                   />
@@ -193,21 +269,21 @@ export default function AddEmployee() {
                     control={form.control}
                     name="department"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Department</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select department" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
+                      <FormItem className="space-y-1.5">
+                        <FormLabel className="text-xs font-bold text-white/60 uppercase tracking-wider">Department</FormLabel>
+                        <FormControl>
+                          <select 
+                            onChange={field.onChange} 
+                            value={field.value || ""} 
+                            className="w-full h-10 border border-white/10 rounded-xl px-3 text-xs focus:border-blue-500/60 focus:ring-0 bg-[#0d1f3c] text-white"
+                          >
+                            <option value="">Select department...</option>
                             {DEPARTMENTS.map(dept => (
-                              <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                              <option key={dept} value={dept}>{dept}</option>
                             ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
+                          </select>
+                        </FormControl>
+                        <FormMessage className="text-rose-400 font-bold text-[10px]" />
                       </FormItem>
                     )}
                   />
@@ -218,12 +294,16 @@ export default function AddEmployee() {
                     control={form.control}
                     name="jobTitle"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Job Title</FormLabel>
+                      <FormItem className="space-y-1.5">
+                        <FormLabel className="text-xs font-bold text-white/60 uppercase tracking-wider">Job Title</FormLabel>
                         <FormControl>
-                          <Input placeholder="Senior SEO Specialist" {...field} />
+                          <Input 
+                            placeholder="e.g. Senior SEO Specialist" 
+                            className="glass-input h-10 text-xs border-white/10 placeholder:text-white/20 focus:border-blue-500/60 focus:ring-0 w-full" 
+                            {...field} 
+                          />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-rose-400 font-bold text-[10px]" />
                       </FormItem>
                     )}
                   />
@@ -232,18 +312,25 @@ export default function AddEmployee() {
                     control={form.control}
                     name="phone"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone Number (Optional)</FormLabel>
+                      <FormItem className="space-y-1.5">
+                        <div className="flex justify-between items-center">
+                          <FormLabel className="text-xs font-bold text-white/60 uppercase tracking-wider">Phone Number</FormLabel>
+                          <span className="text-[9px] text-white/30 uppercase tracking-wider font-bold">Optional</span>
+                        </div>
                         <FormControl>
-                          <Input placeholder="+971 50 123 4567" {...field} />
+                          <Input 
+                            placeholder="e.g. +971 50 123 4567" 
+                            className="glass-input h-10 text-xs border-white/10 placeholder:text-white/20 focus:border-blue-500/60 focus:ring-0 w-full font-mono" 
+                            {...field} 
+                          />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-rose-400 font-bold text-[10px]" />
                       </FormItem>
                     )}
                   />
                 </div>
 
-                <div className="p-4 bg-muted/50 rounded-lg border space-y-4">
+                <div className="p-4 bg-white/[0.02] rounded-2xl border border-white/[0.06] space-y-4">
                   <FormField
                     control={form.control}
                     name="isIntern"
@@ -256,9 +343,9 @@ export default function AddEmployee() {
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <FormLabel>This employee is an Intern</FormLabel>
-                          <FormDescription>
-                            Interns have restricted views and time-bound access.
+                          <FormLabel className="text-xs font-bold text-white/80">This employee is an Intern</FormLabel>
+                          <FormDescription className="text-[10px] text-white/30 mt-0.5">
+                            Interns have restricted dashboards and automatic time-bound account termination.
                           </FormDescription>
                         </div>
                       </FormItem>
@@ -270,12 +357,16 @@ export default function AddEmployee() {
                       control={form.control}
                       name="internEndDate"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Internship End Date</FormLabel>
+                        <FormItem className="space-y-1.5">
+                          <FormLabel className="text-xs font-bold text-white/60 uppercase tracking-wider">Internship Expiration Date</FormLabel>
                           <FormControl>
-                            <Input type="date" {...field} />
+                            <Input 
+                              type="date" 
+                              className="glass-input h-10 text-xs border-white/10 focus:border-blue-500/60 focus:ring-0 w-full" 
+                              {...field} 
+                            />
                           </FormControl>
-                          <FormMessage />
+                          <FormMessage className="text-rose-400 font-bold text-[10px]" />
                         </FormItem>
                       )}
                     />
@@ -287,25 +378,40 @@ export default function AddEmployee() {
                     control={form.control}
                     name="temporaryPassword"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Temporary Password</FormLabel>
+                      <FormItem className="space-y-1.5">
+                        <FormLabel className="text-xs font-bold text-white/60 uppercase tracking-wider flex items-center gap-1">
+                          <Key className="h-3.5 w-3.5 text-blue-400" /> Temporary Login Password
+                        </FormLabel>
                         <FormControl>
-                          <Input type="text" {...field} />
+                          <Input 
+                            type="text" 
+                            className="glass-input h-10 text-xs border-white/10 focus:border-blue-500/60 focus:ring-0 w-full font-mono text-blue-400 font-bold" 
+                            {...field} 
+                          />
                         </FormControl>
-                        <FormDescription>Automatically generated. Will be emailed to user.</FormDescription>
-                        <FormMessage />
+                        <FormDescription className="text-[9px] text-white/30 uppercase tracking-wider">Auto-generated secure credentials. Provide to the employee.</FormDescription>
+                        <FormMessage className="text-rose-400 font-bold text-[10px]" />
                       </FormItem>
                     )}
                   />
                 </div>
 
-                <div className="flex justify-end gap-4 pt-4 border-t">
-                  <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
+                <div className="flex justify-end gap-3 pt-6 border-t border-white/[0.06]">
+                  <button 
+                    type="button" 
+                    onClick={() => router.back()} 
+                    disabled={isSubmitting}
+                    className="btn-ghost h-10 py-0 px-5 text-xs font-bold border-white/10 text-white/70 hover:text-white cursor-pointer"
+                  >
                     Cancel
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting} className="bg-olive-500 hover:bg-olive-600 text-white">
-                    {isSubmitting ? "Creating..." : "Create Employee Account"}
-                  </Button>
+                  </button>
+                  <button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="btn-primary h-10 py-0 px-5 text-xs font-bold flex items-center justify-center cursor-pointer"
+                  >
+                    {isSubmitting ? "Provisioning..." : "Onboard Employee"}
+                  </button>
                 </div>
               </form>
             </Form>

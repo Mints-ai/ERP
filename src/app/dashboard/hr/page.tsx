@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Building2, LayoutGrid, Network, Mail, MessageSquare, Calendar, Briefcase } from "lucide-react";
+import { Search, Plus, Building2, LayoutGrid, Network, Mail, MessageSquare, Calendar, Briefcase, Zap, Users } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -27,7 +27,6 @@ export default function EmployeeDirectory() {
   const [selectedEmployee, setSelectedEmployee] = useState<any | null>(null);
 
   useEffect(() => {
-    // Only fetch active employees for the directory
     const q = query(
       collection(db, "employees"),
       where("isActive", "==", true),
@@ -59,40 +58,49 @@ export default function EmployeeDirectory() {
     return name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase();
   };
 
-  // Basic mock tree logic: Founder -> Directors -> Managers -> Employees
   const founders = filteredEmployees.filter(e => e.role === "founder" || e.role === "c_suite");
   const others = filteredEmployees.filter(e => e.role !== "founder" && e.role !== "c_suite");
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 text-white pl-4 lg:pl-0">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-olive-900">People</h1>
-          <p className="text-olive-600 mt-1">Manage and view the organization's intelligence.</p>
+          <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            <Users className="h-5 w-5 text-blue-500" /> Directory
+          </h1>
+          <p className="text-xs text-white/40 mt-1">Manage and view organizational intelligence.</p>
         </div>
         
         <RoleGuard permission="VIEW_ALL_EMPLOYEES">
           <div className="flex items-center gap-4">
-            <div className="flex gap-1 bg-olive-100 p-1 rounded-lg border border-olive-200 shadow-inner hidden md:flex">
+            <div className="flex gap-1 bg-white/[0.03] p-1 rounded-xl border border-white/[0.08] shadow-inner hidden md:flex">
               <button 
                 onClick={() => setViewMode("grid")}
-                className={cn("px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-all", viewMode === "grid" ? "bg-white text-olive-900 shadow-sm" : "text-olive-600 hover:text-olive-900")}
+                className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center transition-all cursor-pointer", 
+                  viewMode === "grid" 
+                    ? "bg-blue-600 text-white shadow-glow-blue" 
+                    : "text-white/40 hover:text-white/80"
+                )}
               >
-                <LayoutGrid className="w-4 h-4 mr-2" /> Grid
+                <LayoutGrid className="w-3.5 h-3.5 mr-1.5" /> Grid
               </button>
               <button 
                 onClick={() => setViewMode("tree")}
-                className={cn("px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-all", viewMode === "tree" ? "bg-white text-olive-900 shadow-sm" : "text-olive-600 hover:text-olive-900")}
+                className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center transition-all cursor-pointer", 
+                  viewMode === "tree" 
+                    ? "bg-blue-600 text-white shadow-glow-blue" 
+                    : "text-white/40 hover:text-white/80"
+                )}
               >
-                <Network className="w-4 h-4 mr-2" /> Org Chart
+                <Network className="w-3.5 h-3.5 mr-1.5" /> Org Chart
               </button>
             </div>
             
             <RoleGuard permission="MANAGE_USERS">
-              <Link href="/dashboard/hr/new">
-                <Button className="bg-olive-600 hover:bg-olive-700 text-white shadow-md">
-                  <Plus className="mr-2 h-4 w-4" /> Add Person
-                </Button>
+              <Link href="/dashboard/hr/new" className="cursor-pointer">
+                <button className="btn-primary h-9 py-0 px-4 text-xs font-bold flex items-center justify-center">
+                  <Plus className="mr-1.5 h-4 w-4" /> Add Person
+                </button>
               </Link>
             </RoleGuard>
           </div>
@@ -100,12 +108,12 @@ export default function EmployeeDirectory() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-xl border border-olive-200 shadow-card">
+      <div className="flex flex-col md:flex-row gap-4 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.06] backdrop-blur-[24px]">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-olive-400" />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-white/30" />
           <Input
             placeholder="Search by name or title..."
-            className="pl-10 bg-olive-50 border-olive-200 focus-visible:ring-olive-500"
+            className="glass-input h-9 text-xs pl-10 border-white/10 placeholder:text-white/20 focus:border-blue-500/60 focus:ring-0 w-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -113,25 +121,25 @@ export default function EmployeeDirectory() {
         
         <div className="flex gap-4 md:w-1/2">
           <Select value={deptFilter} onValueChange={(val) => setDeptFilter(val || "all")}>
-            <SelectTrigger className="flex-1 bg-olive-50 border-olive-200 focus:ring-olive-500">
+            <SelectTrigger className="flex-1 bg-white/[0.03] border-white/10 text-white placeholder:text-white/20 focus:ring-blue-500/60 h-9 text-xs rounded-xl">
               <SelectValue placeholder="All Departments" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Departments</SelectItem>
+            <SelectContent className="bg-[#0d1f3c] border-white/[0.08] text-white">
+              <SelectItem value="all" className="text-xs hover:bg-white/5 focus:bg-white/5">All Departments</SelectItem>
               {departments.map((dept: any) => (
-                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                <SelectItem key={dept} value={dept} className="text-xs hover:bg-white/5 focus:bg-white/5">{dept}</SelectItem>
               ))}
             </SelectContent>
           </Select>
 
           <Select value={roleFilter} onValueChange={(val) => setRoleFilter(val || "all")}>
-            <SelectTrigger className="flex-1 bg-olive-50 border-olive-200 focus:ring-olive-500">
+            <SelectTrigger className="flex-1 bg-white/[0.03] border-white/10 text-white placeholder:text-white/20 focus:ring-blue-500/60 h-9 text-xs rounded-xl">
               <SelectValue placeholder="All Roles" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
+            <SelectContent className="bg-[#0d1f3c] border-white/[0.08] text-white">
+              <SelectItem value="all" className="text-xs hover:bg-white/5 focus:bg-white/5">All Roles</SelectItem>
               {Object.entries(ROLE_META).map(([key, meta]) => (
-                <SelectItem key={key} value={key}>{meta.label}</SelectItem>
+                <SelectItem key={key} value={key} className="text-xs hover:bg-white/5 focus:bg-white/5">{meta.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -141,76 +149,82 @@ export default function EmployeeDirectory() {
       {/* Content Area */}
       {loading ? (
         <div className="flex justify-center p-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-olive-600"></div>
+          <Zap className="h-6 w-6 text-blue-500 animate-spin" />
         </div>
       ) : filteredEmployees.length === 0 ? (
-        <div className="text-center p-12 bg-white rounded-xl border border-olive-200 border-dashed">
-          <h3 className="text-lg font-medium text-olive-900">No people found</h3>
-          <p className="text-sm text-olive-500 mt-1">Try adjusting your search or filters.</p>
+        <div className="text-center py-16 px-4 bg-white/[0.01] rounded-2xl border border-white/[0.05] border-dashed">
+          <h3 className="text-sm font-bold text-white/50 uppercase tracking-wider">No people found</h3>
+          <p className="text-xs text-white/30 mt-1">Try adjusting your search or filters.</p>
         </div>
       ) : viewMode === "grid" ? (
         <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           <AnimatePresence>
             {filteredEmployees.map((emp) => {
-              const roleMeta = ROLE_META[emp.role] || { label: "Employee", color: "bg-olive-100 text-olive-700 border-olive-200" };
+              const roleMeta = ROLE_META[emp.role] || { label: "Employee", color: "bg-white/5 text-white border-white/10" };
               const isOnline = Math.random() > 0.3; // Mock online status
               
               return (
                 <motion.div
                   layout
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
                   key={emp.id}
                   onClick={() => setSelectedEmployee(emp)}
                   className="group"
                 >
-                  <Card className="hover:shadow-modal transition-all duration-300 cursor-pointer overflow-hidden border-olive-200 hover:border-olive-300 h-full relative">
-                    <div className="h-20 bg-gradient-to-r from-olive-100 to-olive-200"></div>
+                  <Card className="glass-card overflow-hidden border-white/[0.08] bg-white/[0.02] h-full relative p-0 cursor-pointer">
+                    {/* Header banner glow */}
+                    <div className="h-16 bg-gradient-to-r from-blue-900/60 to-blue-800/40 border-b border-white/[0.04] relative overflow-hidden">
+                      <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
+                    
                     <CardContent className="px-4 pb-4 pt-0 text-center relative">
-                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 rounded-full p-1 bg-white shadow-sm">
+                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 rounded-full p-1 bg-[#0a1628] shadow-sm">
                         <div className="relative">
-                          <Avatar className="h-20 w-20 border-2 border-white shadow-sm">
+                          <Avatar className="h-16 w-16 border-2 border-white/10 shadow-sm bg-blue-950">
                             <AvatarImage src={emp.profilePhotoURL} alt={emp.fullName} />
-                            <AvatarFallback className="bg-olive-100 text-olive-700 text-xl font-medium">
+                            <AvatarFallback className="bg-blue-800 text-blue-200 text-base font-bold">
                               {getInitials(emp.fullName)}
                             </AvatarFallback>
                           </Avatar>
                           {/* Status Dot */}
-                          <div className={cn("absolute bottom-1 right-1 h-4 w-4 rounded-full border-2 border-white", isOnline ? "bg-green-500" : "bg-gray-400")} title={isOnline ? "Active today" : "Offline"} />
+                          <div className={cn("absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#0a1628]", 
+                            isOnline ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" : "bg-white/20"
+                          )} title={isOnline ? "Active today" : "Offline"} />
                         </div>
                       </div>
                       
-                      <div className="mt-12 space-y-3">
+                      <div className="mt-10 space-y-3">
                         <div>
-                          <h3 className="font-bold text-lg text-olive-900 line-clamp-1 group-hover:text-olive-700 transition-colors" title={emp.fullName}>
+                          <h3 className="font-bold text-sm text-white line-clamp-1 group-hover:text-blue-400 transition-colors" title={emp.fullName}>
                             {emp.fullName}
                           </h3>
-                          <p className="text-sm text-olive-600 line-clamp-1 font-medium" title={emp.jobTitle}>
+                          <p className="text-[10px] text-white/40 line-clamp-1 font-semibold mt-0.5" title={emp.jobTitle}>
                             {emp.jobTitle || "No Title"}
                           </p>
                         </div>
 
-                        <div className="flex flex-col items-center gap-2">
+                        <div className="flex flex-col items-center gap-1.5">
                           {emp.department && (
-                            <Badge variant="secondary" className="bg-olive-50 text-olive-700 hover:bg-olive-100 font-normal border border-olive-200 shadow-none">
-                              <Building2 className="w-3 h-3 mr-1" />
+                            <span className="badge bg-white/5 border border-white/10 text-white/60 font-semibold text-[9px] py-0.5 uppercase tracking-wider">
+                              <Building2 className="w-2.5 h-2.5 mr-1 text-blue-400" />
                               {emp.department}
-                            </Badge>
+                            </span>
                           )}
-                          <Badge variant="outline" className={cn("font-medium shadow-none", roleMeta.color)}>
+                          <Badge variant="outline" className={cn("font-bold shadow-none text-[9px] py-0.5 uppercase tracking-wider", roleMeta.color)}>
                             {roleMeta.label}
                           </Badge>
                         </div>
                         
                         {emp.role === "intern" && (
-                          <div className="mt-4 pt-4 border-t border-olive-100 w-full text-left">
-                            <div className="flex justify-between text-[10px] text-olive-500 font-semibold mb-1 uppercase tracking-wider">
-                              <span>Internship Progress</span>
+                          <div className="mt-3 pt-3 border-t border-white/[0.04] w-full text-left">
+                            <div className="flex justify-between text-[9px] text-white/40 font-bold mb-1 uppercase tracking-wider">
+                              <span>Intern Progress</span>
                               <span>65%</span>
                             </div>
-                            <div className="w-full h-1.5 bg-olive-100 rounded-full overflow-hidden">
-                              <div className="h-full bg-olive-500 rounded-full" style={{ width: "65%" }}></div>
+                            <div className="glass-progress w-full">
+                              <div className="glass-progress-fill" style={{ width: "65%" }}></div>
                             </div>
                           </div>
                         )}
@@ -223,26 +237,26 @@ export default function EmployeeDirectory() {
           </AnimatePresence>
         </motion.div>
       ) : (
-        /* Org Chart View - Simplified Mock Implementation */
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-xl border border-olive-200 shadow-card p-12 overflow-x-auto min-h-[500px] flex justify-center">
+        /* Org Chart View */
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white/[0.02] rounded-2xl border border-white/[0.06] backdrop-blur-[24px] shadow-card p-12 overflow-x-auto min-h-[500px] flex justify-center">
           <div className="flex flex-col items-center">
             {/* Top Level */}
             <div className="flex gap-16 mb-16 relative">
               {founders.length > 0 ? founders.map(emp => (
                 <div key={emp.id} className="flex flex-col items-center cursor-pointer hover:-translate-y-1 transition-transform" onClick={() => setSelectedEmployee(emp)}>
-                  <Avatar className="h-20 w-20 border-4 border-olive-600 shadow-md z-10 bg-white">
+                  <Avatar className="h-16 w-16 border-2 border-blue-500 shadow-glow-blue z-10 bg-blue-950">
                     <AvatarImage src={emp.profilePhotoURL} />
-                    <AvatarFallback className="text-xl font-bold bg-olive-100 text-olive-700">{getInitials(emp.fullName)}</AvatarFallback>
+                    <AvatarFallback className="text-base font-bold bg-blue-800 text-blue-200">{getInitials(emp.fullName)}</AvatarFallback>
                   </Avatar>
-                  <p className="font-bold text-olive-900 mt-3">{emp.fullName}</p>
-                  <p className="text-sm text-olive-500 font-medium">{ROLE_META[emp.role]?.label || "Executive"}</p>
+                  <p className="font-bold text-xs text-white mt-3">{emp.fullName}</p>
+                  <p className="text-[10px] text-blue-400 font-semibold mt-0.5">{ROLE_META[emp.role]?.label || "Executive"}</p>
                 </div>
               )) : (
-                <div className="text-olive-400 italic">No executives defined</div>
+                <div className="text-white/20 italic text-xs">No executives defined</div>
               )}
               {/* Connector line down */}
               {founders.length > 0 && others.length > 0 && (
-                <div className="absolute top-full left-1/2 -ml-px w-0.5 h-16 bg-olive-300"></div>
+                <div className="absolute top-full left-1/2 -ml-px w-0.5 h-16 bg-blue-500/25"></div>
               )}
             </div>
 
@@ -250,22 +264,22 @@ export default function EmployeeDirectory() {
             {others.length > 0 && (
               <div className="relative pt-6 w-full flex justify-center">
                 {/* Horizontal connector line */}
-                <div className="absolute top-0 left-12 right-12 h-0.5 bg-olive-300"></div>
+                <div className="absolute top-0 left-12 right-12 h-0.5 bg-blue-500/25"></div>
                 <div className="flex gap-6 justify-center flex-wrap max-w-6xl">
                   {others.map(emp => {
-                    const roleMeta = ROLE_META[emp.role] || { label: "Employee", color: "bg-olive-100 text-olive-700 border-olive-200" };
+                    const roleMeta = ROLE_META[emp.role] || { label: "Employee", color: "bg-white/5 text-white border-white/10" };
                     return (
-                      <div key={emp.id} className="flex flex-col items-center relative cursor-pointer hover:-translate-y-1 transition-transform bg-olive-50 p-4 rounded-xl border border-olive-200 shadow-sm w-36" onClick={() => setSelectedEmployee(emp)}>
+                      <div key={emp.id} className="flex flex-col items-center relative cursor-pointer hover:-translate-y-1 transition-transform bg-white/[0.02] p-4 rounded-xl border border-white/[0.06] shadow-sm w-36" onClick={() => setSelectedEmployee(emp)}>
                         {/* Vertical connector line up */}
-                        <div className="absolute -top-6 left-1/2 -ml-px w-0.5 h-6 bg-olive-300"></div>
-                        <Avatar className={cn("h-14 w-14 shadow-sm z-10 bg-white border-2", 
-                          emp.role === "manager" || emp.role === "director" ? "border-olive-500" : "border-white"
+                        <div className="absolute -top-6 left-1/2 -ml-px w-0.5 h-6 bg-blue-500/25"></div>
+                        <Avatar className={cn("h-12 w-12 shadow-sm z-10 bg-blue-950 border-2", 
+                          emp.role === "manager" || emp.role === "director" ? "border-blue-500" : "border-white/10"
                         )}>
                           <AvatarImage src={emp.profilePhotoURL} />
-                          <AvatarFallback className="bg-olive-100 text-olive-700 font-bold">{getInitials(emp.fullName)}</AvatarFallback>
+                          <AvatarFallback className="bg-blue-800 text-blue-200 font-bold text-xs">{getInitials(emp.fullName)}</AvatarFallback>
                         </Avatar>
-                        <p className="font-semibold text-olive-900 mt-3 text-sm truncate w-full text-center" title={emp.fullName}>{emp.fullName}</p>
-                        <p className="text-[10px] text-olive-500 text-center truncate w-full font-medium uppercase mt-0.5">{roleMeta.label}</p>
+                        <p className="font-bold text-white mt-3 text-xs truncate w-full text-center" title={emp.fullName}>{emp.fullName}</p>
+                        <p className="text-[9px] text-white/40 text-center truncate w-full font-bold uppercase mt-0.5">{roleMeta.label}</p>
                       </div>
                     );
                   })}
@@ -278,25 +292,25 @@ export default function EmployeeDirectory() {
 
       {/* Detail Drawer */}
       <Sheet open={!!selectedEmployee} onOpenChange={(open) => !open && setSelectedEmployee(null)}>
-        <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto border-l border-olive-200">
+        <SheetContent className="w-[400px] sm:w-[520px] overflow-y-auto border-l border-white/[0.08] bg-[#0d1f3c] text-white flex flex-col p-6">
           {selectedEmployee && (
-            <div className="space-y-8 pb-12">
-              <SheetHeader className="text-left flex flex-row items-center gap-4 border-b border-olive-100 pb-6 mt-4">
-                <Avatar className="h-20 w-20 border-2 border-olive-200 shadow-md shrink-0">
+            <div className="space-y-6 pb-12 mt-6">
+              <SheetHeader className="text-left flex flex-row items-center gap-4 border-b border-white/[0.06] pb-6 shrink-0">
+                <Avatar className="h-16 w-16 border border-white/10 ring-2 ring-blue-500/20 shrink-0 bg-blue-950">
                   <AvatarImage src={selectedEmployee.profilePhotoURL} />
-                  <AvatarFallback className="text-2xl font-bold text-olive-700 bg-olive-50">{getInitials(selectedEmployee.fullName)}</AvatarFallback>
+                  <AvatarFallback className="text-base font-bold text-blue-200 bg-blue-800">{getInitials(selectedEmployee.fullName)}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <SheetTitle className="text-2xl text-olive-900">{selectedEmployee.fullName}</SheetTitle>
-                  <SheetDescription className="text-olive-600 font-medium text-base">
+                  <SheetTitle className="text-base font-bold text-white leading-tight">{selectedEmployee.fullName}</SheetTitle>
+                  <SheetDescription className="text-blue-400 font-semibold text-xs mt-0.5 leading-none">
                     {selectedEmployee.jobTitle || "No Title"}
                   </SheetDescription>
-                  <div className="flex gap-2 mt-2">
-                    <Badge variant="outline" className="border-olive-200 text-olive-700 bg-olive-50">
+                  <div className="flex gap-2 mt-2.5">
+                    <Badge variant="outline" className="border-white/10 text-white/60 bg-white/5 text-[9px] uppercase tracking-wider font-bold shadow-none">
                       {ROLE_META[selectedEmployee.role]?.label || "Employee"}
                     </Badge>
                     {selectedEmployee.department && (
-                      <Badge variant="outline" className="border-olive-200 text-olive-700 bg-olive-50">
+                      <Badge variant="outline" className="border-white/10 text-white/60 bg-white/5 text-[9px] uppercase tracking-wider font-bold shadow-none">
                         {selectedEmployee.department}
                       </Badge>
                     )}
@@ -305,70 +319,70 @@ export default function EmployeeDirectory() {
               </SheetHeader>
 
               <div className="flex gap-3">
-                <Button className="flex-1 bg-olive-600 hover:bg-olive-700 text-white shadow-sm">
-                  <MessageSquare className="w-4 h-4 mr-2" /> Message
-                </Button>
-                <Button variant="outline" className="flex-1 border-olive-300 text-olive-700 hover:bg-olive-50">
-                  <Mail className="w-4 h-4 mr-2" /> Email
-                </Button>
-                <Link href={`/dashboard/hr/${selectedEmployee.id}`} className="flex-1 flex">
-                  <Button variant="outline" className="w-full border-olive-300 text-olive-700 hover:bg-olive-50">
+                <button className="flex-1 btn-primary h-9 text-xs font-bold flex items-center justify-center cursor-pointer">
+                  <MessageSquare className="w-3.5 h-3.5 mr-1.5" /> Message
+                </button>
+                <button className="flex-1 btn-ghost h-9 text-xs font-semibold flex items-center justify-center border-white/10 text-white/70 cursor-pointer">
+                  <Mail className="w-3.5 h-3.5 mr-1.5" /> Email
+                </button>
+                <Link href={`/dashboard/hr/${selectedEmployee.id}`} className="flex-1 flex cursor-pointer">
+                  <button className="w-full btn-ghost h-9 text-xs font-semibold flex items-center justify-center border-white/10 text-white/70 cursor-pointer">
                     Full Profile
-                  </Button>
+                  </button>
                 </Link>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-5">
                 <div>
-                  <h4 className="text-sm font-bold text-olive-900 uppercase tracking-wider mb-3">Current Status</h4>
-                  <Card className="border-olive-200 shadow-sm bg-olive-50/50">
+                  <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-[0.12em] mb-2.5">Current Status</h4>
+                  <Card className="border-white/[0.06] bg-white/[0.01]">
                     <CardContent className="p-4 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                        <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] animate-pulse"></div>
                         <div>
-                          <p className="text-sm font-semibold text-olive-900">Clocked In</p>
-                          <p className="text-xs text-olive-500">Since 09:00 AM AST</p>
+                          <p className="text-xs font-bold text-white">Clocked In</p>
+                          <p className="text-[10px] text-white/40 mt-0.5">Since 09:00 AM AST</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold text-olive-900">4h 23m</p>
-                        <p className="text-xs text-olive-500">Today</p>
+                        <p className="text-xs font-mono font-bold text-white">4h 23m</p>
+                        <p className="text-[10px] text-white/40 mt-0.5">Today</p>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-bold text-olive-900 uppercase tracking-wider mb-3 flex justify-between items-center">
+                  <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-[0.12em] mb-2.5 flex justify-between items-center">
                     Leave Balance
-                    <span className="text-xs text-olive-500 normal-case font-normal">24 days total</span>
+                    <span className="text-[9px] text-white/40 normal-case font-bold">24 days total</span>
                   </h4>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-olive-700 font-medium">Used</span>
-                      <span className="text-olive-900 font-bold">8 days</span>
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-white/60">Used</span>
+                      <span className="text-white">8 days</span>
                     </div>
-                    <div className="w-full h-3 bg-olive-100 rounded-full overflow-hidden border border-olive-200">
-                      <div className="h-full bg-olive-600 rounded-full" style={{ width: `${(8/24)*100}%` }}></div>
+                    <div className="glass-progress w-full">
+                      <div className="glass-progress-fill" style={{ width: `${(8/24)*100}%` }}></div>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-olive-500">Remaining</span>
-                      <span className="text-olive-600 font-medium">16 days</span>
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-white/30">Remaining</span>
+                      <span className="text-blue-400">16 days</span>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-bold text-olive-900 uppercase tracking-wider mb-3">Active Projects</h4>
+                  <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-[0.12em] mb-2.5">Active Projects</h4>
                   <div className="space-y-2">
                     {[1, 2].map((i) => (
-                      <div key={i} className="flex items-center gap-3 p-3 rounded-lg border border-olive-200 hover:bg-olive-50 transition-colors cursor-pointer">
-                        <div className="w-8 h-8 rounded bg-olive-100 flex items-center justify-center text-olive-600 shrink-0">
-                          <Briefcase className="w-4 h-4" />
+                      <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.03] transition-colors cursor-pointer">
+                        <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+                          <Briefcase className="w-3.5 h-3.5" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-semibold text-olive-900">Al Safa Marketing</p>
-                          <p className="text-xs text-olive-500">Brand Redesign</p>
+                          <p className="text-xs font-bold text-white">Al Safa Marketing</p>
+                          <p className="text-[10px] text-white/40 mt-0.5">Brand Redesign</p>
                         </div>
                       </div>
                     ))}
