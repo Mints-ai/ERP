@@ -401,7 +401,7 @@ export default function EmployeeDirectory() {
                       <div className="flex gap-3 justify-center flex-wrap pt-6 relative">
                         {/* Horizontal line for members within dept */}
                         <div className="absolute top-0 left-6 right-6 h-0.5 bg-primary/25"></div>
-                        {emps.map(emp => {
+                        {(emps as any[]).map((emp: any) => {
                           const roleMeta = ROLE_META[emp.role] || { label: "Employee", color: " text-foreground border-border" };
                           return (
                             <div key={emp.id} className="flex flex-col items-center relative cursor-pointer hover:-translate-y-1 transition-transform p-3 rounded-xl border border-border shadow-sm w-28 bg-card" onClick={() => setSelectedEmployee(emp)}>
