@@ -367,7 +367,7 @@ export function CompanyOverview() {
                         {/* Status Badge */}
                         <td className="px-6 py-4 text-center">
                           {status === "in" ? (
-                            <Badge className="bg-emerald-500/10 hover:bg-emerald-500/20 text-accent border-emerald-500/20 font-bold shadow-none">
+                            <Badge className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20 font-bold shadow-none">
                               <Play className="w-3 h-3 mr-1 fill-emerald-400/20" /> Clocked In
                             </Badge>
                           ) : status === "break" ? (
@@ -388,7 +388,7 @@ export function CompanyOverview() {
                               {formatElapsed(liveWorkingSeconds)}
                             </span>
                             {liveWorkingSeconds > 28800 && (
-                              <span className="text-xs text-accent font-bold uppercase mt-0.5 shadow-glow-emerald">
+                              <span className="text-xs text-emerald-400 font-bold uppercase mt-0.5">
                                 Overtime
                               </span>
                             )}

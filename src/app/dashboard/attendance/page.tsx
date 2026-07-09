@@ -646,7 +646,7 @@ export default function AttendancePage() {
                       </div>
                       <div className="rounded-xl p-3 border border-border">
                         <p className="text-xs text-foreground/40 uppercase tracking-wider font-bold mb-1">Shift Total</p>
-                        <p className="text-lg font-black text-accent tabular-nums">
+                        <p className="text-lg font-black text-emerald-400 tabular-nums">
                           {formatTickingHours(tickingSeconds)}
                         </p>
                       </div>
@@ -783,7 +783,7 @@ export default function AttendancePage() {
                             <div key={idx} className="p-4 flex gap-4 hover: transition-colors">
                               <div className="shrink-0 pt-1">
                                 {log.type === "in" ? (
-                                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-accent flex items-center justify-center">
+                                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
                                     <Play className="w-4 h-4" />
                                   </div>
                                 ) : log.type === "break" ? (
@@ -847,7 +847,7 @@ export default function AttendancePage() {
                             <p className="text-xs text-foreground/30 italic truncate max-w-[150px]">"{req.reason}"</p>
                           </div>
                           <Badge variant="outline" className={cn("text-xs uppercase tracking-wider font-bold shadow-none",
-                            req.status === "approved" ? "bg-emerald-500/10 text-accent border-emerald-500/20" :
+                            req.status === "approved" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
                             req.status === "rejected" ? "bg-rose-500/10 text-rose-400 border-rose-500/20" :
                             "bg-amber-500/10 text-amber-400 border-amber-500/20"
                           )}>

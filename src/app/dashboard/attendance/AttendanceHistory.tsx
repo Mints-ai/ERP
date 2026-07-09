@@ -525,7 +525,7 @@ export function AttendanceHistory() {
                         {/* Clock In */}
                         <td className="px-6 py-4 text-center">
                           {clockInLog ? (
-                            <Badge variant="outline" className="bg-emerald-500/10 text-accent border-emerald-500/20 font-mono font-bold shadow-none">
+                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-mono font-bold shadow-none">
                               {clockInLog.time}
                             </Badge>
                           ) : (
@@ -555,7 +555,7 @@ export function AttendanceHistory() {
                               {formatElapsed(workingSec)}
                             </span>
                             {workingSec > 28800 ? (
-                              <span className="text-xs text-accent font-bold uppercase mt-0.5 shadow-glow-emerald" title="Overtime shift target exceeded (>8h)">
+                              <span className="text-xs text-emerald-400 font-bold uppercase mt-0.5" title="Overtime shift target exceeded (>8h)">
                                 Overtime (+{formatElapsedShort(workingSec - 28800)})
                               </span>
                             ) : workingSec > 0 ? (
@@ -599,7 +599,7 @@ export function AttendanceHistory() {
                                 <div className="grid grid-cols-2 gap-4 mt-4 border border-border rounded-xl p-3 text-center">
                                   <div>
                                     <p className="text-xs text-foreground/40 uppercase tracking-widest font-bold">Total Work Time</p>
-                                    <p className="text-lg font-bold text-accent font-mono mt-1">{formatElapsed(workingSec)}</p>
+                                    <p className="text-lg font-bold text-emerald-400 font-mono mt-1">{formatElapsed(workingSec)}</p>
                                   </div>
                                   <div>
                                     <p className="text-xs text-foreground/40 uppercase tracking-widest font-bold">Total Break Time</p>

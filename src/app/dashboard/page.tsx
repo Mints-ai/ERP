@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
-import { cn } from "@/lib/utils";
+import { cn, sendDiscordNotification } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Briefcase, Users, CheckCircle2, Clock, Check, X, AlertCircle, Heart, Za
 import { LineChart, Line, ResponsiveContainer, AreaChart, Area } from "recharts";
 import { motion } from "framer-motion";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { doc, onSnapshot, collection, addDoc, setDoc, updateDoc } from "firebase/firestore";
 
 const taskData = [{ v: 5 }, { v: 8 }, { v: 6 }, { v: 12 }, { v: 8 }, { v: 14 }];
 const projData = [{ v: 2 }, { v: 4 }, { v: 3 }, { v: 6 }, { v: 5 }, { v: 7 }];
@@ -63,63 +64,110 @@ export default function DashboardHome() {
   const [loadingStats, setLoadingStats] = useState(true);
   const [employees, setEmployees] = useState<any[]>([]);
   
-  // Attendance State
-  const [isClockedIn, setIsClockedIn] = useState(false);
-  const [clockInTime, setClockInTime] = useState<Date | null>(null);
-  const [elapsedTime, setElapsedTime] = useState("00:00:00");
+  // ── Attendance State (synced with /attendance page schema) ──
+  const [attStatus, setAttStatus] = useState<"out" | "in" | "break">("out");
+  const [attLogs, setAttLogs] = useState<any[]>([]);
+  const [totalWorkingSeconds, setTotalWorkingSeconds] = useState(0);
+  const [lastActionTimestamp, setLastActionTimestamp] = useState<number>(0);
+  const [tickingSeconds, setTickingSeconds] = useState(0);
   const [clockOutLoading, setClockOutLoading] = useState(false);
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isClockedIn && clockInTime) {
-      interval = setInterval(() => {
-        const diff = Math.floor((Date.now() - clockInTime.getTime()) / 1000);
-        const hrs = String(Math.floor(diff / 3600)).padStart(2, '0');
-        const mins = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
-        const secs = String(diff % 60).padStart(2, '0');
-        setElapsedTime(`${hrs}:${mins}:${secs}`);
-      }, 1000);
-    } else {
-      setElapsedTime("00:00:00");
-    }
-    return () => clearInterval(interval);
-  }, [isClockedIn, clockInTime]);
+  // Derived helpers
+  const isClockedIn = attStatus === "in";
+  const formatElapsed = (s: number) => {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  };
+  const elapsedTime = formatElapsed(tickingSeconds);
 
+  // 1. Real-time listener — same doc as attendance page
+  useEffect(() => {
+    if (!user) return;
+    const today = new Date().toISOString().split("T")[0];
+    const docRef = doc(db, "attendance", `${user.uid}_${today}`);
+    const unsub = onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        const d = snap.data();
+        setAttStatus(d.status || "out");
+        setAttLogs(d.logs || []);
+        setTotalWorkingSeconds(d.totalWorkingSeconds || 0);
+        setLastActionTimestamp(d.lastActionTimestamp || 0);
+      } else {
+        setAttStatus("out");
+        setAttLogs([]);
+        setTotalWorkingSeconds(0);
+        setLastActionTimestamp(0);
+      }
+    });
+    return () => unsub();
+  }, [user]);
+
+  // 2. Ticking display — mirrors attendance page logic exactly
+  useEffect(() => {
+    const getLive = () => {
+      if (attStatus === "in" && lastActionTimestamp > 0) {
+        return totalWorkingSeconds + Math.floor((Date.now() - lastActionTimestamp) / 1000);
+      }
+      return totalWorkingSeconds;
+    };
+    setTickingSeconds(getLive());
+    const t = setInterval(() => setTickingSeconds(getLive()), 1000);
+    return () => clearInterval(t);
+  }, [attStatus, totalWorkingSeconds, lastActionTimestamp]);
+
+  // 3. Clock-In / Clock-Out — uses exact same schema as attendance page
   const handleClockInOut = async () => {
     if (!user) return;
     setClockOutLoading(true);
+    const today = new Date().toISOString().split("T")[0];
+    const now = new Date();
+    const attRef = doc(db, "attendance", `${user.uid}_${today}`);
     try {
-      const { doc, setDoc, getDoc } = await import("firebase/firestore");
-      const today = new Date().toISOString().split("T")[0];
-      const attRef = doc(db, "attendance", `${user.uid}_${today}`);
-      
-      if (!isClockedIn) {
+      if (attStatus === "out") {
         // Clock In
+        const newLog = { type: "in", time: now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}), timestamp: now.toISOString(), label: "Clocked In" };
         await setDoc(attRef, {
           uid: user.uid,
+          employeeName: user.fullName || user.email || "Employee",
           date: today,
-          clockIn: new Date().toISOString(),
-          clockOut: null,
-          totalHours: 0
+          status: "in",
+          logs: [...attLogs, newLog],
+          totalWorkingSeconds,
+          totalBreakSeconds: 0,
+          lastActionTimestamp: Date.now()
         }, { merge: true });
-        setClockInTime(new Date());
-        setIsClockedIn(true);
+        await addDoc(collection(db, "auditLog"), {
+          actorId: user.uid,
+          actorName: user.fullName || user.email || "Employee",
+          action: "ATTENDANCE_CLOCK_IN",
+          targetCollection: "attendance",
+          targetId: `${user.uid}_${today}`,
+          details: `Clocked in at ${newLog.time} (via Dashboard widget)`,
+          createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
+        });
+        await sendDiscordNotification(`⏱️ **${user.fullName || user.email}** clocked **IN** for the day.`, undefined, 'hr');
       } else {
         // Clock Out
-        const attSnap = await getDoc(attRef);
-        if (attSnap.exists()) {
-          const data = attSnap.data();
-          const inTime = new Date(data.clockIn).getTime();
-          const outTime = new Date().getTime();
-          const totalHours = (outTime - inTime) / (1000 * 60 * 60);
-          
-          await setDoc(attRef, {
-            clockOut: new Date().toISOString(),
-            totalHours: (data.totalHours || 0) + totalHours
-          }, { merge: true });
-        }
-        setIsClockedIn(false);
-        setClockInTime(null);
+        const newLog = { type: "out", time: now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}), timestamp: now.toISOString(), label: "Clocked Out" };
+        const elapsed = attStatus === "in" && lastActionTimestamp > 0 ? Math.floor((Date.now() - lastActionTimestamp) / 1000) : 0;
+        await updateDoc(attRef, {
+          status: "out",
+          logs: [...attLogs, newLog],
+          totalWorkingSeconds: totalWorkingSeconds + elapsed,
+          lastActionTimestamp: Date.now()
+        });
+        await addDoc(collection(db, "auditLog"), {
+          actorId: user.uid,
+          actorName: user.fullName || user.email || "Employee",
+          action: "ATTENDANCE_CLOCK_OUT",
+          targetCollection: "attendance",
+          targetId: `${user.uid}_${today}`,
+          details: `Clocked out at ${newLog.time} (via Dashboard widget)`,
+          createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
+        });
+        await sendDiscordNotification(`🏁 **${user.fullName || user.email}** clocked **OUT** for the day.`, undefined, 'hr');
       }
     } catch (err) {
       console.error("Attendance error:", err);
@@ -127,23 +175,6 @@ export default function DashboardHome() {
       setClockOutLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (!user) return;
-    const checkAttendance = async () => {
-      const { doc, getDoc } = await import("firebase/firestore");
-      const today = new Date().toISOString().split("T")[0];
-      const attSnap = await getDoc(doc(db, "attendance", `${user.uid}_${today}`));
-      if (attSnap.exists()) {
-        const data = attSnap.data();
-        if (data.clockIn && !data.clockOut) {
-          setIsClockedIn(true);
-          setClockInTime(new Date(data.clockIn));
-        }
-      }
-    };
-    checkAttendance();
-  }, [user]);
   
   const isExecutive = role === "founder" || role === "system_admin" || role === "c_suite" || role === "manager";
 

@@ -337,7 +337,7 @@ export function CorrectionRequestsTab() {
                         {req.proposedClockIn && (
                           <div className="flex items-center gap-1.5">
                             <span className="text-foreground/45">Clock In:</span>
-                            <Badge className="bg-emerald-500/10 text-accent border-emerald-500/20 font-bold font-mono text-xs">
+                            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-bold font-mono text-xs">
                               {formatTimeString(req.proposedClockIn)}
                             </Badge>
                           </div>
