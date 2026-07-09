@@ -502,10 +502,10 @@ export default function Chat() {
   const activeChannelObj = channels.find(c => c.id === activeChannel);
   const activeInfo = resolveChannelInfo(activeChannelObj);
   return (
-    <div className="h-[calc(100vh-120px)] flex bg-card border border-border rounded-xl overflow-hidden shadow-sm text-foreground">
+    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-120px)] lg:h-[calc(100vh-120px)] bg-card border border-border rounded-xl overflow-hidden shadow-sm text-foreground">
       
       {/* Sidebar Channels */}
-      <div className="w-72 bg-card border-r border-border flex flex-col shrink-0">
+      <div className="w-full lg:w-72 bg-card border-b lg:border-b-0 lg:border-r border-border flex flex-col shrink-0 h-[250px] lg:h-auto">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h2 className="font-bold text-foreground text-lg tracking-tight">Chat</h2>
         </div>
@@ -712,7 +712,7 @@ export default function Chat() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col bg-card overflow-hidden">
+      <div className="w-full lg:flex-1 flex flex-col bg-card overflow-hidden min-h-[500px] lg:min-h-0">
         
         {/* Chat Header */}
         <div className="h-14 border-b border-border flex items-center justify-between px-4 bg-card shrink-0 shadow-sm z-10">

@@ -357,10 +357,10 @@ export default function SecureMail() {
     name ? name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() : "M";
 
   return (
-    <div className="h-[calc(100vh-120px)] flex bg-background/40 border border-border rounded-2xl overflow-hidden text-foreground">
+    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-120px)] lg:h-[calc(100vh-120px)] bg-background/40 border border-border rounded-2xl overflow-hidden text-foreground">
       
       {/* 1. Left Folders Navigation */}
-      <div className="w-56 border-r border-border flex flex-col p-4 shrink-0">
+      <div className="w-full lg:w-56 border-b lg:border-b-0 lg:border-r border-border flex flex-col p-4 shrink-0">
         <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
           <DialogTrigger 
             render={
@@ -545,7 +545,7 @@ export default function SecureMail() {
           </DialogContent>
         </Dialog>
 
-        <div className="space-y-1 flex-1">
+        <div className="space-y-0 lg:space-y-1 flex-1 flex lg:flex-col overflow-x-auto lg:overflow-visible gap-2 lg:gap-0 pb-1 lg:pb-0">
           <div className="text-xs font-bold uppercase tracking-wider text-foreground/30 mb-2 px-3">secure Folders</div>
           {[
             { id: "inbox", label: "Inbox", icon: Inbox, count: inboxUnreadCount },
@@ -559,7 +559,7 @@ export default function SecureMail() {
                 setActiveFolder(folder.id as FolderType);
                 setSelectedMail(null);
               }}
-              className={cn("w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer border border-transparent",
+              className={cn("flex-none w-auto lg:w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer border border-transparent",
                 activeFolder === folder.id 
                   ? "bg-primary/15 text-primary border-primary/15" 
                   : "text-foreground/40 hover: hover:text-foreground/70"
@@ -580,7 +580,7 @@ export default function SecureMail() {
       </div>
 
       {/* 2. Middle Mail List Pane */}
-      <div className="w-80 border-r border-border flex flex-col shrink-0">
+      <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-border flex flex-col shrink-0 h-[400px] lg:h-auto">
         
         {/* Search & Priority Pills */}
         <div className="p-4 border-b border-border relative shrink-0 space-y-3">
@@ -693,7 +693,7 @@ export default function SecureMail() {
       </div>
 
       {/* 3. Right Mail Reader Pane */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-[500px] lg:min-h-0">
         {selectedMail ? (
           <div className="flex-1 flex flex-col overflow-hidden">
             
