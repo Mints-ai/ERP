@@ -25,6 +25,7 @@ const NAV_GROUPS = [
       { name: "Dashboard",    href: "/dashboard",                    icon: LayoutDashboard,  permission: null },
       { name: "Team Chat",    href: "/dashboard/chat",               icon: MessageSquare,    permission: null },
       { name: "Secure Mail",  href: "/dashboard/mail",               icon: Mail,             permission: null },
+      { name: "Tickets",      href: "/dashboard/tickets",            icon: CheckSquare,      permission: null },
       { name: "Tasks",        href: "/dashboard/tasks",              icon: CheckSquare,      permission: null },
       { name: "Cloud Drive",  href: "/dashboard/files",              icon: Cloud,            permission: null },
     ]

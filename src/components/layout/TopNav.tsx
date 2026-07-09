@@ -104,8 +104,18 @@ export function TopNav() {
     return name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
   };
 
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-  const hour = new Date().getHours();
+  const [now, setNow] = useState(new Date());
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const today = mounted ? now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : '';
+  const time = mounted ? now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
+  const hour = now.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
   return (
@@ -117,7 +127,9 @@ export function TopNav() {
             <h2 className="text-sm font-semibold text-foreground tracking-tight">
               {greeting}, {user?.fullName ? user.fullName.split(' ')[0] : (user?.displayName ? user.displayName.split(' ')[0] : 'there')}
             </h2>
-            <p className="text-xs text-muted-foreground font-medium mt-0.5">{today}</p>
+            <p className="text-xs text-muted-foreground font-medium mt-0.5 h-4">
+              {mounted ? `${today} • ${time}` : ''}
+            </p>
           </div>
 
           <button 

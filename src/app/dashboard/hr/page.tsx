@@ -95,17 +95,33 @@ export default function EmployeeDirectory() {
     return name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase();
   };
 
-  const founders = filteredEmployees.filter(
-    e => (e.role === "founder" || e.role === "c_suite") && 
-         e.fullName !== "System Administrator" && 
-         !adminEmails.includes(e.email?.toLowerCase().trim() || "")
+  const validEmployees = filteredEmployees.filter(
+    e => e.fullName !== "System Administrator" && e.fullName !== "Test Admin"
   );
-  const others = filteredEmployees.filter(
-    e => e.role !== "founder" && 
-         e.role !== "c_suite" && 
-         e.fullName !== "System Administrator" &&
-         !adminEmails.includes(e.email?.toLowerCase().trim() || "")
+
+  const level1Emails = ["arya@mintsglobal.ae"];
+  const level2Emails = [
+    "anand.binuarjun@mintsglobal.ae", 
+    "febin.sani@mintsglobal.ae", 
+    "jishnu@mintsglobal.ae", 
+    "razal.basheer@mintsglobal.ae", 
+    "shuhaib.latheef@mintsglobal.ae"
+  ];
+
+  const level1 = validEmployees.filter(e => level1Emails.includes(e.email?.toLowerCase().trim() || ""));
+  const level2 = validEmployees.filter(e => level2Emails.includes(e.email?.toLowerCase().trim() || ""));
+  
+  const level3 = validEmployees.filter(e => 
+    !level1Emails.includes(e.email?.toLowerCase().trim() || "") && 
+    !level2Emails.includes(e.email?.toLowerCase().trim() || "")
   );
+
+  const level3ByDept = level3.reduce((acc, emp) => {
+    const dept = emp.department || "Other";
+    if (!acc[dept]) acc[dept] = [];
+    acc[dept].push(emp);
+    return acc;
+  }, {} as Record<string, any[]>);
 
   return (
     <div className="space-y-6 pb-12 text-foreground">
@@ -317,39 +333,37 @@ export default function EmployeeDirectory() {
           <div className="flex flex-col items-center">
             {/* Top Level */}
             <div className="flex gap-16 mb-16 relative">
-              {founders.length > 0 ? founders.map(emp => (
+              {level1.length > 0 ? level1.map(emp => (
                 <div key={emp.id} className="flex flex-col items-center cursor-pointer hover:-translate-y-1 transition-transform" onClick={() => setSelectedEmployee(emp)}>
                   <Avatar className="h-16 w-16 border-2 border-primary shadow-sm z-10 bg-blue-950">
                     <AvatarImage src={emp.profilePhotoURL} />
                     <AvatarFallback className="text-base font-bold bg-primary/20 text-primary/70">{getInitials(emp.fullName)}</AvatarFallback>
                   </Avatar>
                   <p className="font-bold text-xs text-foreground mt-3">{emp.fullName}</p>
-                  <p className="text-xs text-primary font-semibold mt-0.5">{emp.jobTitle || ROLE_META[emp.role]?.label || "Executive"}</p>
+                  <p className="text-xs text-primary font-semibold mt-0.5">{emp.jobTitle || ROLE_META[emp.role]?.label || "Founder & CEO"}</p>
                 </div>
               )) : (
-                <div className="text-foreground/20 italic text-xs">No executives defined</div>
+                <div className="text-foreground/20 italic text-xs">Founder account not found</div>
               )}
               {/* Connector line down */}
-              {founders.length > 0 && others.length > 0 && (
+              {level1.length > 0 && (level2.length > 0 || level3.length > 0) && (
                 <div className="absolute top-full left-1/2 -ml-px w-0.5 h-16 bg-primary/25"></div>
               )}
             </div>
 
             {/* Second Level */}
-            {others.length > 0 && (
-              <div className="relative pt-6 w-full flex justify-center">
+            {level2.length > 0 && (
+              <div className="relative pt-6 w-full flex justify-center mb-16">
                 {/* Horizontal connector line */}
                 <div className="absolute top-0 left-12 right-12 h-0.5 bg-primary/25"></div>
-                <div className="flex gap-6 justify-center flex-wrap max-w-6xl">
-                  {others.map(emp => {
-                    const roleMeta = ROLE_META[emp.role] || { label: "Employee", color: " text-foreground border-border" };
+                <div className="flex gap-6 justify-center flex-wrap max-w-6xl relative">
+                  {level2.map(emp => {
+                    const roleMeta = ROLE_META[emp.role] || { label: "Executive", color: " text-foreground border-border" };
                     return (
-                      <div key={emp.id} className="flex flex-col items-center relative cursor-pointer hover:-translate-y-1 transition-transform p-4 rounded-xl border border-border shadow-sm w-36" onClick={() => setSelectedEmployee(emp)}>
+                      <div key={emp.id} className="flex flex-col items-center relative cursor-pointer hover:-translate-y-1 transition-transform p-4 rounded-xl border border-border shadow-sm w-36 bg-card" onClick={() => setSelectedEmployee(emp)}>
                         {/* Vertical connector line up */}
                         <div className="absolute -top-6 left-1/2 -ml-px w-0.5 h-6 bg-primary/25"></div>
-                        <Avatar className={cn("h-12 w-12 shadow-sm z-10 bg-blue-950 border-2", 
-                          emp.role === "manager" || emp.role === "director" || emp.role === "system_admin" ? "border-primary" : "border-border"
-                        )}>
+                        <Avatar className="h-12 w-12 shadow-sm z-10 bg-blue-950 border-2 border-primary">
                           <AvatarImage src={emp.profilePhotoURL} />
                           <AvatarFallback className="bg-primary/20 text-primary/70 font-bold text-xs">{getInitials(emp.fullName)}</AvatarFallback>
                         </Avatar>
@@ -358,6 +372,53 @@ export default function EmployeeDirectory() {
                       </div>
                     );
                   })}
+                </div>
+                {/* Connector line down to third level */}
+                {level3.length > 0 && (
+                  <div className="absolute top-full left-1/2 -ml-px w-0.5 h-16 bg-primary/25"></div>
+                )}
+              </div>
+            )}
+
+            {/* Third Level (Departments) */}
+            {level3.length > 0 && (
+              <div className="relative pt-6 w-full flex justify-center">
+                {/* Horizontal connector line for departments */}
+                <div className="absolute top-0 left-[10%] right-[10%] h-0.5 bg-primary/25"></div>
+                <div className="flex gap-8 justify-center flex-wrap max-w-full relative">
+                  {Object.entries(level3ByDept).map(([dept, emps]) => (
+                    <div key={dept} className="flex flex-col items-center relative min-w-[180px]">
+                      {/* Vertical connector line up to horizontal */}
+                      <div className="absolute -top-6 left-1/2 -ml-px w-0.5 h-6 bg-primary/25"></div>
+                      
+                      {/* Department Label */}
+                      <div className="bg-secondary/40 border border-border rounded-xl px-4 py-2 mb-6 shadow-sm z-10 relative">
+                        <span className="text-foreground/70 font-bold text-[10px] uppercase tracking-wider">{dept}</span>
+                        {/* Vertical line down from dept to members */}
+                        <div className="absolute top-full left-1/2 -ml-px w-0.5 h-6 bg-primary/25"></div>
+                      </div>
+                      
+                      <div className="flex gap-3 justify-center flex-wrap pt-6 relative">
+                        {/* Horizontal line for members within dept */}
+                        <div className="absolute top-0 left-6 right-6 h-0.5 bg-primary/25"></div>
+                        {emps.map(emp => {
+                          const roleMeta = ROLE_META[emp.role] || { label: "Employee", color: " text-foreground border-border" };
+                          return (
+                            <div key={emp.id} className="flex flex-col items-center relative cursor-pointer hover:-translate-y-1 transition-transform p-3 rounded-xl border border-border shadow-sm w-28 bg-card" onClick={() => setSelectedEmployee(emp)}>
+                              {/* Vertical connector line up */}
+                              <div className="absolute -top-6 left-1/2 -ml-px w-0.5 h-6 bg-primary/25"></div>
+                              <Avatar className="h-10 w-10 shadow-sm z-10 bg-blue-950 border border-border">
+                                <AvatarImage src={emp.profilePhotoURL} />
+                                <AvatarFallback className="bg-primary/20 text-primary/70 font-bold text-[10px]">{getInitials(emp.fullName)}</AvatarFallback>
+                              </Avatar>
+                              <p className="font-bold text-foreground mt-2 text-[10px] truncate w-full text-center" title={emp.fullName}>{emp.fullName}</p>
+                              <p className="text-[9px] text-foreground/40 text-center truncate w-full font-bold uppercase mt-0.5">{emp.jobTitle || roleMeta.label}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

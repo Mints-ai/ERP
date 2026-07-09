@@ -63,9 +63,15 @@ service cloud.firestore {
       allow delete: if isAuth() && isManagerOrAbove();
     }
 
+    // Tickets Collection Rules
+    match /tickets/{ticketId} {
+      allow read: if isAuth();
+      allow write: if isAuth();
+    }
+
     // Clients Collection Rules
     match /clients/{clientId} {
-      allow read: if isAuth() && getEmployee().role != 'intern';
+      allow read: if isAuth();
       allow write: if isAuth() && isManagerOrAbove();
     }
 
@@ -174,7 +180,7 @@ service cloud.firestore {
 
     // Chat Channels Collection Rules
     match /chatChannels/{channelId} {
-      allow read: if isAuth() && (resource.data.type in ['global', 'department'] || request.auth.uid in resource.data.members);
+      allow read: if isAuth();
       allow create: if isAuth();
       allow update, delete: if isAuth() && (resource.data.type in ['global', 'department'] || request.auth.uid in resource.data.members || isManagerOrAbove());
     }

@@ -60,8 +60,11 @@ export function CommandPalette({ open: externalOpen, setOpen: externalSetOpen }:
   };
 
   const [employees, setEmployees] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
+  const [channels, setChannels] = useState<any[]>([]);
   const router = useRouter();
-  const { role } = useAuth();
+  const { role, user } = useAuth();
 
   // Keyboard shortcut listener (Cmd + K / Ctrl + K)
   useEffect(() => {
@@ -75,22 +78,40 @@ export function CommandPalette({ open: externalOpen, setOpen: externalSetOpen }:
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  // Fetch employees list dynamically for global search capability
+  // Fetch data dynamically for global search capability
   useEffect(() => {
     if (!open) return;
-    const fetchTeammates = async () => {
+    const fetchGlobalData = async () => {
       try {
-        const querySnap = await getDocs(collection(db, "employees"));
-        const data = querySnap.docs
-          .map((doc) => ({ id: doc.id, ...doc.data() }))
-          .filter((emp: any) => emp.isActive === true);
-        setEmployees(data);
+        const results = await Promise.allSettled([
+          getDocs(collection(db, "employees")),
+          getDocs(collection(db, "projects")),
+          getDocs(collection(db, "clients")),
+          getDocs(collection(db, "chatChannels"))
+        ]);
+        
+        if (results[0].status === "fulfilled") {
+          setEmployees(results[0].value.docs.map(d => ({ id: d.id, ...d.data() })).filter((e: any) => e.isActive));
+        }
+        if (results[1].status === "fulfilled") {
+          setProjects(results[1].value.docs.map(d => ({ id: d.id, ...d.data() })));
+        }
+        if (results[2].status === "fulfilled") {
+          setClients(results[2].value.docs.map(d => ({ id: d.id, ...d.data() })));
+        }
+        if (results[3].status === "fulfilled") {
+          const allChannels = results[3].value.docs.map(d => ({ id: d.id, ...d.data() }));
+          const userChannels = allChannels.filter((c: any) => 
+            c.isPublic || (c.members && c.members.includes(user?.uid))
+          );
+          setChannels(userChannels);
+        }
       } catch (err) {
-        console.error("Failed to load teammates for command palette search", err);
+        console.error("Failed to load global data for command palette search", err);
       }
     };
-    fetchTeammates();
-  }, [open]);
+    fetchGlobalData();
+  }, [open, user]);
 
   const runCommand = (action: () => void) => {
     setOpen(false);
@@ -249,6 +270,72 @@ export function CommandPalette({ open: externalOpen, setOpen: externalSetOpen }:
                     <span className="text-xs text-foreground/40 leading-none mt-0.5">{emp.jobTitle || "Team Member"}</span>
                   </div>
                   <CommandShortcut className="text-xs text-foreground/30 uppercase tracking-widest font-semibold ml-auto">{emp.department || "Staff"}</CommandShortcut>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        {projects.length > 0 && (
+          <>
+            <CommandSeparator className="bg-border my-2" />
+            <CommandGroup heading="Active Projects" className="text-xs text-foreground/30 tracking-wider font-bold uppercase mb-1">
+              {projects.slice(0, 8).map((proj) => (
+                <CommandItem
+                  key={proj.id}
+                  onSelect={() => runCommand(() => router.push(`/dashboard/projects/${proj.id}`))}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-foreground/70 hover:text-foreground hover:bg-secondary cursor-pointer"
+                >
+                  <Briefcase className="h-4 w-4 text-rose-400" />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-foreground leading-tight">{proj.name}</span>
+                    <span className="text-xs text-foreground/40 leading-none mt-0.5">{proj.status || "Ongoing"}</span>
+                  </div>
+                  <CommandShortcut className="text-xs text-foreground/30 uppercase tracking-widest font-semibold ml-auto">Project</CommandShortcut>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        {clients.length > 0 && canAccess(role, "CREATE_PROJECT") && (
+          <>
+            <CommandSeparator className="bg-border my-2" />
+            <CommandGroup heading="Clients" className="text-xs text-foreground/30 tracking-wider font-bold uppercase mb-1">
+              {clients.slice(0, 8).map((client) => (
+                <CommandItem
+                  key={client.id}
+                  onSelect={() => runCommand(() => router.push(`/dashboard/clients/${client.id}`))}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-foreground/70 hover:text-foreground hover:bg-secondary cursor-pointer"
+                >
+                  <UserSquare2 className="h-4 w-4 text-accent" />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-foreground leading-tight">{client.name}</span>
+                    <span className="text-xs text-foreground/40 leading-none mt-0.5">{client.industry || "Client"}</span>
+                  </div>
+                  <CommandShortcut className="text-xs text-foreground/30 uppercase tracking-widest font-semibold ml-auto">Client</CommandShortcut>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        {channels.length > 0 && (
+          <>
+            <CommandSeparator className="bg-border my-2" />
+            <CommandGroup heading="Chat Channels" className="text-xs text-foreground/30 tracking-wider font-bold uppercase mb-1">
+              {channels.slice(0, 8).map((chan) => (
+                <CommandItem
+                  key={chan.id}
+                  onSelect={() => runCommand(() => router.push(`/dashboard/chat`))}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-foreground/70 hover:text-foreground hover:bg-secondary cursor-pointer"
+                >
+                  <MessageSquare className="h-4 w-4 text-violet-400" />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-foreground leading-tight">#{chan.name}</span>
+                    <span className="text-xs text-foreground/40 leading-none mt-0.5">{chan.description || "Channel"}</span>
+                  </div>
+                  <CommandShortcut className="text-xs text-foreground/30 uppercase tracking-widest font-semibold ml-auto">Chat</CommandShortcut>
                 </CommandItem>
               ))}
             </CommandGroup>

@@ -118,47 +118,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       sessionUnsub = onSnapshot(sessionDocRef, async (docSnap) => {
-        if (docSnap.exists()) {
+        if (!docSnap.exists()) {
+          // If session was deleted externally, log out
+          await sendDiscordNotification(`⚠️ Session for **${user.email}** was unexpectedly terminated or revoked.`, undefined, 'auth');
+          logout();
+        } else {
           const data = docSnap.data();
           if (data.status === "revoked") {
-            sessionUnsub();
-            alert("Your session has been terminated by an administrator.");
-            await signOut(auth);
-            setUser(null);
-            sessionStorage.removeItem("mints_session_id");
+            await sendDiscordNotification(`🚫 Session for **${user.email}** was officially revoked by an admin. Logging out.`, undefined, 'auth');
+            logout();
           }
         }
-      }, (err) => {
-        console.warn("Session snapshot listener error:", err);
+      }, (err: any) => {
+        if (err.code !== "permission-denied") {
+          console.error("Session snapshot listener error:", err);
+        }
       });
     };
 
     initSession();
 
-    const todayStr = new Date().toISOString().split("T")[0];
-    const qDelegations = query(
-      collection(db, "delegations"),
-      where("toUid", "==", user.uid),
-      where("status", "==", "active")
-    );
-
-    const delegationsUnsub = onSnapshot(qDelegations, (snap) => {
-      const activeDelegation = snap.docs.find(d => {
-        const data = d.data();
-        return data.startDate <= todayStr && data.endDate >= todayStr;
-      });
-      if (activeDelegation) {
-        setDelegatedRole(activeDelegation.data().role);
+    const delegationsQuery = query(collection(db, "delegations"), where("toUid", "==", user.uid));
+    let delegationUnsub = onSnapshot(delegationsQuery, (snap) => {
+      const now = new Date().toISOString();
+      const activeDelegations = snap.docs.map(d => d.data()).filter(d => d.status === "active" && (!d.expiresAt || d.expiresAt > now));
+      
+      if (activeDelegations.length > 0) {
+        setDelegatedRole(activeDelegations[0].roleToSimulate);
       } else {
         setDelegatedRole(null);
       }
-    }, (err) => {
-      console.warn("Delegations snapshot listener error:", err);
+    }, (err: any) => {
+      if (err.code !== "permission-denied") {
+        console.error("Delegations snapshot listener error:", err);
+      }
     });
 
     return () => {
       sessionUnsub();
-      delegationsUnsub();
+      delegationUnsub();
     };
   }, [user]);
 
@@ -546,8 +544,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             lastActiveAt: new Date().toISOString()
           });
         }
-      } catch (err) {
-        console.error("Heartbeat error:", err);
+      } catch (err: any) {
+        if (err.code !== "permission-denied") {
+          console.error("Heartbeat error:", err);
+        }
       }
     };
     

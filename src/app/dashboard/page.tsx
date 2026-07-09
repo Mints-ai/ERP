@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Briefcase, Users, CheckCircle2, Clock, Check, X, AlertCircle, Heart, Zap } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, AreaChart, Area } from "recharts";
 import { motion } from "framer-motion";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 const taskData = [{ v: 5 }, { v: 8 }, { v: 6 }, { v: 12 }, { v: 8 }, { v: 14 }];
 const projData = [{ v: 2 }, { v: 4 }, { v: 3 }, { v: 6 }, { v: 5 }, { v: 7 }];
@@ -31,10 +32,26 @@ export default function DashboardHome() {
   const [newShoutout, setNewShoutout] = useState("");
   const [isSubmittingShoutout, setIsSubmittingShoutout] = useState(false);
   const [mounted, setMounted] = useState(false);
+  
+  // Draggable Widget State
+  const [widgetOrder, setWidgetOrder] = useState(["presence", "shoutouts", "announcements", "heatmap"]);
 
   useEffect(() => {
     setMounted(true);
+    const saved = localStorage.getItem("dashboard_widget_order");
+    if (saved) {
+      try { setWidgetOrder(JSON.parse(saved)); } catch (e) {}
+    }
   }, []);
+
+  const onDragEnd = (result: any) => {
+    if (!result.destination) return;
+    const items = Array.from(widgetOrder);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    setWidgetOrder(items);
+    localStorage.setItem("dashboard_widget_order", JSON.stringify(items));
+  };
   const [stats, setStats] = useState({
     openTasks: 0,
     activeProjects: 0,
@@ -299,186 +316,158 @@ export default function DashboardHome() {
           </Card>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7 h-auto">
-          {/* Recent Activity / Tasks */}
-          <div className="md:col-span-2 lg:col-span-4 space-y-6 flex flex-col">
-            {/* Real-time Live Presence Map */}
-            <Card className="bg-card border border-border shadow-sm border-border">
-              <CardHeader className="pb-3 border-b border-border flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-                    <span className="relative flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-                    </span>
-                    Live Presence Map
-                  </CardTitle>
-                  <CardDescription className="text-xs text-foreground/50 mt-1">Real-time status updates of onboarded colleagues based on activity beat.</CardDescription>
-                </div>
-                <div className="flex gap-4 text-xs font-bold text-foreground/60">
-                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary" /> Online</span>
-                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-warning" /> Idle</span>
-                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" /> Offline</span>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {employees.length === 0 ? (
-                    <div className="col-span-full py-8 text-center text-xs text-foreground/40 italic">
-                      No registered colleagues found.
-                    </div>
-                  ) : (
-                    employees.map(emp => {
-                      const now = Date.now();
-                      let status: "online" | "idle" | "offline" = "offline";
-                      let lastSeenStr = "Never active";
-                      
-                      if (emp.lastSeenAt) {
-                        const diff = now - new Date(emp.lastSeenAt).getTime();
-                        if (diff < 5 * 60 * 1000) {
-                          status = "online";
-                          lastSeenStr = "Active now";
-                        } else if (diff < 15 * 60 * 1000) {
-                          status = "idle";
-                          lastSeenStr = "Idle (Active recently)";
-                        } else {
-                          status = "offline";
-                          lastSeenStr = `Offline (Seen ${new Date(emp.lastSeenAt).toLocaleDateString()})`;
-                        }
-                      }
-
-                      const initials = (emp.fullName || emp.name || "SA").split(" ").map((n: any) => n[0]).join("").substring(0, 2).toUpperCase();
-
-                      return (
-                        <div key={emp.id} className="relative border border-border p-3 rounded-xl flex items-center gap-3 hover: hover:border-border transition-all group">
-                          <div className="relative">
-                            <Avatar className="h-10 w-10 border border-border/30 shadow-sm">
-                              <AvatarImage src={emp.profilePhotoURL} />
-                              <AvatarFallback className="bg-primary/30 text-foreground font-bold text-sm">{initials}</AvatarFallback>
-                            </Avatar>
-                            <span className={cn("absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-background",
-                              status === "online" && "bg-primary animate-pulse",
-                              status === "idle" && "bg-warning animate-pulse",
-                              status === "offline" && "bg-muted-foreground/50"
-                            )} />
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-foreground truncate leading-snug">{emp.fullName || emp.name}</p>
-                            <p className="text-xs text-foreground/50 truncate mt-0.5 leading-snug">{emp.jobTitle || "Team Colleague"}</p>
-                            <p className="text-xs text-foreground/40 font-semibold truncate mt-1.5 leading-snug">{lastSeenStr}</p>
-                          </div>
+        {/* DRAGGABLE WIDGETS AREA */}
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="dashboard-widgets">
+            {(provided) => (
+              <div 
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6" 
+                {...provided.droppableProps} 
+                ref={provided.innerRef}
+              >
+                {widgetOrder.map((widgetId, index) => (
+                  <Draggable key={widgetId} draggableId={widgetId} index={index}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        className={`flex flex-col ${snapshot.isDragging ? "z-50 shadow-2xl ring-2 ring-primary rounded-xl" : ""}`}
+                      >
+                        {/* Drag Handle Bar */}
+                        <div 
+                          {...provided.dragHandleProps} 
+                          className="h-6 flex items-center justify-center bg-secondary/50 rounded-t-xl border border-b-0 border-border opacity-0 hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+                        >
+                          <div className="w-8 h-1 bg-foreground/20 rounded-full" />
                         </div>
-                      );
-                    })
-                  )}
-                </div>
-              </CardContent>
-            </Card>
 
-            {/* TEAM SHOUTOUTS */}
-            <Card className="bg-card border border-border shadow-sm border-border flex-1 flex flex-col">
-              <CardHeader className="pb-3 border-b border-border flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-                    <Heart className="h-5 w-5 text-red-400 fill-red-400/20" /> Team Shoutouts
-                  </CardTitle>
-                  <CardDescription className="text-xs text-foreground/50 mt-1">Recognize your peers for great work</CardDescription>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 flex-1 flex flex-col gap-4">
-                <form onSubmit={handlePostShoutout} className="flex gap-2">
-                  <Input 
-                    placeholder="Give a shoutout to someone..." 
-                    value={newShoutout}
-                    onChange={(e) => setNewShoutout(e.target.value)}
-                    className="bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary shadow-sm h-10 text-sm border-border placeholder:text-foreground/30 focus:border-primary/60 focus:ring-0 flex-1"
-                  />
-                  <button type="submit" disabled={isSubmittingShoutout || !newShoutout.trim()} className="btn-primary h-9 text-xs py-0 px-4 shrink-0 flex items-center justify-center font-bold">
-                    Post
-                  </button>
-                </form>
-                
-                <div className="space-y-2.5 overflow-y-auto max-h-[260px] pr-1">
-                  {shoutouts.length === 0 ? (
-                    <div className="text-center py-6 text-foreground/40 text-sm font-semibold">No shoutouts yet. Be the first!</div>
-                  ) : (
-                    shoutouts.map((shout: any) => (
-                      <div key={shout.id} className="p-4 rounded-xl border border-border shadow-sm relative overflow-hidden group">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-accent"></div>
-                        <p className="text-sm text-foreground/90 font-medium leading-relaxed pl-3">"{shout.text}"</p>
-                        <p className="text-xs text-foreground/50 mt-3 pl-3 flex justify-between items-center">
-                          <span className="font-bold text-accent">— {shout.authorName}</span>
-                          <span className="font-mono text-xs">{shout.createdAt ? new Date(shout.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}</span>
-                        </p>
+                        {widgetId === "presence" && (
+                          <Card className="bg-card border border-border shadow-sm flex-1 rounded-t-none">
+                            <CardHeader className="pb-3 border-b border-border flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                                  <span className="relative flex h-3 w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                                  </span>
+                                  Live Presence Map
+                                </CardTitle>
+                                <CardDescription className="text-xs text-foreground/50 mt-1">Real-time status updates.</CardDescription>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="p-4 h-[300px] overflow-y-auto">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {employees.map(emp => {
+                                  const now = Date.now();
+                                  let status = "offline";
+                                  if (emp.lastSeenAt) {
+                                    if (now - new Date(emp.lastSeenAt).getTime() < 5 * 60 * 1000) status = "online";
+                                    else if (now - new Date(emp.lastSeenAt).getTime() < 15 * 60 * 1000) status = "idle";
+                                  }
+                                  return (
+                                    <div key={emp.id} className="border border-border p-3 rounded-xl flex items-center gap-3">
+                                      <Avatar className="h-10 w-10 border border-border/30">
+                                        <AvatarImage src={emp.profilePhotoURL} />
+                                        <AvatarFallback className="bg-primary/30 text-sm">{(emp.fullName||"").substring(0,2)}</AvatarFallback>
+                                      </Avatar>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold truncate">{emp.fullName}</p>
+                                        <p className="text-xs text-foreground/50 truncate mt-0.5">{status === "online" ? "Active Now" : "Offline"}</p>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {widgetId === "shoutouts" && (
+                          <Card className="bg-card border border-border shadow-sm flex-1 rounded-t-none flex flex-col">
+                            <CardHeader className="pb-3 border-b border-border">
+                              <CardTitle className="text-base font-bold flex items-center gap-2">
+                                <Heart className="h-5 w-5 text-red-400" /> Team Shoutouts
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4 flex-1 h-[300px] overflow-y-auto flex flex-col gap-4">
+                              <form onSubmit={handlePostShoutout} className="flex gap-2">
+                                <Input 
+                                  placeholder="Give a shoutout..." 
+                                  value={newShoutout}
+                                  onChange={(e) => setNewShoutout(e.target.value)}
+                                  className="h-9 text-xs"
+                                />
+                                <button type="submit" disabled={!newShoutout.trim()} className="btn-primary h-9 px-4 text-xs">Post</button>
+                              </form>
+                              <div className="space-y-2">
+                                {shoutouts.map((shout: any) => (
+                                  <div key={shout.id} className="p-3 rounded-xl border border-border shadow-sm border-l-4 border-l-accent">
+                                    <p className="text-sm">"{shout.text}"</p>
+                                    <p className="text-xs text-accent mt-2 font-bold">— {shout.authorName}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {widgetId === "announcements" && (
+                          <Card className="bg-card border border-border shadow-sm flex-1 rounded-t-none">
+                            <CardHeader className="pb-4 border-b border-border">
+                              <CardTitle className="text-base font-bold flex items-center gap-2">
+                                <AlertCircle className="h-5 w-5 text-primary" /> Notice Board
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4 space-y-3 h-[300px] overflow-y-auto">
+                              <div className="p-4 rounded-xl border border-border border-l-4 border-l-primary">
+                                <p className="font-bold text-sm">Q3 Planning Meeting</p>
+                                <p className="text-xs mt-1.5">Tomorrow at 10:00 AM AST.</p>
+                              </div>
+                              <div className="p-4 rounded-xl border border-border border-l-4 border-l-accent">
+                                <p className="font-bold text-sm">New Client Onboarding</p>
+                                <p className="text-xs mt-1.5">Welcome Al Safa Group.</p>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {widgetId === "heatmap" && (
+                          <Card className="bg-card border border-border shadow-sm flex-1 rounded-t-none">
+                            <CardHeader className="pb-4 border-b border-border">
+                              <CardTitle className="text-base font-bold">Attendance Heatmap</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4 h-[300px] flex items-center justify-center">
+                               <div className="flex gap-1.5 overflow-x-auto pb-2">
+                                {heatmapData.map((week, wi) => (
+                                  <div key={wi} className="flex flex-col gap-1.5 shrink-0">
+                                    {week.map((day, di) => (
+                                      <div
+                                        key={di}
+                                        className={cn(
+                                          "w-4 h-4 rounded-[3px] border border-border/50 transition-colors",
+                                          day === 0 ? "bg-muted hover:bg-muted/80" :
+                                          day === 1 ? "bg-primary/40 hover:bg-primary/50" :
+                                          day === 2 ? "bg-primary/80 hover:bg-primary/90" :
+                                          "bg-primary hover:bg-primary shadow-[0_0_8px_rgba(112,130,56,0.6)]"
+                                        )}
+                                        title={["Absent", "Late/Half-day", "Present", "Overtime"][day]}
+                                      />
+                                    ))}
+                                  </div>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
                       </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="md:col-span-2 lg:col-span-3 space-y-6 flex flex-col">
-            {/* Announcements */}
-            <Card className="bg-card border border-border shadow-sm border-border overflow-hidden">
-              <CardHeader className="border-b border-border pb-4">
-                <CardTitle className="text-base font-bold flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5 text-primary" />
-                  Notice Board
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 space-y-3 h-[180px] overflow-y-auto">
-                <div className="p-4 rounded-xl border border-border shadow-sm border-l-4 border-l-primary hover: transition-all">
-                  <p className="font-bold text-sm text-foreground">Q3 Planning Meeting</p>
-                  <p className="text-xs text-foreground/60 mt-1.5 leading-relaxed">Tomorrow at 10:00 AM AST. All department heads must attend.</p>
-                </div>
-                <div className="p-4 rounded-xl border border-border shadow-sm border-l-4 border-l-accent hover: transition-all">
-                  <p className="font-bold text-sm text-foreground">New Client Onboarding</p>
-                  <p className="text-xs text-foreground/60 mt-1.5 leading-relaxed">Please welcome Al Safa Group to the SEO portfolio.</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Attendance Heatmap */}
-            <Card className="bg-card border border-border shadow-sm border-border">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-base font-bold text-foreground">Attendance Heatmap</CardTitle>
-                <CardDescription className="text-xs text-foreground/50">Your activity over the last 12 weeks</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-1.5 overflow-x-auto pb-2">
-                  {heatmapData.map((week, wIdx) => (
-                    <div key={wIdx} className="flex flex-col gap-1.5">
-                      {week.map((day, dIdx) => {
-                        let colorClass = "bg-secondary hover:bg-secondary/80"; // absent/weekend
-                        if (day === 1) colorClass = "bg-primary/40 hover:bg-primary/60"; // late/half-day
-                        if (day === 2) colorClass = "bg-primary hover:bg-primary/80 shadow-[0_0_8px_rgba(112,130,56,0.4)]"; // present
-                        if (day === 3) colorClass = "bg-accent hover:bg-accent/80 shadow-[0_0_8px_rgba(143,168,123,0.4)]"; // overtime
-                        
-                        return (
-                          <div 
-                            key={dIdx} 
-                            className={`w-3.5 h-3.5 rounded-[3px] ${colorClass} cursor-help transition-all duration-150 border border-transparent`}
-                            title={`Status level: ${day}`}
-                          />
-                        );
-                      })}
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center gap-2.5 mt-5 text-xs text-foreground/40 font-bold uppercase tracking-wider">
-                  <span>Less</span>
-                  <div className="w-3 h-3 rounded-[3px] bg-secondary" />
-                  <div className="w-3 h-3 rounded-[3px] bg-primary/40" />
-                  <div className="w-3 h-3 rounded-[3px] bg-primary" />
-                  <div className="w-3 h-3 rounded-[3px] bg-accent" />
-                  <span>More</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
       </div>
 
       {/* RIGHT RAIL - PENDING APPROVALS */}
