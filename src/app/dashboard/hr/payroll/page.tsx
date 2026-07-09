@@ -133,7 +133,7 @@ export default function PayrollDashboard() {
             <p className="text-foreground/40 mt-1">Manage salaries, pro-rate unpaid leave deductions, and generate secure payslips.</p>
           </div>
           
-          <Button className="bg-[#2563eb] hover:bg-[#1d4ed8] text-foreground shadow-[0_0_24px_rgba(37,99,235,0.3)] border-0 rounded-xl font-bold h-10 px-5 cursor-pointer">
+          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md border-0 rounded-xl font-bold h-10 px-5 cursor-pointer">
             <Calculator className="mr-2 h-4 w-4" /> Run Payroll Cycle
           </Button>
         </div>

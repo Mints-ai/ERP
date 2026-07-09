@@ -952,7 +952,7 @@ export default function ReportsAndIntelligence() {
 
       {/* Detailed Report View Modal */}
       <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-        <DialogContent className="max-w-md bg-[#0a1122]/98 border border-border rounded-2xl text-foreground p-6 shadow-2xl">
+        <DialogContent className="max-w-md bg-popover/98 border border-border rounded-2xl text-foreground p-6 shadow-2xl">
           {selectedReport && (
             <>
               <DialogHeader className="border-b border-border pb-4">

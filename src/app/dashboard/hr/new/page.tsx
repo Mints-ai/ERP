@@ -1254,7 +1254,7 @@ export default function OnboardEmployees() {
                   <select 
                     value={editFormData.role}
                     onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
-                    className="w-full h-9 border border-border rounded-xl px-2.5 text-xs focus:border-primary/60 focus:ring-0 bg-[#0f1510] text-foreground"
+                    className="w-full h-9 border border-border rounded-xl px-2.5 text-xs focus:border-primary/60 focus:ring-0 bg-background text-foreground"
                   >
                     {Object.entries(ROLE_META).map(([key, meta]) => (
                       <option key={key} value={key}>{meta.label}</option>
@@ -1285,7 +1285,7 @@ export default function OnboardEmployees() {
                           : [...editFormData.departments, dept];
                         setEditFormData({ ...editFormData, departments: depts });
                       }}
-                      className={`flex items-center space-x-2 border rounded-md p-1.5 hover: transition-colors cursor-pointer ${editFormData.departments.includes(dept) ? 'border-primary/40 bg-primary/5' : 'border-border/30 bg-[#0a100b]'}`}
+                      className={`flex items-center space-x-2 border rounded-md p-1.5 hover: transition-colors cursor-pointer ${editFormData.departments.includes(dept) ? 'border-primary/40 bg-primary/5' : 'border-border/30 bg-muted'}`}
                     >
                       <input 
                         type="checkbox" 
@@ -1321,7 +1321,7 @@ export default function OnboardEmployees() {
                                     : [...editFormData.subRoles, sub];
                                   setEditFormData({ ...editFormData, subRoles: subroles });
                                 }}
-                                className={`flex items-center space-x-2 border rounded p-1 hover: transition-colors cursor-pointer ${editFormData.subRoles.includes(sub) ? 'border-primary/40 bg-primary/5' : 'border-border/30 bg-[#050912]'}`}
+                                className={`flex items-center space-x-2 border rounded p-1 hover: transition-colors cursor-pointer ${editFormData.subRoles.includes(sub) ? 'border-primary/40 bg-primary/5' : 'border-border/30 bg-muted'}`}
                               >
                                 <input 
                                   type="checkbox" 

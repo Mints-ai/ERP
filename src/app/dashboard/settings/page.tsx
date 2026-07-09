@@ -864,7 +864,7 @@ export default function SettingsDashboard() {
                           key={idx}
                           type="button"
                           onClick={() => setPrefPhoto(avatar)}
-                          className={cn("h-10 w-10 rounded-lg overflow-hidden border-2 transition-all p-0.5 bg-[#0a0f18]",
+                          className={cn("h-10 w-10 rounded-lg overflow-hidden border-2 transition-all p-0.5 bg-secondary",
                             prefPhoto === avatar ? "border-blue-600 scale-105 shadow-md" : "border-border hover:border-muted-foreground/30"
                           )}
                         >

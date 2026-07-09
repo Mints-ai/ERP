@@ -582,7 +582,7 @@ export default function AttendancePage() {
                               if (active && payload && payload.length) {
                                 const data = payload[0].payload;
                                 return (
-                                  <div className="bg-[#0b1329]/95 border border-border rounded-xl p-3 shadow-xl">
+                                  <div className="bg-popover/95 border border-border rounded-xl p-3 shadow-xl">
                                     <p className="text-xs text-foreground/40 font-bold uppercase tracking-wider">{new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                                     <p className="text-xs font-black text-primary mt-1">{data.hours} hours logged</p>
                                   </div>

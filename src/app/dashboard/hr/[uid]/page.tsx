@@ -596,7 +596,7 @@ export default function EmployeeProfile() {
         </div>
         <div className="px-6 pb-6 relative">
           <div className="flex flex-col md:flex-row gap-6 items-start md:items-end -mt-12 md:-mt-10">
-            <Avatar className="h-24 w-24 border-4 border-[#0a0e0b] shadow-lg bg-background rounded-2xl">
+            <Avatar className="h-24 w-24 border-4 border-card shadow-lg bg-background rounded-2xl">
               <AvatarImage src={employee.profilePhotoURL} alt={employee.fullName} />
               <AvatarFallback className="bg-primary/10 text-primary/80 text-xl font-bold">
                 {getInitials(employee.fullName)}
@@ -848,7 +848,7 @@ export default function EmployeeProfile() {
                         <SelectTrigger className="border-border text-foreground">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#1e293b] border-border text-foreground">
+                        <SelectContent className="bg-popover border-border text-foreground">
                           <SelectItem value="Passport">Passport</SelectItem>
                           <SelectItem value="Visa">Visa</SelectItem>
                           <SelectItem value="National ID">National ID</SelectItem>
@@ -1191,7 +1191,7 @@ export default function EmployeeProfile() {
                       key={idx}
                       type="button"
                       onClick={() => setEditForm({ ...editForm, profilePhotoURL: avatar })}
-                      className={cn("h-10 w-10 rounded-lg overflow-hidden border-2 transition-all p-0.5 bg-[#0a0f18]",
+                      className={cn("h-10 w-10 rounded-lg overflow-hidden border-2 transition-all p-0.5 bg-secondary",
                         editForm.profilePhotoURL === avatar ? "border-primary scale-105 shadow-sm" : "border-border hover:border-border"
                       )}
                     >

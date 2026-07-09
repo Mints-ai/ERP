@@ -299,7 +299,7 @@ export function CorrectionRequestsTab() {
                     {/* Employee Profile Header */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9 border border-border bg-blue-950">
+                        <Avatar className="h-9 w-9 border border-border">
                           <AvatarFallback className="bg-primary/20 text-primary/70 font-bold text-xs">
                             {getInitials(req.employeeName)}
                           </AvatarFallback>

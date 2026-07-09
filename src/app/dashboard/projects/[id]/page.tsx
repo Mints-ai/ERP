@@ -612,7 +612,7 @@ export default function ProjectDetail() {
                     project.memberIds.slice(0, 4).map((id: string) => {
                       const emp = employees.find(e => e.id === id);
                       return (
-                        <Avatar key={id} className="inline-block border-2 border-[#121813] h-8 w-8 shadow-sm" title={emp?.fullName || "User"}>
+                        <Avatar key={id} className="inline-block border-2 border-card h-8 w-8 shadow-sm" title={emp?.fullName || "User"}>
                           <AvatarFallback className="bg-primary text-blue-100 text-xs font-bold">
                             {emp?.fullName?.charAt(0) || "U"}
                           </AvatarFallback>

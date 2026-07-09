@@ -1185,7 +1185,7 @@ export default function SecurityAuditDashboard() {
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
                         <tr className="border-b border-border">
-                          <th className="p-3 text-xs font-bold text-foreground/40 uppercase tracking-wider sticky left-0 bg-[#0a0e0b] z-10 min-w-[200px]">Permission</th>
+                          <th className="p-3 text-xs font-bold text-foreground/40 uppercase tracking-wider sticky left-0 bg-card z-10 min-w-[200px]">Permission</th>
                           {["founder", "system_admin", "c_suite", "manager", "team_lead", "employee", "intern"].map(r => (
                             <th key={r} className="p-3 text-xs font-bold text-foreground/40 uppercase tracking-wider text-center min-w-[90px]">{r.replace("_", " ")}</th>
                           ))}
@@ -1201,7 +1201,7 @@ export default function SecurityAuditDashboard() {
                         ) : (
                           Object.entries(permMatrix).map(([permKey, roles]) => (
                             <tr key={permKey} className="border-b border-border hover: transition-colors">
-                              <td className="p-3 text-xs font-bold text-foreground/70 font-mono sticky left-0 bg-[#0a0e0b] z-10">{permKey}</td>
+                              <td className="p-3 text-xs font-bold text-foreground/70 font-mono sticky left-0 bg-card z-10">{permKey}</td>
                               {["founder", "system_admin", "c_suite", "manager", "team_lead", "employee", "intern"].map(roleKey => (
                                 <td key={roleKey} className="p-3 text-center">
                                   <input

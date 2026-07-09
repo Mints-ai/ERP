@@ -412,7 +412,7 @@ export default function SecureMail() {
                       className="bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary shadow-sm h-10 text-xs border-border placeholder:text-foreground/20 focus:border-primary/60 focus:ring-0 w-full"
                     />
                     {recipientSearchText.trim() && (
-                      <div className="absolute top-11 left-0 right-0 max-h-40 overflow-y-auto bg-[#1c241e] border border-border rounded-xl z-50 divide-y divide-white/[0.03] shadow-2xl">
+                      <div className="absolute top-11 left-0 right-0 max-h-40 overflow-y-auto bg-popover border border-border rounded-xl z-50 divide-y divide-border shadow-2xl">
                         {employees.filter(emp => {
                           const text = recipientSearchText.toLowerCase().trim();
                           return emp.fullName?.toLowerCase().includes(text) || emp.email?.toLowerCase().includes(text);

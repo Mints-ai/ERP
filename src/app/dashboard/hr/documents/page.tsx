@@ -280,7 +280,7 @@ export default function DocumentExpiryTracker() {
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="bg-card border border-border shadow-sm rounded-lg border-border bg-[#0d1117] w-full max-w-md p-6 rounded-2xl shadow-2xl"
+              className="bg-card border border-border shadow-sm rounded-lg border-border w-full max-w-md p-6 rounded-2xl shadow-2xl"
             >
               <div className="flex justify-between items-center mb-5">
                 <div>
@@ -298,7 +298,7 @@ export default function DocumentExpiryTracker() {
                     <SelectTrigger className="bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary shadow-sm border-border text-foreground text-xs h-9">
                       <SelectValue placeholder="Select employee..." />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#0d1117] border-border text-foreground">
+                    <SelectContent className="bg-popover border-border text-foreground">
                       {employees.filter(e => e.isActive !== false).map(emp => (
                         <SelectItem key={emp.id} value={emp.id} className="text-xs">{emp.fullName}</SelectItem>
                       ))}
@@ -311,7 +311,7 @@ export default function DocumentExpiryTracker() {
                     <SelectTrigger className="bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary shadow-sm border-border text-foreground text-xs h-9">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#0d1117] border-border text-foreground">
+                    <SelectContent className="bg-popover border-border text-foreground">
                       {DOC_TYPES.map(t => <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>)}
                     </SelectContent>
                   </Select>

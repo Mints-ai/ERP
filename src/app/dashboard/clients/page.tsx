@@ -149,7 +149,7 @@ export default function ClientsCRM() {
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <DialogTrigger 
                 render={
-                  <Button className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold h-10 px-5 bg-[#2563eb] hover:bg-[#1d4ed8] text-foreground shadow-[0_0_24px_rgba(37,99,235,0.3)] border-0 cursor-pointer transition-all hover:translate-y-[-1px]">
+                  <Button className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold h-10 px-5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md border-0 cursor-pointer transition-all hover:translate-y-[-1px]">
                     <Plus className="h-4 w-4" /> Add Client Profile
                   </Button>
                 }
@@ -227,7 +227,7 @@ export default function ClientsCRM() {
                       <select 
                         value={healthScore}
                         onChange={(e) => setHealthScore(Number(e.target.value))}
-                        className="w-full h-10 px-3 border border-border rounded-xl text-sm focus:border-primary focus:ring-primary bg-[#0d1f37] text-foreground"
+                        className="w-full h-10 px-3 border border-border rounded-xl text-sm focus:border-primary focus:ring-primary bg-background text-foreground"
                       >
                         <option value={5}>5 - Excellent Relationship</option>
                         <option value={4}>4 - Good Standing</option>
@@ -264,7 +264,7 @@ export default function ClientsCRM() {
                             key={svc}
                             type="button"
                             onClick={() => toggleService(svc)}
-                            className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${ active ? "bg-[#2563eb] text-foreground border-[#2563eb] shadow-[0_0_15px_rgba(37,99,235,0.25)]" : " text-foreground/60 border-border hover: hover:text-foreground" }`}
+                            className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${ active ? "bg-primary text-primary-foreground border-primary shadow-sm" : " text-foreground/60 border-border hover: hover:text-foreground" }`}
                           >
                             {svc}
                           </button>
@@ -286,7 +286,7 @@ export default function ClientsCRM() {
                     <Button 
                       type="submit" 
                       disabled={saving || !companyName.trim()} 
-                      className="bg-[#2563eb] hover:bg-[#1d4ed8] text-foreground rounded-xl font-bold shadow-[0_0_24px_rgba(37,99,235,0.3)] border-0 cursor-pointer"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-md border-0 cursor-pointer"
                     >
                       {saving ? "Onboarding..." : "Establish Client Profile"}
                     </Button>

@@ -340,7 +340,7 @@ export function CompanyOverview() {
                                 </AvatarFallback>
                               </Avatar>
                               {isOnline && (
-                                <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-[#0c1322] shadow-[0_0_6px_rgba(16,185,129,0.8)] animate-pulse" title="Active in ERP" />
+                                <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-card shadow-[0_0_6px_rgba(16,185,129,0.8)] animate-pulse" title="Active in ERP" />
                               )}
                             </div>
                             <div>

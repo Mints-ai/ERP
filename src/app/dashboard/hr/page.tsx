@@ -228,15 +228,15 @@ export default function EmployeeDirectory() {
                     <CardContent className="px-4 pb-4 pt-0 text-center relative">
                       <div className="absolute -top-10 left-1/2 -translate-x-1/2 rounded-full p-1 bg-card shadow-sm">
                         <div className="relative">
-                          <Avatar className="h-16 w-16 border-2 border-border shadow-sm bg-blue-950">
+                          <Avatar className="h-16 w-16 border-2 border-border shadow-sm">
                             <AvatarImage src={emp.profilePhotoURL} alt={emp.fullName} />
                             <AvatarFallback>
                               {getInitials(emp.fullName)}
                             </AvatarFallback>
                           </Avatar>
                           {/* Status Dot */}
-                          <div className={cn("absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#0a1628]", 
-                            isOnline ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] animate-pulse" : ""
+                          <div className={cn("absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-card", 
+                            isOnline ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] animate-pulse" : "bg-muted"
                           )} title={isOnline ? "Active now" : emp.lastSeenAt ? `Last active ${new Date(emp.lastSeenAt).toLocaleString()}` : "Offline"} />
                         </div>
                       </div>
