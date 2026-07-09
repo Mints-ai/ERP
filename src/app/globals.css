@@ -488,6 +488,10 @@ html.light .btn-ghost {
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 html.light .btn-ghost:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1a241b;
+}
+
 /* Fix hardcoded Tailwind blue-9xx colors used as avatar fallback backgrounds */
 html.light .bg-blue-950,
 html.light .bg-blue-900 {
