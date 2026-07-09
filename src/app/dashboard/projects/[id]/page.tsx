@@ -81,6 +81,7 @@ export default function ProjectDetail() {
   const [projectTasks, setProjectTasks] = useState<any[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState<"low" | "normal" | "high" | "urgent">("normal");
+  const [taskView, setTaskView] = useState<"list" | "gantt">("list");
 
   useEffect(() => {
     if (!id) return;
@@ -414,62 +415,150 @@ export default function ProjectDetail() {
             <TabsContent value="tasks" className="m-0 space-y-6">
               <Card className="border-border shadow-sm">
                 <CardContent className="p-6 space-y-4">
-                  <div className="flex justify-between items-center pb-4 border-b border-border/30">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 pb-4 border-b border-border/30">
                     <h3 className="font-extrabold text-foreground text-lg flex items-center gap-2">
                       <CheckSquare className="h-5 w-5 text-primary" />
                       Project Deliverables & Tasks
                     </h3>
-                    <Badge className="bg-primary/20 text-primary border-primary/20 font-bold px-2.5 py-0.5 rounded-full">
-                      {projectTasks.length} Total Tasks
-                    </Badge>
+                    <div className="flex items-center gap-3">
+                      <div className="flex gap-1 bg-muted p-1 rounded-lg border border-border/50">
+                        <button 
+                          onClick={() => setTaskView("list")}
+                          className={cn("px-3 py-1.5 text-xs font-bold rounded-md flex items-center transition-all", taskView === "list" ? "bg-background shadow-sm text-foreground" : "text-foreground/50 hover:text-foreground")}
+                        >
+                          List View
+                        </button>
+                        <button 
+                          onClick={() => setTaskView("gantt")}
+                          className={cn("px-3 py-1.5 text-xs font-bold rounded-md flex items-center transition-all", taskView === "gantt" ? "bg-background shadow-sm text-foreground" : "text-foreground/50 hover:text-foreground")}
+                        >
+                          Timeline (Gantt)
+                        </button>
+                      </div>
+                      <Badge className="bg-primary/20 text-primary border-primary/20 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline-flex">
+                        {projectTasks.length} Tasks
+                      </Badge>
+                    </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    {projectTasks.length === 0 ? (
-                      <p className="text-xs text-foreground/40 italic p-6 text-center">No tasks linked to this project yet.</p>
-                    ) : (
-                      projectTasks.map((t: any) => {
-                        const isTaskDone = t.status === "done";
-                        return (
-                          <div key={t.id} className="flex items-center justify-between p-3 rounded-xl border border-border hover: transition-colors">
-                            <div className="flex items-center gap-3">
-                              <button 
-                                onClick={() => handleToggleTaskStatus(t.id, t.status)}
-                                className={cn("w-5 h-5 rounded-md border flex items-center justify-center transition-colors shrink-0 cursor-pointer",
-                                  isTaskDone 
-                                    ? "bg-primary border-primary text-foreground" 
-                                    : "border-border/80 bg-transparent text-transparent"
-                                )}
-                              >
-                                {isTaskDone && <Check className="h-3.5 w-3.5" />}
-                              </button>
-                              <div>
-                                <span className={cn("text-xs font-bold block",
-                                  isTaskDone ? "text-foreground/40 line-through" : "text-foreground"
+                  {taskView === "list" ? (
+                    <div className="space-y-2">
+                      {projectTasks.length === 0 ? (
+                        <p className="text-xs text-foreground/40 italic p-6 text-center">No tasks linked to this project yet.</p>
+                      ) : (
+                        projectTasks.map((t: any) => {
+                          const isTaskDone = t.status === "done";
+                          return (
+                            <div key={t.id} className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-muted/30 transition-colors">
+                              <div className="flex items-center gap-3">
+                                <button 
+                                  onClick={() => handleToggleTaskStatus(t.id, t.status)}
+                                  className={cn("w-5 h-5 rounded-md border flex items-center justify-center transition-colors shrink-0 cursor-pointer",
+                                    isTaskDone 
+                                      ? "bg-primary border-primary text-foreground" 
+                                      : "border-border/80 bg-transparent text-transparent"
+                                  )}
+                                >
+                                  {isTaskDone && <Check className="h-3.5 w-3.5" />}
+                                </button>
+                                <div>
+                                  <span className={cn("text-xs font-bold block",
+                                    isTaskDone ? "text-foreground/40 line-through" : "text-foreground"
+                                  )}>
+                                    {t.title}
+                                  </span>
+                                  {t.dueDate && (
+                                    <span className="text-xs text-foreground/40 font-mono">Due: {new Date(t.dueDate).toLocaleDateString()}</span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge className={cn("text-xs uppercase tracking-wider px-2 py-0.5 font-bold rounded-full shadow-none border",
+                                  t.status === "done" 
+                                    ? "bg-emerald-500/10 text-accent border-emerald-500/20"
+                                    : t.status === "in_progress"
+                                    ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                                    : " text-foreground/60 border-border"
                                 )}>
-                                  {t.title}
-                                </span>
-                                {t.dueDate && (
-                                  <span className="text-xs text-foreground/40 font-mono">Due: {new Date(t.dueDate).toLocaleDateString()}</span>
-                                )}
+                                  {t.status === "in_progress" ? "In Progress" : t.status}
+                                </Badge>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Badge className={cn("text-xs uppercase tracking-wider px-2 py-0.5 font-bold rounded-full shadow-none border",
-                                t.status === "done" 
-                                  ? "bg-emerald-500/10 text-accent border-emerald-500/20"
-                                  : t.status === "in_progress"
-                                  ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                                  : " text-foreground/60 border-border"
-                              )}>
-                                {t.status === "in_progress" ? "In Progress" : t.status}
-                              </Badge>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  ) : (
+                    <div className="border border-border rounded-xl overflow-hidden bg-card mt-4">
+                      {/* Gantt Chart Header */}
+                      <div className="flex border-b border-border bg-muted/50">
+                        <div className="w-1/3 p-3 text-xs font-bold text-foreground/60 uppercase tracking-wider border-r border-border shrink-0">
+                          Task Name
+                        </div>
+                        <div className="flex-1 flex text-xs font-bold text-foreground/50 uppercase tracking-wider relative min-w-[500px]">
+                          {/* Next 7 Days Headers */}
+                          {[...Array(7)].map((_, i) => {
+                            const d = new Date();
+                            d.setDate(d.getDate() + i);
+                            return (
+                              <div key={i} className="flex-1 text-center p-3 border-r border-border/50 shrink-0">
+                                {d.toLocaleDateString("en-US", { weekday: "short" })}
+                                <span className="block font-mono mt-0.5 opacity-60 text-[10px]">{d.getDate()}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Gantt Chart Body */}
+                      <div className="overflow-y-auto max-h-[400px]">
+                        {projectTasks.length === 0 ? (
+                          <div className="p-8 text-center text-xs text-foreground/40 italic">No tasks available to map on timeline.</div>
+                        ) : (
+                          projectTasks.map((t: any) => {
+                            // Dummy start/end calculations just to visualize since we don't have real start dates for tasks yet
+                            const isDone = t.status === "done";
+                            const barColor = isDone ? "bg-emerald-500" : t.status === "in_progress" ? "bg-amber-500" : "bg-primary";
+                            
+                            // Pseudo-random position for demo purposes based on charCode, until real startDate/dueDate drag drop is built
+                            const charCode = t.title.charCodeAt(0) || 65;
+                            const startGrid = (charCode % 5) + 1; 
+                            const spanGrid = (charCode % 3) + 1;
+                            
+                            return (
+                              <div key={t.id} className="flex border-b border-border hover:bg-muted/20 transition-colors">
+                                <div className="w-1/3 p-3 flex items-center gap-2 border-r border-border shrink-0">
+                                  <span className={cn("w-2 h-2 rounded-full shrink-0", barColor)} />
+                                  <span className="text-xs font-semibold truncate">{t.title}</span>
+                                </div>
+                                <div className="flex-1 flex relative min-w-[500px]">
+                                  {/* Grid Lines */}
+                                  {[...Array(7)].map((_, i) => (
+                                    <div key={i} className="flex-1 border-r border-border/50 border-dashed pointer-events-none" />
+                                  ))}
+                                  
+                                  {/* The Task Bar */}
+                                  <div className="absolute inset-y-0 flex items-center p-1.5 w-full pointer-events-none">
+                                    <div 
+                                      className={cn("h-full rounded-md shadow-sm border opacity-90 transition-all pointer-events-auto cursor-col-resize hover:opacity-100 flex items-center px-2", barColor, isDone ? "border-emerald-600" : "border-black/10")}
+                                      style={{
+                                        marginLeft: `${((startGrid - 1) / 7) * 100}%`,
+                                        width: `${(spanGrid / 7) * 100}%`
+                                      }}
+                                    >
+                                      <span className="text-[10px] font-bold text-white truncate mix-blend-overlay">
+                                        {t.status === "in_progress" ? "Working" : isDone ? "Completed" : "Scheduled"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Inline Task Form */}
                   <form onSubmit={handleAddProjectTask} className="pt-4 border-t border-border/30 flex gap-3 items-end">

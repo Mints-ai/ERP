@@ -22,6 +22,19 @@ The ERP features dynamic, automated role enforcement to maintain absolute operat
 
 ---
 
+## 🆕 Recent Feature Additions & Enhancements
+
+As part of our continuous ERP upgrades, several new integrated modules have been released:
+
+- **Command Palette (`Cmd/Ctrl + K`)**: Instantly jump across modules, employees, projects, or chats from any screen.
+- **HR Interactive Organization Chart**: The HR directory now features a tree-view visualizing the corporate hierarchy (Founder ➔ Core Team ➔ Departments).
+- **Internal Ticketing System**: A centralized Kanban board for logging and tracking internal IT/HR/Operations support tickets.
+- **Admin Audit Trail Logs**: Automated background activity tracking giving administrators complete visibility over sensitive system events.
+- **Live Attendance Widget**: A robust dashboard Clock-In/Out tracker that logs daily operational hours directly into the HR attendance module.
+- **Project Gantt Charts**: A visual Timeline mode added to the Project Tasks view, allowing managers to effortlessly track multi-day task dependencies.
+
+---
+
 ## 📬 Module 1: Secure Internal Mail Room
 
 The secure internal communication suite provides end-to-end internal memo exchanges, real-time counters, document attachments, and interactive priority filtering.

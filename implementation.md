@@ -18,6 +18,19 @@ Following the comprehensive code audits and feature upgrades, the status of the 
 
 ---
 
+## 🚀 Recent System Upgrades (Q3 Additions)
+
+We successfully launched six major architectural modules to improve data visibility and operational efficiency across the platform:
+
+1. **Global Search (Command Palette)**: Implemented a highly optimized fuzzy-search dialog (`Cmd/Ctrl + K`) allowing 1-click navigation to employees, projects, tickets, and CRM leads.
+2. **HR Organizational Hierarchy**: Refactored the HR directory from a flat grid to a top-down tree visualization, organizing the team strictly by roles (Founder ➔ Core Team ➔ Departments).
+3. **Internal IT/HR Ticketing Kanban**: Deployed a brand new `/dashboard/tickets` route featuring drag-and-drop state management for resolving internal support issues.
+4. **Admin Audit Trails**: Added strict background tracking for critical write-operations, viewable only by Admins inside the Settings panel to ensure maximum accountability.
+5. **Live Time Tracking & Attendance**: Built a unified Clock-In widget on the main dashboard coupled with Firebase triggers to log shifts into the `/dashboard/attendance` database in real time.
+6. **Project Timeline (Gantt) View**: Integrated a custom CSS-grid Gantt visualization directly into the Project Details (`/dashboard/projects/[id]`) task list for dynamic dependency mapping.
+
+---
+
 ## 🎨 1. The Modern Blue Glassmorphism Design System
 
 We established a premium dark-mode corporate design system that feels alive, precise, and state-of-the-art.

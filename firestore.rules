@@ -91,10 +91,8 @@ service cloud.firestore {
 
     // Attendance Collection Rules
     match /attendance/{attendanceId} {
-      allow get: if isAuth() && (attendanceId[0:request.auth.uid.size()] == request.auth.uid || isManagerOrAbove());
-      allow list: if isAuth() && isManagerOrAbove();
-      allow list: if isAuth() && resource.data.uid == request.auth.uid;
-      allow write: if isAuth() && (attendanceId[0:request.auth.uid.size()] == request.auth.uid || isManagerOrAbove());
+      allow read: if isAuth() && (resource == null || resource.data.uid == request.auth.uid || isManagerOrAbove());
+      allow write: if isAuth() && (request.resource.data.uid == request.auth.uid || isManagerOrAbove());
     }
 
     // Attendance Corrections Collection Rules

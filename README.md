@@ -38,6 +38,19 @@ Welcome to the **Mints Global ERP**, a state-of-the-art enterprise resource plan
 
 ---
 
+## ✨ Recent Feature Updates
+
+The ERP has been recently upgraded with the following powerful modules and enhancements:
+
+- **Unified Global Search (Command Palette)**: Press `Cmd/Ctrl + K` to instantly search and navigate across Employees, Projects, Clients, and Chat Channels from anywhere in the app.
+- **Interactive Organization Chart (HR)**: Added a visual, multi-level hierarchical tree-view in the HR Directory showing Founder -> Core Team -> Departments.
+- **Internal IT & Helpdesk Ticketing**: Created a full Kanban-style module for submitting, assigning, and tracking internal IT and HR support tickets.
+- **Admin Audit Trail**: Implemented secure background activity logs to track sensitive user actions for absolute administrative oversight.
+- **Time Tracking & Attendance**: Integrated a live Clock-In/Clock-Out widget on the main dashboard, syncing directly to Firebase attendance logs and HR reporting.
+- **Interactive Gantt Charts (Timeline View)**: Upgraded project task lists with a toggle to view tasks on a visual timeline (Gantt Chart), mapped across a 7-day calendar view for flawless dependency tracking.
+
+---
+
 ## 🏛️ Architecture & Flow Diagram
 
 Mints Global ERP utilizes a secure, serverless architecture powered by Next.js and Firebase. The client communicates directly with Firestore for real-time data sync using a customized React Context provider for Authentication and state management. Server-side API routes handle secure third-party integrations, such as Discord Webhooks.

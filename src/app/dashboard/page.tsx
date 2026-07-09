@@ -34,7 +34,7 @@ export default function DashboardHome() {
   const [mounted, setMounted] = useState(false);
   
   // Draggable Widget State
-  const [widgetOrder, setWidgetOrder] = useState(["presence", "shoutouts", "announcements", "heatmap"]);
+  const [widgetOrder, setWidgetOrder] = useState(["attendance", "presence", "shoutouts", "announcements", "heatmap"]);
 
   useEffect(() => {
     setMounted(true);
@@ -62,6 +62,88 @@ export default function DashboardHome() {
   });
   const [loadingStats, setLoadingStats] = useState(true);
   const [employees, setEmployees] = useState<any[]>([]);
+  
+  // Attendance State
+  const [isClockedIn, setIsClockedIn] = useState(false);
+  const [clockInTime, setClockInTime] = useState<Date | null>(null);
+  const [elapsedTime, setElapsedTime] = useState("00:00:00");
+  const [clockOutLoading, setClockOutLoading] = useState(false);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isClockedIn && clockInTime) {
+      interval = setInterval(() => {
+        const diff = Math.floor((Date.now() - clockInTime.getTime()) / 1000);
+        const hrs = String(Math.floor(diff / 3600)).padStart(2, '0');
+        const mins = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+        const secs = String(diff % 60).padStart(2, '0');
+        setElapsedTime(`${hrs}:${mins}:${secs}`);
+      }, 1000);
+    } else {
+      setElapsedTime("00:00:00");
+    }
+    return () => clearInterval(interval);
+  }, [isClockedIn, clockInTime]);
+
+  const handleClockInOut = async () => {
+    if (!user) return;
+    setClockOutLoading(true);
+    try {
+      const { doc, setDoc, getDoc } = await import("firebase/firestore");
+      const today = new Date().toISOString().split("T")[0];
+      const attRef = doc(db, "attendance", `${user.uid}_${today}`);
+      
+      if (!isClockedIn) {
+        // Clock In
+        await setDoc(attRef, {
+          uid: user.uid,
+          date: today,
+          clockIn: new Date().toISOString(),
+          clockOut: null,
+          totalHours: 0
+        }, { merge: true });
+        setClockInTime(new Date());
+        setIsClockedIn(true);
+      } else {
+        // Clock Out
+        const attSnap = await getDoc(attRef);
+        if (attSnap.exists()) {
+          const data = attSnap.data();
+          const inTime = new Date(data.clockIn).getTime();
+          const outTime = new Date().getTime();
+          const totalHours = (outTime - inTime) / (1000 * 60 * 60);
+          
+          await setDoc(attRef, {
+            clockOut: new Date().toISOString(),
+            totalHours: (data.totalHours || 0) + totalHours
+          }, { merge: true });
+        }
+        setIsClockedIn(false);
+        setClockInTime(null);
+      }
+    } catch (err) {
+      console.error("Attendance error:", err);
+    } finally {
+      setClockOutLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    const checkAttendance = async () => {
+      const { doc, getDoc } = await import("firebase/firestore");
+      const today = new Date().toISOString().split("T")[0];
+      const attSnap = await getDoc(doc(db, "attendance", `${user.uid}_${today}`));
+      if (attSnap.exists()) {
+        const data = attSnap.data();
+        if (data.clockIn && !data.clockOut) {
+          setIsClockedIn(true);
+          setClockInTime(new Date(data.clockIn));
+        }
+      }
+    };
+    checkAttendance();
+  }, [user]);
   
   const isExecutive = role === "founder" || role === "system_admin" || role === "c_suite" || role === "manager";
 
@@ -340,6 +422,40 @@ export default function DashboardHome() {
                         >
                           <div className="w-8 h-1 bg-foreground/20 rounded-full" />
                         </div>
+
+                        {widgetId === "attendance" && (
+                          <Card className="bg-card border border-border shadow-sm flex-1 rounded-t-none">
+                            <CardHeader className="pb-3 border-b border-border flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                                  <Clock className="h-5 w-5 text-primary" /> Time Tracking
+                                </CardTitle>
+                                <CardDescription className="text-xs text-foreground/50 mt-1">Clock in for your daily shift.</CardDescription>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="p-8 h-[300px] flex flex-col items-center justify-center relative overflow-hidden">
+                              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+                              <div className="text-6xl font-mono font-bold tracking-wider text-foreground mb-8 tabular-nums z-10">
+                                {elapsedTime}
+                              </div>
+                              <button
+                                onClick={handleClockInOut}
+                                disabled={clockOutLoading}
+                                className={cn(
+                                  "relative px-12 py-4 rounded-full font-bold text-sm uppercase tracking-widest transition-all shadow-lg overflow-hidden z-10",
+                                  isClockedIn 
+                                    ? "bg-red-500/10 text-red-500 border-2 border-red-500/20 hover:bg-red-500 hover:text-white"
+                                    : "bg-primary text-primary-foreground hover:brightness-110"
+                                )}
+                              >
+                                {clockOutLoading ? "Processing..." : isClockedIn ? "Clock Out" : "Clock In"}
+                                {isClockedIn && (
+                                  <span className="absolute inset-0 rounded-full ring-2 ring-red-500/50 animate-ping opacity-20 pointer-events-none"></span>
+                                )}
+                              </button>
+                            </CardContent>
+                          </Card>
+                        )}
 
                         {widgetId === "presence" && (
                           <Card className="bg-card border border-border shadow-sm flex-1 rounded-t-none">
