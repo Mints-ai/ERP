@@ -673,7 +673,7 @@ export default function SecureMail() {
                         <Badge variant="outline" className="bg-rose-500/15 text-rose-300 border-rose-500/25 text-xs py-0 px-1 font-bold uppercase tracking-wider">Urgent</Badge>
                       )}
                       {mail.priority === "low" && (
-                        <Badge variant="outline" className="bg-slate-500/10 text-slate-400 border-border/30 text-xs py-0 px-1 font-bold uppercase tracking-wider">Low</Badge>
+                        <Badge variant="outline" className="bg-slate-500/10 text-muted-foreground border-border/30 text-xs py-0 px-1 font-bold uppercase tracking-wider">Low</Badge>
                       )}
                       <button
                         onClick={(e) => handleToggleStar(e, mail)}
@@ -765,7 +765,7 @@ export default function SecureMail() {
                 <div className="flex items-center gap-2 pt-2.5">
                   <Badge variant="outline" className={cn("font-bold text-xs uppercase tracking-wider py-0.5 shadow-none",
                     selectedMail.priority === "urgent" ? "bg-rose-500/15 text-rose-300 border-rose-500/20 shadow-glow-rose" :
-                    selectedMail.priority === "low" ? "bg-slate-500/10 text-slate-400 border-border/30" :
+                    selectedMail.priority === "low" ? "bg-slate-500/10 text-muted-foreground border-border/30" :
                     "bg-primary/10 text-primary/80 border-primary/20"
                   )}>
                     Priority: {selectedMail.priority}

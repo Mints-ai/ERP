@@ -198,7 +198,7 @@ export default function ProjectDetail() {
 
   if (!project) {
     return (
-      <div className="flex flex-col items-center justify-center h-[50vh] text-center bg-white rounded-xl border border-olive-200 shadow-card">
+      <div className="flex flex-col items-center justify-center h-[50vh] text-center bg-background rounded-xl border border-olive-200 shadow-card">
         <div className="h-16 w-16 rounded-full bg-olive-50 flex items-center justify-center mb-4 border border-olive-100">
           <FileText className="h-8 w-8 text-olive-400" />
         </div>

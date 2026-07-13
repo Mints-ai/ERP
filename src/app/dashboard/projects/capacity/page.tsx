@@ -151,7 +151,7 @@ export default function CapacityPlanning() {
       case "Overbooked": return "bg-rose-500/10 text-rose-300 border-rose-500/20";
       case "Healthy": return "bg-emerald-500/10 text-emerald-300 border-emerald-500/20";
       case "Available": return "bg-primary/10 text-primary border-primary/20";
-      default: return "bg-slate-800 text-slate-400";
+      default: return "bg-secondary text-muted-foreground";
     }
   };
 
@@ -446,7 +446,7 @@ export default function CapacityPlanning() {
                       className="w-full border border-border rounded-xl px-3 py-2 text-xs font-semibold focus:border-primary focus:outline-none"
                     >
                       {employees.map(e => (
-                        <option key={e.id} value={e.id} className="bg-slate-900 text-foreground">
+                        <option key={e.id} value={e.id} className="bg-secondary/80 text-foreground">
                           {e.fullName || e.name} — {e.jobTitle || e.role || "Team Member"}
                         </option>
                       ))}
@@ -460,9 +460,9 @@ export default function CapacityPlanning() {
                       onChange={(e) => setSelectedWeek(e.target.value)}
                       className="w-full border border-border rounded-xl px-3 py-2 text-xs font-semibold focus:border-primary focus:outline-none"
                     >
-                      <option value="May 24 - May 30, 2026" className="bg-slate-900 text-foreground">May 24 - May 30, 2026 (Active Week)</option>
-                      <option value="May 31 - June 06, 2026" className="bg-slate-900 text-foreground">May 31 - June 06, 2026</option>
-                      <option value="June 07 - June 13, 2026" className="bg-slate-900 text-foreground">June 07 - June 13, 2026</option>
+                      <option value="May 24 - May 30, 2026" className="bg-secondary/80 text-foreground">May 24 - May 30, 2026 (Active Week)</option>
+                      <option value="May 31 - June 06, 2026" className="bg-secondary/80 text-foreground">May 31 - June 06, 2026</option>
+                      <option value="June 07 - June 13, 2026" className="bg-secondary/80 text-foreground">June 07 - June 13, 2026</option>
                     </select>
                   </div>
 
@@ -516,9 +516,9 @@ export default function CapacityPlanning() {
                                 onChange={(e) => handleRowProjectChange(row.id, e.target.value)}
                                 className="w-full border border-border rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:border-primary focus:outline-none"
                               >
-                                <option value="" className="bg-slate-900 text-foreground/35">Select Project...</option>
+                                <option value="" className="bg-secondary/80 text-foreground/35">Select Project...</option>
                                 {projects.map(p => (
-                                  <option key={p.id} value={p.id} className="bg-slate-900 text-foreground">
+                                  <option key={p.id} value={p.id} className="bg-secondary/80 text-foreground">
                                     {p.name || p.title}
                                   </option>
                                 ))}

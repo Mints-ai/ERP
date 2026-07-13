@@ -149,7 +149,7 @@ export default function ClientProfile() {
         <div className="border border-border p-6 rounded-2xl shadow-card flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex items-center gap-4">
             {client.logo ? (
-              <img src={client.logo} alt="" className="h-16 w-16 object-contain rounded-2xl border border-border bg-white p-1" />
+              <img src={client.logo} alt="" className="h-16 w-16 object-contain rounded-2xl border border-border bg-background p-1" />
             ) : (
               <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary/80 font-bold text-2xl border border-primary/20">
                 {client.companyName?.substring(0, 2).toUpperCase()}

@@ -249,7 +249,7 @@ export default function ClientsCRM() {
                         className="text-xs text-foreground/60 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary/80 hover:file:bg-primary/20 cursor-pointer"
                       />
                       {logoBase64 && (
-                        <img src={logoBase64} alt="Preview" className="h-10 w-10 object-contain rounded border border-border bg-white ml-auto" />
+                        <img src={logoBase64} alt="Preview" className="h-10 w-10 object-contain rounded border border-border bg-background ml-auto" />
                       )}
                     </div>
                   </div>
@@ -333,7 +333,7 @@ export default function ClientsCRM() {
                         onClick={() => router.push(`/dashboard/clients/${client.id}`)}
                       >
                         {client.logo ? (
-                          <img src={client.logo} alt="" className="h-12 w-12 object-contain rounded-xl border border-border bg-white shrink-0 p-1" />
+                          <img src={client.logo} alt="" className="h-12 w-12 object-contain rounded-xl border border-border bg-background shrink-0 p-1" />
                         ) : (
                           <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary/80 font-bold text-lg shrink-0 border border-primary/20">
                             {client.companyName?.substring(0, 2).toUpperCase()}

@@ -835,13 +835,13 @@ export default function Chat() {
 
         {/* Live Call Window */}
         {inCall && (
-          <div className="bg-slate-950 p-6 border-b border-slate-800 animate-in slide-in-from-top duration-300 relative shrink-0">
+          <div className="bg-slate-950 p-6 border-b border-border/80 animate-in slide-in-from-top duration-300 relative shrink-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
               
               {/* Local Stream (Me) */}
-              <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden relative border border-slate-800 group shadow-md">
+              <div className="aspect-video bg-secondary/80 rounded-xl overflow-hidden relative border border-border/80 group shadow-md">
                 {isVideoOff ? (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-foreground/40">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-secondary/80 text-foreground/40">
                     <Avatar className="h-16 w-16 mb-2 border border-border">
                       <AvatarFallback className="bg-primary text-foreground text-lg font-bold">
                         {user?.fullName ? user.fullName[0] : (user?.displayName ? user.displayName[0] : "Me")}
@@ -866,7 +866,7 @@ export default function Chat() {
               </div>
 
               {/* Remote Stream (Simulated connection) */}
-              <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden relative border border-slate-800 group shadow-md flex items-center justify-center">
+              <div className="aspect-video bg-secondary/80 rounded-xl overflow-hidden relative border border-border/80 group shadow-md flex items-center justify-center">
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-slate-900 to-indigo-950/20 text-foreground/50">
                   <div className="flex items-center gap-1 mb-4 h-8">
                     <span className="w-1 bg-primary rounded-full h-6 animate-pulse" />
@@ -899,7 +899,7 @@ export default function Chat() {
                 className={cn("h-11 w-11 rounded-full p-0 border border-slate-850", 
                   isMuted 
                     ? "bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30 hover:text-red-300" 
-                    : "bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-foreground"
+                    : "bg-secondary/80 text-slate-300 hover:bg-secondary hover:text-foreground"
                 )}
               >
                 {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
@@ -911,7 +911,7 @@ export default function Chat() {
                 className={cn("h-11 w-11 rounded-full p-0 border border-slate-850", 
                   isVideoOff 
                     ? "bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30 hover:text-red-300" 
-                    : "bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-foreground"
+                    : "bg-secondary/80 text-slate-300 hover:bg-secondary hover:text-foreground"
                 )}
               >
                 {isVideoOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
@@ -923,7 +923,7 @@ export default function Chat() {
                 className={cn("h-11 w-11 rounded-full p-0 border border-slate-850", 
                   isScreenSharing 
                     ? "bg-primary border-primary/80 text-foreground hover:bg-primary/90" 
-                    : "bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-foreground"
+                    : "bg-secondary/80 text-slate-300 hover:bg-secondary hover:text-foreground"
                 )}
               >
                 <Monitor className="h-5 w-5" />

@@ -306,7 +306,7 @@ export default function ClientDashboard() {
         <Card className="shadow-sm border-border">
           <CardContent className="p-6">
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-border/50 pb-3 text-slate-950">
+              <div className="flex items-center justify-between border-b border-border/50 pb-3 text-foreground">
                 <div>
                   <h4 className="font-bold text-sm text-foreground">Brand Identity Package v1.0</h4>
                   <p className="text-xs text-muted-foreground mt-0.5">Uploaded on May 24, 2026</p>
@@ -322,7 +322,7 @@ export default function ClientDashboard() {
                   <FileDown className="mr-1.5 h-4 w-4" /> Download ZIP
                 </Button>
               </div>
-              <div className="flex items-center justify-between border-b border-border/50 pb-3 text-slate-950">
+              <div className="flex items-center justify-between border-b border-border/50 pb-3 text-foreground">
                 <div>
                   <h4 className="font-bold text-sm text-foreground">High-Fidelity Figma UX Layouts</h4>
                   <p className="text-xs text-muted-foreground mt-0.5">Uploaded on May 22, 2026</p>
@@ -348,7 +348,7 @@ export default function ClientDashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           >
             <motion.div 
               initial={{ scale: 0.95, y: 15 }}
@@ -361,7 +361,7 @@ export default function ClientDashboard() {
                   <div className="p-2 bg-indigo-50 rounded-xl text-primary font-black tracking-wider text-xs">stripe</div>
                   <span className="text-xs bg-muted/50 text-muted-foreground uppercase tracking-widest font-bold px-2 py-0.5 rounded-full">Simulator</span>
                 </div>
-                <button onClick={() => setIsStripeModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold text-sm p-1">✕</button>
+                <button type="button" onClick={() => setIsStripeModalOpen(false)} className="text-muted-foreground hover:text-foreground font-bold text-sm p-1">✕</button>
               </div>
 
               {stripeSuccess ? (
@@ -376,13 +376,13 @@ export default function ClientDashboard() {
                 </div>
               ) : (
                 <form onSubmit={handleProcessPayment} className="space-y-5">
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-border/50">
+                  <div className="bg-muted/30 p-4 rounded-2xl border border-border">
                     <div className="flex justify-between text-xs text-muted-foreground mb-1">
                       <span>Paying Invoice</span>
-                      <span className="font-bold text-slate-800">{activePaymentInvoice.invoiceNumber}</span>
+                      <span className="font-bold text-foreground">{activePaymentInvoice.invoiceNumber}</span>
                     </div>
                     <div className="flex justify-between items-baseline mt-2">
-                      <span className="text-sm font-bold text-slate-950">Total Payment Due</span>
+                      <span className="text-sm font-bold text-foreground">Total Payment Due</span>
                       <span className="text-xl font-black text-primary font-mono">{activePaymentInvoice.total?.toLocaleString()} AED</span>
                     </div>
                   </div>
@@ -391,7 +391,7 @@ export default function ClientDashboard() {
                     <div className="grid gap-1.5">
                       <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Card Number</label>
                       <div className="relative">
-                        <CreditCard className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                        <CreditCard className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                         <input 
                           required
                           placeholder="4242 4242 4242 4242"
@@ -425,8 +425,8 @@ export default function ClientDashboard() {
                     </div>
                   </div>
 
-                  <div className="flex gap-2 text-xs text-slate-450 items-start text-muted-foreground">
-                    <Lock className="h-3.5 w-3.5 shrink-0 text-slate-400 mt-0.5" />
+                  <div className="flex gap-2 text-xs items-start text-muted-foreground">
+                    <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground mt-0.5" />
                     <span>Payments are secured using SSL. Card details are routed safely through the Mints sandboxed credit gateway.</span>
                   </div>
 

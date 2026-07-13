@@ -41,7 +41,7 @@ export default function ClientPortalLayout({
 
   if (authLoading || checkingRole) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-slate-50">
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -57,19 +57,19 @@ export default function ClientPortalLayout({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Client Portal Header */}
-      <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+      <header className="h-16 bg-background/80 backdrop-blur-md border-b border-border px-6 flex items-center justify-between sticky top-0 z-50 shadow-sm">
         <div className="flex items-center gap-3">
           <img src="/logo.png" alt="Mints Logo" className="h-6 w-auto object-contain" />
-          <span className="font-bold text-xl tracking-tight text-slate-900 border-l pl-3 border-slate-200"><span className="text-slate-400 font-normal">Client Portal</span></span>
+          <span className="font-bold text-xl tracking-tight text-foreground border-l pl-3 border-border"><span className="text-muted-foreground font-normal">Client Portal</span></span>
         </div>
 
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-slate-600 hidden sm:inline-block">
+          <span className="text-sm font-medium text-muted-foreground hidden sm:inline-block">
             Welcome, {user?.displayName || "Client"}
           </span>
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-slate-500 hover:text-slate-900">
+          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-foreground">
             <LogOut className="h-4 w-4 mr-2" /> Logout
           </Button>
         </div>

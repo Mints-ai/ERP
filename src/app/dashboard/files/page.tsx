@@ -126,7 +126,16 @@ export default function CloudDrive() {
 
     try {
       const storageRef = ref(storage, folderPath ? `agency-assets/${folderPath}` : 'agency-assets');
-      const result = await listAll(storageRef);
+      
+      // Add a 5-second timeout to prevent infinite hanging if Firebase Storage is unavailable/misconfigured
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("Firebase Storage connection timed out. Please check if Storage is enabled and bucket URL is correct in .env.local")), 5000);
+      });
+
+      const result = await Promise.race([
+        listAll(storageRef),
+        timeoutPromise
+      ]) as Awaited<ReturnType<typeof listAll>>;
       
       const filePromises = result.items.map(async (itemRef) => {
         const url = await getDownloadURL(itemRef);
@@ -290,7 +299,7 @@ export default function CloudDrive() {
     if (contentType.includes('zip') || contentType.includes('rar')) return <FileArchive className="h-10 w-10 text-amber-500" />;
     if (contentType.includes('video')) return <FileVideo className="h-10 w-10 text-primary" />;
     if (contentType.includes('audio')) return <FileAudio className="h-10 w-10 text-green-500" />;
-    return <File className="h-10 w-10 text-slate-500" />;
+    return <File className="h-10 w-10 text-muted-foreground" />;
   };
 
   return (
@@ -303,16 +312,16 @@ export default function CloudDrive() {
         
         <div className="flex items-center gap-4">
           {/* Mode Switcher */}
-          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner">
+          <div className="flex bg-muted/50 p-1 rounded-xl border border-border/60 shadow-inner">
             <button
               onClick={() => setDriveMode('cloud')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center transition-all ${ driveMode === 'cloud' ? "bg-white text-primary shadow-sm" : "text-slate-500 hover:text-slate-800" }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center transition-all ${ driveMode === 'cloud' ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground" }`}
             >
               <Cloud className="w-3.5 h-3.5 mr-1.5" /> Firebase Cloud
             </button>
             <button
               onClick={() => setDriveMode('local')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center transition-all ${ driveMode === 'local' ? "bg-white text-primary shadow-sm" : "text-slate-500 hover:text-slate-800" }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center transition-all ${ driveMode === 'local' ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground" }`}
             >
               <Database className="w-3.5 h-3.5 mr-1.5" /> Free Local Drive
             </button>
@@ -339,9 +348,9 @@ export default function CloudDrive() {
       </div>
 
       <Card className="bg-card border border-border shadow-sm rounded-lg min-h-[500px]">
-        <CardHeader className="border-b border-slate-100 bg-slate-50/50 flex flex-row items-center justify-between">
+        <CardHeader className="border-b border-border/40 bg-muted/30/50 flex flex-row items-center justify-between">
           <div className="flex flex-col gap-1">
-            <CardTitle className="text-lg flex items-center gap-2 text-slate-900">
+            <CardTitle className="text-lg flex items-center gap-2 text-foreground">
               {driveMode === 'cloud' ? (
                 <Cloud className="h-5 w-5 text-primary animate-pulse" />
               ) : (
@@ -349,12 +358,12 @@ export default function CloudDrive() {
               )}
               {driveMode === 'cloud' ? "agency-assets/ (Firebase)" : "browser-local-assets/ (100% Free Drive)"}
             </CardTitle>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 mt-1">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground mt-1">
               <span className="cursor-pointer hover:text-primary" onClick={() => setCurrentFolder("")}>Root Drive</span>
               {currentFolder && (
                 <>
                   <span>/</span>
-                  <span className="text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
+                  <span className="text-foreground bg-muted/50 px-2 py-0.5 rounded-md flex items-center gap-1">
                     {currentFolder === "founding-directors-only" ? "🔒 founding-directors-only" : 
                      currentFolder === "client-handovers" ? "🌐 client-handovers" : `📁 ${currentFolder}`}
                   </span>
@@ -370,7 +379,7 @@ export default function CloudDrive() {
           {/* Secured Folders Grid when at Root */}
           {currentFolder === "" && (
             <div className="mb-6 space-y-3">
-              <h3 className="text-xs uppercase font-bold text-slate-500 tracking-wider">Role-Based Secured Folders</h3>
+              <h3 className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Role-Based Secured Folders</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
                   { id: "founding-directors-only", name: "Founding Directors Only", icon: "🔒", desc: "Executive strategic plans, financials, payrolls", roleRestricted: "founder" },
@@ -388,7 +397,7 @@ export default function CloudDrive() {
                         }
                         setCurrentFolder(folder.id);
                       }}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between h-32 hover:shadow-md ${ isRestricted ? "bg-slate-50/50 border-slate-200 opacity-60 hover:border-red-300" : "bg-white border-slate-200 hover:border-primary/50" }`}
+                      className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between h-32 hover:shadow-md ${ isRestricted ? "bg-muted/30/50 border-border/60 opacity-60 hover:border-red-300" : "bg-background border-border/60 hover:border-primary/50" }`}
                     >
                       <div className="flex justify-between items-start">
                         <span className="text-2xl">{folder.icon}</span>
@@ -397,16 +406,16 @@ export default function CloudDrive() {
                         )}
                       </div>
                       <div>
-                        <h4 className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                        <h4 className="font-bold text-sm text-foreground flex items-center gap-1.5">
                           {folder.name}
                         </h4>
-                        <p className="text-xs text-slate-500 mt-1 truncate">{folder.desc}</p>
+                        <p className="text-xs text-muted-foreground mt-1 truncate">{folder.desc}</p>
                       </div>
                     </div>
                   );
                 })}
               </div>
-              <div className="border-t border-slate-100 pt-6"></div>
+              <div className="border-t border-border/40 pt-6"></div>
             </div>
           )}
 
@@ -416,9 +425,9 @@ export default function CloudDrive() {
               <p>Loading files...</p>
             </div>
           ) : files.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-muted-foreground border-2 border-dashed border-slate-200 rounded-xl">
+            <div className="flex flex-col items-center justify-center h-64 text-muted-foreground border-2 border-dashed border-border/60 rounded-xl">
               {driveMode === 'cloud' ? <Cloud className="h-12 w-12 text-slate-300 mb-4" /> : <Database className="h-12 w-12 text-slate-300 mb-4" />}
-              <p className="font-medium text-slate-900">This folder is empty</p>
+              <p className="font-medium text-foreground">This folder is empty</p>
               <p className="text-sm">Click Upload File to add assets.</p>
             </div>
           ) : (
@@ -431,12 +440,12 @@ export default function CloudDrive() {
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ delay: i * 0.05 }}
                     key={file.path}
-                    className="group relative bg-white border border-slate-200 rounded-xl p-4 hover:border-primary/50 hover:shadow-lg transition-all flex flex-col items-center text-center"
+                    className="group relative bg-background border border-border/60 rounded-xl p-4 hover:border-primary/50 hover:shadow-lg transition-all flex flex-col items-center text-center"
                   >
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <DropdownMenu>
-                        <DropdownMenuTrigger className="p-1 hover:bg-slate-100 rounded-md">
-                          <MoreVertical className="h-4 w-4 text-slate-600" />
+                        <DropdownMenuTrigger className="p-1 hover:bg-muted/50 rounded-md">
+                          <MoreVertical className="h-4 w-4 text-muted-foreground" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => {
@@ -465,10 +474,10 @@ export default function CloudDrive() {
                       )}
                     </div>
                     
-                    <p className="font-semibold text-sm text-slate-900 truncate w-full" title={file.name}>
+                    <p className="font-semibold text-sm text-foreground truncate w-full" title={file.name}>
                       {file.name.includes('_') ? file.name.substring(file.name.indexOf('_') + 1) : file.name}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">{formatSize(file.size)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{formatSize(file.size)}</p>
                   </motion.div>
                 ))}
               </AnimatePresence>

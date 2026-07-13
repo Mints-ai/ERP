@@ -66,16 +66,16 @@ export const generateInternCertificate = (internName: string, department: string
   const height = doc.internal.pageSize.getHeight();
 
   // Draw background border
-  doc.setDrawColor(107, 124, 75); // Olive 500
+  doc.setDrawColor(79, 70, 229); // Indigo 600
   doc.setLineWidth(10);
   doc.rect(20, 20, width - 40, height - 40);
   
-  doc.setDrawColor(138, 155, 106); // Olive 400
+  doc.setDrawColor(129, 140, 248); // Indigo 400
   doc.setLineWidth(2);
   doc.rect(35, 35, width - 70, height - 70);
 
   // Logo / Header
-  doc.setTextColor(20, 24, 16); // Olive 900
+  doc.setTextColor(15, 23, 42); // Slate 900
   doc.setFontSize(40);
   doc.setFont("helvetica", "bold");
   doc.text("CERTIFICATE OF COMPLETION", width / 2, 140, { align: "center" });
@@ -87,12 +87,12 @@ export const generateInternCertificate = (internName: string, department: string
 
   doc.setFontSize(32);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(78, 93, 53); // Olive 600
+  doc.setTextColor(79, 70, 229); // Indigo 600
   doc.text(internName, width / 2, 280, { align: "center" });
 
   doc.setFontSize(16);
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(20, 24, 16);
+  doc.setTextColor(15, 23, 42);
   doc.text(
     `has successfully completed their internship program in the`,
     width / 2,
@@ -118,161 +118,10 @@ export const generateInternCertificate = (internName: string, department: string
   doc.save(`Certificate_${internName.replace(/\s+/g, '_')}.pdf`);
 };
 
-export const generateInvoice = (
-  invoiceData: {
-    invoiceNumber: string;
-    date: string;
-    clientName: string;
-    items: { description: string; amount: number }[];
-    total: number;
-    status: string;
-  }
-) => {
-  const doc = new jsPDF("portrait", "pt", "a4");
+// ─── Shared Brand Elements ────────────────────────────────────────────────────
+function drawBrandHeader(doc: jsPDF, title: string, subtitle: string) {
   const width = doc.internal.pageSize.getWidth();
-
-  // Header
-  doc.setFontSize(28);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(20, 24, 16);
-  doc.text("INVOICE", 40, 60);
-
-  doc.setFontSize(12);
-  doc.setTextColor(138, 155, 106);
-  doc.text("MINTS GLOBAL", 40, 80);
   
-  doc.setFontSize(10);
-  doc.setTextColor(100, 100, 100);
-  doc.text("123 Creative Avenue, Suite 100", 40, 95);
-  doc.text("Global HQ", 40, 110);
-
-  // Invoice Details
-  doc.setFontSize(12);
-  doc.setTextColor(20, 24, 16);
-  doc.setFont("helvetica", "bold");
-  doc.text("Billed To:", width - 200, 60);
-  
-  doc.setFont("helvetica", "normal");
-  doc.text(invoiceData.clientName, width - 200, 80);
-  
-  doc.text(`Invoice Number: ${invoiceData.invoiceNumber}`, width - 200, 110);
-  doc.text(`Date: ${invoiceData.date}`, width - 200, 125);
-  doc.text(`Status: ${invoiceData.status.toUpperCase()}`, width - 200, 140);
-
-  // Table
-  const tableData = invoiceData.items.map(item => [item.description, `$${item.amount.toFixed(2)}`]);
-  
-  autoTable(doc, {
-    startY: 180,
-    head: [["Description", "Amount"]],
-    body: tableData,
-    foot: [["Total", `$${invoiceData.total.toFixed(2)}`]],
-    theme: "striped",
-    headStyles: { fillColor: [107, 124, 75] },
-    footStyles: { fillColor: [20, 24, 16], fontStyle: "bold" },
-    columnStyles: {
-      1: { halign: "right" }
-    }
-  });
-
-  // Footer
-  const finalY = (doc as any).lastAutoTable.finalY || 180;
-  doc.setFontSize(10);
-  doc.setTextColor(150, 150, 150);
-  doc.text("Thank you for your business!", width / 2, finalY + 50, { align: "center" });
-
-  doc.save(`Invoice_${invoiceData.invoiceNumber}.pdf`);
-};
-
-export const generateQuote = (
-  quoteData: {
-    quoteNumber: string;
-    date: string;
-    clientName: string;
-    contactName: string;
-    items: { description: string; amount: number }[];
-    total: number;
-  }
-) => {
-  const doc = new jsPDF("portrait", "pt", "a4");
-  const width = doc.internal.pageSize.getWidth();
-
-  // Header
-  doc.setFontSize(28);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(20, 24, 16);
-  doc.text("PROPOSAL & QUOTE", 40, 60);
-
-  doc.setFontSize(12);
-  doc.setTextColor(138, 155, 106);
-  doc.text("MINTS GLOBAL", 40, 80);
-  
-  doc.setFontSize(10);
-  doc.setTextColor(100, 100, 100);
-  doc.text("123 Creative Avenue, Suite 100", 40, 95);
-  doc.text("Global HQ", 40, 110);
-
-  // Quote Details
-  doc.setFontSize(12);
-  doc.setTextColor(20, 24, 16);
-  doc.setFont("helvetica", "bold");
-  doc.text("Prepared For:", width - 200, 60);
-  
-  doc.setFont("helvetica", "normal");
-  doc.text(quoteData.clientName, width - 200, 80);
-  doc.text(quoteData.contactName, width - 200, 95);
-  
-  doc.text(`Quote Number: ${quoteData.quoteNumber}`, width - 200, 125);
-  doc.text(`Date: ${quoteData.date}`, width - 200, 140);
-  doc.text("Valid For: 30 Days", width - 200, 155);
-
-  // Table
-  const tableData = quoteData.items.map(item => [item.description, `${item.amount.toLocaleString()} AED`]);
-  
-  autoTable(doc, {
-    startY: 190,
-    head: [["Service Description", "Investment"]],
-    body: tableData,
-    foot: [["Total Investment", `${quoteData.total.toLocaleString()} AED`]],
-    theme: "striped",
-    headStyles: { fillColor: [107, 124, 75] },
-    footStyles: { fillColor: [20, 24, 16], fontStyle: "bold" },
-    columnStyles: {
-      1: { halign: "right" }
-    }
-  });
-
-  // Footer
-  const finalY = (doc as any).lastAutoTable.finalY || 190;
-  doc.setFontSize(10);
-  doc.setTextColor(100, 100, 100);
-  doc.text("This quote is subject to our standard terms of service.", 40, finalY + 40);
-  doc.text("To accept this proposal, please sign and return this document.", 40, finalY + 55);
-  
-  doc.line(40, finalY + 120, 240, finalY + 120);
-  doc.text("Client Signature", 100, finalY + 135);
-
-  doc.line(width - 240, finalY + 120, width - 40, finalY + 120);
-  doc.text("Date", width - 150, finalY + 135);
-
-  doc.save(`Quote_${quoteData.quoteNumber}.pdf`);
-};
-
-export const generatePayslip = (
-  payslipData: {
-    payslipNumber: string;
-    employeeName: string;
-    role: string;
-    period: string;
-    baseSalary: number;
-    deductions: number;
-    netPay: number;
-    unpaidLeaves: number;
-  }
-) => {
-  const doc = new jsPDF("portrait", "pt", "a4");
-  const width = doc.internal.pageSize.getWidth();
-
   // 1. Draw elegant glowing minimalist logo badge
   doc.setFillColor(79, 70, 229); // Indigo 600
   doc.roundedRect(40, 40, 36, 36, 8, 8, "F");
@@ -284,7 +133,7 @@ export const generatePayslip = (
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
   doc.text("M", 51, 64);
-
+  
   // 2. Title and Subtitle to the right of the logo
   doc.setFontSize(22);
   doc.setTextColor(15, 23, 42); // Slate 900
@@ -296,120 +145,269 @@ export const generatePayslip = (
   doc.setFont("helvetica", "normal");
   doc.text("Global Operations Command Center", 88, 72);
 
-  // 3. Document Title
+  // 3. Document Title (Right aligned)
   doc.setFontSize(24);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(15, 23, 42); // Slate 900
-  doc.text("SALARY PAYSLIP", 40, 120);
-
-  doc.setDrawColor(79, 70, 229);
-  doc.setLineWidth(2);
-  doc.line(40, 130, 120, 130); // Classy accent line under title
-
-  // 4. Employee & Payperiod details in container
-  doc.setFillColor(248, 250, 252); // Slate 50 (ultra-light gray)
-  doc.setDrawColor(241, 245, 249); // Slate 100
-  doc.setLineWidth(1);
-  doc.roundedRect(40, 150, width - 80, 80, 6, 6, "FD");
-
-  // Details labels & values side-by-side
-  doc.setFontSize(9);
+  doc.setTextColor(79, 70, 229); // Indigo 600
+  doc.text(title, width - 40, 60, { align: "right" });
+  
+  doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
-  doc.setFont("helvetica", "bold");
-  doc.text("EMPLOYEE NAME:", 60, 175);
-  doc.text("DESIGNATION / ROLE:", 60, 195);
-  doc.text("OFFICE LOCATION:", 60, 215);
-
-  doc.setTextColor(15, 23, 42); // Slate 900
   doc.setFont("helvetica", "normal");
-  doc.text(payslipData.employeeName, 190, 175);
-  doc.text(payslipData.role.toUpperCase(), 190, 195);
-  doc.text("Mints Global HQ, UAE", 190, 215);
+  doc.text(subtitle, width - 40, 75, { align: "right" });
 
-  // Payperiod details on the right side of the container
+  doc.setDrawColor(226, 232, 240); // Slate 200
+  doc.setLineWidth(1);
+  doc.line(40, 100, width - 40, 100);
+}
+
+// ─── Base Document Builders ───────────────────────────────────────────────────
+
+function buildInvoiceDoc(
+  invoiceData: { invoiceNumber: string; date: string; clientName: string; items: { description: string; amount: number }[]; total: number; status: string; }
+): jsPDF {
+  const doc = new jsPDF("portrait", "pt", "a4");
+  const width = doc.internal.pageSize.getWidth();
+
+  drawBrandHeader(doc, "TAX INVOICE", `Invoice # ${invoiceData.invoiceNumber}`);
+
+  // Info Container
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(241, 245, 249);
+  doc.setLineWidth(1);
+  doc.roundedRect(40, 120, width - 80, 80, 6, 6, "FD");
+
+  // Left column: Billed To
   doc.setFontSize(9);
   doc.setTextColor(100, 100, 100);
   doc.setFont("helvetica", "bold");
-  doc.text("PAYSLIP NUMBER:", width - 240, 175);
-  doc.text("PAY PERIOD:", width - 240, 195);
-  doc.text("DISPATCH STATUS:", width - 240, 215);
+  doc.text("BILLED TO:", 60, 145);
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(11);
+  doc.text(invoiceData.clientName, 60, 165);
 
+  // Right column: Details
+  doc.setFontSize(9);
+  doc.setTextColor(100, 100, 100);
+  doc.text("DATE OF ISSUE:", width - 240, 145);
+  doc.text("PAYMENT STATUS:", width - 240, 165);
+  
   doc.setTextColor(15, 23, 42);
   doc.setFont("helvetica", "normal");
-  doc.text(payslipData.payslipNumber, width - 130, 175);
-  doc.text(payslipData.period, width - 130, 195);
+  doc.text(invoiceData.date, width - 120, 145);
   
-  doc.setTextColor(16, 185, 129); // Emerald 500 green
   doc.setFont("helvetica", "bold");
-  doc.text("RELEASED / PAID", width - 130, 215);
+  const isPaid = invoiceData.status.toLowerCase() === "paid";
+  const statusColor = isPaid ? [16, 185, 129] : [239, 68, 68];
+  doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+  doc.text(invoiceData.status.toUpperCase(), width - 120, 165);
 
-  // 5. Highly professional 4-column Salary Table
+  // Items Table
+  const tableData = invoiceData.items.map(item => [item.description, `${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`]);
+  
   autoTable(doc, {
-    startY: 260,
-    head: [["Earnings Item", "Amount (AED)", "Deductions Item", "Amount (AED)"]],
-    body: [
-      [
-        "Basic Salary (60%)", 
-        `${(payslipData.baseSalary * 0.6).toLocaleString()} AED`, 
-        "Unpaid Leaves (LWP)", 
-        `-${payslipData.deductions.toLocaleString()} AED`
-      ],
-      [
-        "Housing Allowance (25%)", 
-        `${(payslipData.baseSalary * 0.25).toLocaleString()} AED`, 
-        `Deduction Days (${payslipData.unpaidLeaves} Days)`, 
-        ""
-      ],
-      [
-        "Transport & Utility (15%)", 
-        `${(payslipData.baseSalary * 0.15).toLocaleString()} AED`, 
-        "", 
-        ""
-      ]
-    ],
+    startY: 230,
+    head: [["Description of Services", "Amount (AED)"]],
+    body: tableData,
     theme: "striped",
-    headStyles: { 
-      fillColor: [79, 70, 229], // Indigo 600
-      textColor: [255, 255, 255], 
-      fontStyle: "bold",
-      fontSize: 9
-    },
-    bodyStyles: {
-      fontSize: 9,
-      textColor: [15, 23, 42] // Slate 900
-    },
-    columnStyles: {
-      1: { halign: "right" },
-      3: { halign: "right" }
-    }
+    headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 10, cellPadding: 8 },
+    bodyStyles: { fontSize: 10, textColor: [15, 23, 42], cellPadding: 8 },
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+    columnStyles: { 1: { halign: "right", fontStyle: "bold" } },
+    margin: { left: 40, right: 40 }
   });
 
-  // 6. Net Salary Summary Card (solves vertical Net Pay squeezing bug)
-  const tableFinalY = (doc as any).lastAutoTable.finalY || 360;
-
+  // Summary Card
+  const tableFinalY = (doc as any).lastAutoTable.finalY || 230;
+  
   doc.setFillColor(15, 23, 42); // Slate 900
-  doc.roundedRect(40, tableFinalY + 25, width - 80, 60, 6, 6, "F");
+  doc.roundedRect(width - 240, tableFinalY + 30, 200, 60, 6, 6, "F");
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text("Total Amount Due", width - 220, tableFinalY + 55);
+
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(129, 140, 248); // Indigo 300
+  doc.text(`${invoiceData.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, width - 60, tableFinalY + 70, { align: "right" });
+
+  // Footer
+  const footerY = tableFinalY + 140;
+  doc.setDrawColor(226, 232, 240);
+  doc.line(40, footerY, width - 40, footerY);
+  
+  doc.setFontSize(9);
+  doc.setTextColor(150, 150, 150);
+  doc.setFont("helvetica", "normal");
+  doc.text("Thank you for your business. Please process payment within 14 days.", width / 2, footerY + 20, { align: "center" });
+
+  return doc;
+}
+
+function buildQuoteDoc(
+  quoteData: { quoteNumber: string; date: string; clientName: string; contactName: string; items: { description: string; amount: number }[]; total: number; }
+): jsPDF {
+  const doc = new jsPDF("portrait", "pt", "a4");
+  const width = doc.internal.pageSize.getWidth();
+
+  drawBrandHeader(doc, "PROPOSAL & QUOTE", `Quote # ${quoteData.quoteNumber}`);
+
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(241, 245, 249);
+  doc.setLineWidth(1);
+  doc.roundedRect(40, 120, width - 80, 80, 6, 6, "FD");
+
+  doc.setFontSize(9); doc.setTextColor(100, 100, 100); doc.setFont("helvetica", "bold");
+  doc.text("PREPARED FOR:", 60, 145);
+  doc.text("ATTENTION:", 60, 165);
+  doc.setTextColor(15, 23, 42); doc.setFontSize(10); doc.setFont("helvetica", "normal");
+  doc.text(quoteData.clientName, 150, 145);
+  doc.text(quoteData.contactName, 150, 165);
+
+  doc.setFontSize(9); doc.setTextColor(100, 100, 100); doc.setFont("helvetica", "bold");
+  doc.text("DATE OF ISSUE:", width - 240, 145);
+  doc.text("VALID FOR:", width - 240, 165);
+  doc.setTextColor(15, 23, 42); doc.setFont("helvetica", "normal");
+  doc.text(quoteData.date, width - 120, 145);
+  doc.text("30 Days", width - 120, 165);
+
+  const tableData = quoteData.items.map(item => [item.description, `${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`]);
+  
+  autoTable(doc, {
+    startY: 230,
+    head: [["Service Description", "Investment (AED)"]],
+    body: tableData,
+    theme: "striped",
+    headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 10, cellPadding: 8 },
+    bodyStyles: { fontSize: 10, textColor: [15, 23, 42], cellPadding: 8 },
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+    columnStyles: { 1: { halign: "right", fontStyle: "bold" } },
+    margin: { left: 40, right: 40 }
+  });
+
+  const tableFinalY = (doc as any).lastAutoTable.finalY || 230;
+  
+  doc.setFillColor(15, 23, 42);
+  doc.roundedRect(width - 240, tableFinalY + 30, 200, 60, 6, 6, "F");
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text("Total Estimated Investment", width - 220, tableFinalY + 55);
+
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(129, 140, 248);
+  doc.text(`${quoteData.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, width - 60, tableFinalY + 70, { align: "right" });
+
+  const footerY = tableFinalY + 140;
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.setFont("helvetica", "normal");
+  doc.text("This quote is subject to our standard terms of service.", 40, footerY);
+  doc.text("To accept this proposal, please sign and return this document.", 40, footerY + 15);
+  
+  doc.setDrawColor(200, 200, 200);
+  doc.line(40, footerY + 70, 240, footerY + 70);
+  doc.text("Authorized Client Signature", 140, footerY + 85, { align: "center" });
+
+  doc.line(width - 240, footerY + 70, width - 40, footerY + 70);
+  doc.text("Date", width - 140, footerY + 85, { align: "center" });
+
+  return doc;
+}
+
+function buildPayslipDoc(
+  payslipData: { payslipNumber: string; employeeName: string; role: string; period: string; baseSalary: number; deductions: number; netPay: number; unpaidLeaves: number; }
+): jsPDF {
+  const doc = new jsPDF("portrait", "pt", "a4");
+  const width = doc.internal.pageSize.getWidth();
+
+  drawBrandHeader(doc, "SALARY PAYSLIP", `Payslip # ${payslipData.payslipNumber}`);
+
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(241, 245, 249);
+  doc.setLineWidth(1);
+  doc.roundedRect(40, 120, width - 80, 80, 6, 6, "FD");
+
+  doc.setFontSize(9); doc.setTextColor(100, 100, 100); doc.setFont("helvetica", "bold");
+  doc.text("EMPLOYEE NAME:", 60, 145);
+  doc.text("DESIGNATION / ROLE:", 60, 165);
+  doc.text("OFFICE LOCATION:", 60, 185);
+
+  doc.setTextColor(15, 23, 42); doc.setFont("helvetica", "normal");
+  doc.text(payslipData.employeeName, 190, 145);
+  doc.text(payslipData.role.toUpperCase(), 190, 165);
+  doc.text("Mints Global HQ, UAE", 190, 185);
+
+  doc.setFontSize(9); doc.setTextColor(100, 100, 100); doc.setFont("helvetica", "bold");
+  doc.text("PAY PERIOD:", width - 240, 145);
+  doc.text("DISPATCH STATUS:", width - 240, 165);
+
+  doc.setTextColor(15, 23, 42); doc.setFont("helvetica", "normal");
+  doc.text(payslipData.period, width - 130, 145);
+  
+  doc.setTextColor(16, 185, 129); doc.setFont("helvetica", "bold");
+  doc.text("RELEASED / PAID", width - 130, 165);
+
+  autoTable(doc, {
+    startY: 230,
+    head: [["Earnings Item", "Amount (AED)", "Deductions Item", "Amount (AED)"]],
+    body: [
+      ["Basic Salary (60%)", `${(payslipData.baseSalary * 0.6).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`, "Unpaid Leaves (LWP)", `-${payslipData.deductions.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`],
+      ["Housing Allowance (25%)", `${(payslipData.baseSalary * 0.25).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`, `Deduction Days (${payslipData.unpaidLeaves} Days)`, ""],
+      ["Transport & Utility (15%)", `${(payslipData.baseSalary * 0.15).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`, "", ""]
+    ],
+    theme: "striped",
+    headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9, cellPadding: 8 },
+    bodyStyles: { fontSize: 9, textColor: [15, 23, 42], cellPadding: 8 },
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+    columnStyles: { 1: { halign: "right" }, 3: { halign: "right" } },
+    margin: { left: 40, right: 40 }
+  });
+
+  const tableFinalY = (doc as any).lastAutoTable.finalY || 330;
+
+  doc.setFillColor(15, 23, 42);
+  doc.roundedRect(40, tableFinalY + 30, width - 80, 60, 6, 6, "F");
 
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.text("NET TAKE-HOME SALARY (AED)", 60, tableFinalY + 60);
+  doc.text("NET TAKE-HOME SALARY (AED)", 60, tableFinalY + 65);
 
   doc.setFontSize(20);
-  doc.setTextColor(129, 140, 248); // Indigo 300
-  doc.text(`${payslipData.netPay.toLocaleString()} AED`, width - 60, tableFinalY + 62, { align: "right" });
+  doc.setTextColor(129, 140, 248);
+  doc.text(`${payslipData.netPay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`, width - 60, tableFinalY + 68, { align: "right" });
 
-  const cardFinalY = tableFinalY + 85;
-
-  // 7. Official Computer-Generated Footer
+  const cardFinalY = tableFinalY + 90;
   doc.setFontSize(8);
   doc.setTextColor(150, 150, 150);
   doc.setFont("helvetica", "italic");
   doc.text("This is an official computer-generated document released by Mints Global Human Resources and requires no physical signature.", width / 2, cardFinalY + 50, { align: "center" });
 
+  return doc;
+}
+
+// ─── Exported Sync Functions ──────────────────────────────────────────────────
+
+export const generateInvoice = (invoiceData: Parameters<typeof buildInvoiceDoc>[0]) => {
+  const doc = buildInvoiceDoc(invoiceData);
+  doc.save(`Invoice_${invoiceData.invoiceNumber}.pdf`);
+};
+
+export const generateQuote = (quoteData: Parameters<typeof buildQuoteDoc>[0]) => {
+  const doc = buildQuoteDoc(quoteData);
+  doc.save(`Quote_${quoteData.quoteNumber}.pdf`);
+};
+
+export const generatePayslip = (payslipData: Parameters<typeof buildPayslipDoc>[0]) => {
+  const doc = buildPayslipDoc(payslipData);
   doc.save(`Payslip_${payslipData.employeeName.replace(/\s+/g, '_')}_${payslipData.period.replace(/\s+/g, '')}.pdf`);
 
-  // Archive to Firebase Storage vault (non-blocking)
   uploadToVault(doc, `vaults/payslips/${payslipData.payslipNumber}.pdf`, {
     type: "payslip",
     payslipNumber: payslipData.payslipNumber,
@@ -422,51 +420,17 @@ export const generatePayslip = (
 };
 
 // ─── Vault-Aware Async Wrappers ────────────────────────────────────────────────
-// These wrappers wrap the sync generators above to also push a copy to
-// Firebase Storage. They do NOT replace the sync functions — existing callers
-// continue to work unchanged. New integrations (e.g., Finance page confirmation
-// toasts) can await these for the storage download URL.
 
 /**
  * Generates an invoice PDF, saves it locally, AND archives it to Firebase Storage.
  * @returns Promise<string | null> - The Firebase Storage download URL, or null on failure
  */
 export async function generateAndVaultInvoice(
-  invoiceData: Parameters<typeof generateInvoice>[0]
+  invoiceData: Parameters<typeof buildInvoiceDoc>[0]
 ): Promise<string | null> {
-  const doc = new jsPDF("portrait", "pt", "a4");
-  const width = doc.internal.pageSize.getWidth();
-
-  // Reproduce the invoice content on the doc (same as generateInvoice)
-  doc.setFontSize(28); doc.setFont("helvetica", "bold"); doc.setTextColor(20, 24, 16);
-  doc.text("INVOICE", 40, 60);
-  doc.setFontSize(12); doc.setTextColor(138, 155, 106); doc.text("MINTS GLOBAL", 40, 80);
-  doc.setFontSize(10); doc.setTextColor(100, 100, 100);
-  doc.text("123 Creative Avenue, Suite 100", 40, 95); doc.text("Global HQ", 40, 110);
-  doc.setFontSize(12); doc.setTextColor(20, 24, 16); doc.setFont("helvetica", "bold");
-  doc.text("Billed To:", width - 200, 60);
-  doc.setFont("helvetica", "normal");
-  doc.text(invoiceData.clientName, width - 200, 80);
-  doc.text(`Invoice Number: ${invoiceData.invoiceNumber}`, width - 200, 110);
-  doc.text(`Date: ${invoiceData.date}`, width - 200, 125);
-  doc.text(`Status: ${invoiceData.status.toUpperCase()}`, width - 200, 140);
-
-  const tableData = invoiceData.items.map(item => [item.description, `$${item.amount.toFixed(2)}`]);
-  autoTable(doc, {
-    startY: 180, head: [["Description", "Amount"]], body: tableData,
-    foot: [["Total", `$${invoiceData.total.toFixed(2)}`]], theme: "striped",
-    headStyles: { fillColor: [107, 124, 75] }, footStyles: { fillColor: [20, 24, 16], fontStyle: "bold" },
-    columnStyles: { 1: { halign: "right" } }
-  });
-
-  const finalY = (doc as any).lastAutoTable.finalY || 180;
-  doc.setFontSize(10); doc.setTextColor(150, 150, 150);
-  doc.text("Thank you for your business!", width / 2, finalY + 50, { align: "center" });
-
-  // Browser download
+  const doc = buildInvoiceDoc(invoiceData);
   doc.save(`Invoice_${invoiceData.invoiceNumber}.pdf`);
 
-  // Vault archive (non-blocking)
   return uploadToVault(doc, `vaults/invoices/Invoice_${invoiceData.invoiceNumber}.pdf`, {
     type: "invoice",
     invoiceNumber: invoiceData.invoiceNumber,
@@ -482,40 +446,9 @@ export async function generateAndVaultInvoice(
  * @returns Promise<string | null> - The Firebase Storage download URL, or null on failure
  */
 export async function generateAndVaultQuote(
-  quoteData: Parameters<typeof generateQuote>[0]
+  quoteData: Parameters<typeof buildQuoteDoc>[0]
 ): Promise<string | null> {
-  const doc = new jsPDF("portrait", "pt", "a4");
-  const width = doc.internal.pageSize.getWidth();
-
-  doc.setFontSize(28); doc.setFont("helvetica", "bold"); doc.setTextColor(20, 24, 16);
-  doc.text("PROPOSAL & QUOTE", 40, 60);
-  doc.setFontSize(12); doc.setTextColor(138, 155, 106); doc.text("MINTS GLOBAL", 40, 80);
-  doc.setFontSize(10); doc.setTextColor(100, 100, 100);
-  doc.text("123 Creative Avenue, Suite 100", 40, 95); doc.text("Global HQ", 40, 110);
-  doc.setFontSize(12); doc.setTextColor(20, 24, 16); doc.setFont("helvetica", "bold");
-  doc.text("Prepared For:", width - 200, 60);
-  doc.setFont("helvetica", "normal");
-  doc.text(quoteData.clientName, width - 200, 80);
-  doc.text(quoteData.contactName, width - 200, 95);
-  doc.text(`Quote Number: ${quoteData.quoteNumber}`, width - 200, 125);
-  doc.text(`Date: ${quoteData.date}`, width - 200, 140);
-  doc.text("Valid For: 30 Days", width - 200, 155);
-
-  const tableData = quoteData.items.map(item => [item.description, `${item.amount.toLocaleString()} AED`]);
-  autoTable(doc, {
-    startY: 190, head: [["Service Description", "Investment"]], body: tableData,
-    foot: [["Total Investment", `${quoteData.total.toLocaleString()} AED`]], theme: "striped",
-    headStyles: { fillColor: [107, 124, 75] }, footStyles: { fillColor: [20, 24, 16], fontStyle: "bold" },
-    columnStyles: { 1: { halign: "right" } }
-  });
-
-  const finalY = (doc as any).lastAutoTable.finalY || 190;
-  doc.setFontSize(10); doc.setTextColor(100, 100, 100);
-  doc.text("This quote is subject to our standard terms of service.", 40, finalY + 40);
-  doc.text("To accept this proposal, please sign and return this document.", 40, finalY + 55);
-  doc.line(40, finalY + 120, 240, finalY + 120); doc.text("Client Signature", 100, finalY + 135);
-  doc.line(width - 240, finalY + 120, width - 40, finalY + 120); doc.text("Date", width - 150, finalY + 135);
-
+  const doc = buildQuoteDoc(quoteData);
   doc.save(`Quote_${quoteData.quoteNumber}.pdf`);
 
   return uploadToVault(doc, `vaults/quotes/Quote_${quoteData.quoteNumber}.pdf`, {

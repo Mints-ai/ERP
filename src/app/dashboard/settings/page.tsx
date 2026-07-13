@@ -497,7 +497,7 @@ export default function SettingsDashboard() {
       case "START_DM": return "bg-cyan-100 text-cyan-800 border-cyan-250";
       case "CREATE_GROUP": return "bg-primary text-primary border-primary";
       case "SYSTEM_SETTINGS": return "bg-rose-100 text-rose-800 border-rose-250";
-      default: return "bg-slate-100 text-slate-800 border-slate-250";
+      default: return "bg-muted/50 text-foreground border-slate-250";
     }
   };
 

@@ -357,7 +357,7 @@ export default function TaskBoard() {
                 }}
                 disabled={role === "intern"}
               >
-                <div className={`w-3.5 h-3.5 rounded-full bg-white absolute top-0.5 shadow-sm transition-all ${myTasksOnly ? 'left-5' : 'left-0.5'}`} />
+                <div className={`w-3.5 h-3.5 rounded-full bg-background absolute top-0.5 shadow-sm transition-all ${myTasksOnly ? 'left-5' : 'left-0.5'}`} />
               </button>
               <span className={myTasksOnly ? "font-bold text-foreground" : "text-foreground/40 font-bold"}>Mine</span>
             </div>
