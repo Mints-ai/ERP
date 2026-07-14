@@ -62,7 +62,7 @@ const companySchema = z.object({
 });
 
 export default function SettingsDashboard() {
-  const { user, role } = useAuth();
+  const { user, role, loading } = useAuth();
   const { showToast } = useToast();
   const { theme, setTheme } = useTheme();
   const [employees, setEmployees] = useState<any[]>([]);
@@ -236,7 +236,7 @@ export default function SettingsDashboard() {
 
   // Load preferences from Firestore / localStorage on mount
   useEffect(() => {
-    if (!user) return;
+    if (loading || !user) return;
     
     // Fallback initially to user profile / localStorage
     if (user.displayName) {
@@ -285,7 +285,7 @@ export default function SettingsDashboard() {
   }, [user]);
 
   useEffect(() => {
-    if (!user || !isCSuiteOrAbove) return;
+    if (loading || !user || !isCSuiteOrAbove) return;
 
     // Fetch Employees for User Management
     const qEmp = query(collection(db, "employees"), orderBy("fullName"));

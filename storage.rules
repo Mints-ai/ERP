@@ -1,0 +1,20 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper to check authentication
+    function isAuth() {
+      return request.auth != null;
+    }
+    
+    // Profile Photos: Anyone logged in can read. Only the user can upload their own.
+    match /profile-photos/{userId}/{allPaths=**} {
+      allow read: if isAuth();
+      allow write: if isAuth() && request.auth.uid == userId;
+    }
+
+    // Default fallback: Block all other unauthorized access to root level or unspecified folders
+    match /{allPaths=**} {
+      allow read, write: if isAuth();
+    }
+  }
+}

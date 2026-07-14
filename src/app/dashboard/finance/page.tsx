@@ -16,7 +16,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Banknote, FileText, Receipt, TrendingUp, AlertCircle, Plus, FileDown, ArrowUpRight, DollarSign, Upload, Loader2, Sparkles, Wallet, Trash2 } from "lucide-react";
+import { Banknote, FileText, Receipt, TrendingUp, AlertCircle, Plus, FileDown, ArrowUpRight, DollarSign, Upload, Loader2, Sparkles, Wallet, Trash2, FileSpreadsheet } from "lucide-react";
+import { exportToExcel } from "@/lib/export";
 import { motion } from "framer-motion";
 import { CHART_COLORS, CHART_STYLE } from "@/lib/chartTheme";
 import { cn } from "@/lib/utils";
@@ -642,12 +643,19 @@ export default function FinanceDashboard() {
           <TabsContent value="invoices" className="space-y-4">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Accounts Receivable</h2>
-              <RoleGuard permission="CREATE_INVOICE">
-                <Dialog open={isInvoiceModalOpen} onOpenChange={setIsInvoiceModalOpen}>
-                  <DialogTrigger 
-                    render={
-                      <button onClick={initInvoiceForm} className="btn-primary h-9 py-0 px-4 text-xs font-bold flex items-center justify-center cursor-pointer">
-                        <Plus className="mr-1.5 h-4 w-4" /> Create Invoice
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => exportToExcel(invoices, "Invoices_Report", "Invoices")}
+                  className="px-4 h-9 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-1.5 cursor-pointer bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/20"
+                >
+                  <FileSpreadsheet className="h-4 w-4" /> Export Excel
+                </button>
+                <RoleGuard permission="CREATE_INVOICE">
+                  <Dialog open={isInvoiceModalOpen} onOpenChange={setIsInvoiceModalOpen}>
+                    <DialogTrigger 
+                      render={
+                        <button onClick={initInvoiceForm} className="btn-primary h-9 py-0 px-4 text-xs font-bold flex items-center justify-center cursor-pointer">
+                          <Plus className="mr-1.5 h-4 w-4" /> Create Invoice
                       </button>
                     }
                   />
@@ -781,6 +789,7 @@ export default function FinanceDashboard() {
                   </DialogContent>
                 </Dialog>
               </RoleGuard>
+              </div>
             </div>
             <Card className="bg-card border border-border shadow-sm rounded-lg overflow-hidden border-border">
               <CardContent className="p-0">
