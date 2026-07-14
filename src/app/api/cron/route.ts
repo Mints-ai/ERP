@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebaseAdmin';
-import { FieldValue } from 'firebase-admin/firestore';
+
+
 import { addDays, isBefore } from 'date-fns';
 
 // This is required to force Vercel to treat this as a dynamic endpoint for cron jobs
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
@@ -18,6 +19,7 @@ export async function GET(request: Request) {
 
   try {
     const today = new Date();
+    const { adminDb, FieldValue } = await import('@/lib/firebaseAdmin');
     const batch = adminDb.batch();
     const notificationsRef = adminDb.collection('notifications');
 
