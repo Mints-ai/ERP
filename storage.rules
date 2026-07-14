@@ -12,9 +12,9 @@ service firebase.storage {
       allow write: if isAuth() && request.auth.uid == userId;
     }
 
-    // Default fallback: Block all other unauthorized access to root level or unspecified folders
+    // Default fallback: Deny everything else by default
     match /{allPaths=**} {
-      allow read, write: if isAuth();
+      allow read, write: if false;
     }
   }
 }
