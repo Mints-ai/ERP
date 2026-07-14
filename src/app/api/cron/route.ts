@@ -29,7 +29,7 @@ export async function GET(request: Request) {
       .where('isActive', '==', true)
       .get();
 
-    expiringQuery.docs.forEach((doc) => {
+    expiringQuery.docs.forEach((doc: any) => {
       const emp = doc.data();
       if (emp.internEndDate) {
         const endDate = new Date(emp.internEndDate);
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
       .where('status', '==', 'pending')
       .get();
       
-    invoicesQuery.docs.forEach((doc) => {
+    invoicesQuery.docs.forEach((doc: any) => {
       const invoice = doc.data();
       if (invoice.dueDate) {
         const dueDate = new Date(invoice.dueDate);
