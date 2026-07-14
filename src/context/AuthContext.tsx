@@ -472,6 +472,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                   createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
                 });
 
+                // Request FCM Token
+                try {
+                  const { messaging } = await import("@/lib/firebase");
+                  if (messaging) {
+                    const { getToken } = await import("firebase/messaging");
+                    const currentToken = await getToken(messaging, { 
+                      vapidKey: "REPLACE_WITH_VAPID_KEY" // User needs to replace this
+                    });
+                    
+                    if (currentToken) {
+                      await updateDoc(userDocRef, {
+                        fcmToken: currentToken
+                      });
+                    }
+                  }
+                } catch (fcmErr) {
+                  console.warn("FCM Token generation failed (ensure VAPID key is set):", fcmErr);
+                }
               } catch (ipErr) {
                 console.error("Error logging sign-in IP address:", ipErr);
               }

@@ -11,10 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Building2, LayoutGrid, Network, Mail, MessageSquare, Calendar, Briefcase, Zap, Users, Trash2, Sparkles } from "lucide-react";
+import { Search, Plus, Building2, LayoutGrid, Network, Mail, MessageSquare, Calendar, Briefcase, Zap, Users, Trash2, Sparkles, Download } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { exportToExcel } from "@/lib/export";
 import { RoleGuard } from "@/components/layout/RoleGuard";
 import { cn } from "@/lib/utils";
 
@@ -123,6 +124,23 @@ export default function EmployeeDirectory() {
     return acc;
   }, {} as Record<string, any[]>);
 
+  const handleExport = () => {
+    const exportData = filteredEmployees.map(emp => ({
+      "Full Name": emp.fullName || "",
+      "Email": emp.email || "",
+      "Phone": emp.phone || "",
+      "Department": emp.department || "",
+      "Job Title": emp.jobTitle || "",
+      "Role": emp.role || "",
+      "Is Intern": emp.isIntern ? "Yes" : "No",
+      "Intern End Date": emp.internEndDate || "",
+      "Is Active": emp.isActive ? "Yes" : "No",
+      "Last Seen": emp.lastSeenAt ? new Date(emp.lastSeenAt).toLocaleString() : ""
+    }));
+
+    exportToExcel(exportData, "Employee_Directory");
+  };
+
   return (
     <div className="space-y-6 pb-12 text-foreground">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -159,6 +177,12 @@ export default function EmployeeDirectory() {
             </div>
             
             <RoleGuard permission="MANAGE_USERS">
+              <button 
+                onClick={handleExport}
+                className="btn-outline h-9 py-0 px-4 text-xs font-bold flex items-center justify-center border-border text-foreground hover:bg-muted/80 cursor-pointer"
+              >
+                <Download className="mr-1.5 h-4 w-4" /> Export
+              </button>
               <Link href="/dashboard/hr/new" className="cursor-pointer">
                 <button className="btn-primary h-9 py-0 px-4 text-xs font-bold flex items-center justify-center">
                   <Plus className="mr-1.5 h-4 w-4" /> Add Person

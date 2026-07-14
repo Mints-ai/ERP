@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getMessaging, isSupported } from "firebase/messaging";
 
 // Determine if we are running in the server/build phase
 const isServer = typeof window === "undefined";
@@ -26,6 +27,7 @@ let app;
 let auth: any;
 let db: any;
 let storage: any;
+let messaging: any;
 
 // Helper to check if Firebase is configured
 const isFirebaseConfigured = !!firebaseConfig.apiKey;
@@ -50,7 +52,14 @@ if (isFirebaseConfigured) {
     }
   }
   
-  storage = getStorage(app);
+  if (!isServer) {
+    storage = getStorage(app);
+    isSupported().then((supported) => {
+      if (supported) {
+        messaging = getMessaging(app);
+      }
+    });
+  }
 } else {
   // If we are on the client and configuration is missing, we create a proxy
   // that throws a helpful error when accessed, rather than throwing cryptic Firebase errors.
@@ -78,6 +87,7 @@ if (isFirebaseConfigured) {
   auth = createMissingConfigHandler("Auth");
   db = createMissingConfigHandler("Firestore");
   storage = createMissingConfigHandler("Storage");
+  messaging = createMissingConfigHandler("Messaging");
 }
 
-export { app, auth, db, storage, firebaseConfig, isFirebaseConfigured };
+export { app, auth, db, storage, messaging, firebaseConfig, isFirebaseConfigured };
