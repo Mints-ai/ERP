@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { AlertCircle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AlertOctagon, RefreshCcw } from "lucide-react";
 
 export default function DashboardError({
   error,
@@ -12,28 +11,30 @@ export default function DashboardError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log the error to an error reporting service if needed
-    console.error("Dashboard caught an error:", error);
+    // Log the error to an error reporting service
+    console.error("Dashboard Boundary Error:", error);
   }, [error]);
 
   return (
-    <div className="flex h-[80vh] w-full flex-col items-center justify-center p-6 text-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mb-6">
-        <AlertCircle className="h-10 w-10 text-red-600 dark:text-red-400" />
+    <div className="flex h-full w-full items-center justify-center p-6">
+      <div className="max-w-md w-full bg-card border border-border shadow-sm rounded-2xl p-8 text-center flex flex-col items-center">
+        <div className="h-16 w-16 bg-rose-500/10 rounded-2xl flex items-center justify-center mb-6 border border-rose-500/20">
+          <AlertOctagon className="h-8 w-8 text-rose-500" />
+        </div>
+        <h2 className="text-lg font-bold text-foreground mb-2 uppercase tracking-wide">
+          Dashboard Component Error
+        </h2>
+        <p className="text-sm text-foreground/50 mb-8 leading-relaxed">
+          Something went wrong while loading this section of the dashboard. Please try refreshing or contact support if the issue persists.
+        </p>
+        <button
+          onClick={() => reset()}
+          className="btn-primary flex items-center justify-center gap-2 h-10 px-6 rounded-xl text-sm font-bold w-full"
+        >
+          <RefreshCcw className="h-4 w-4" />
+          Reload Section
+        </button>
       </div>
-      <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-2">
-        Something went wrong!
-      </h2>
-      <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mb-8">
-        We encountered an unexpected error while loading this module. You can try reloading the module, or contact support if the issue persists.
-      </p>
-      <Button
-        onClick={() => reset()}
-        className="bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-500 dark:hover:bg-indigo-600"
-      >
-        <RefreshCw className="mr-2 h-4 w-4" />
-        Try again
-      </Button>
     </div>
   );
 }
