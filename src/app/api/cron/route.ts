@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebaseAdmin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { addDays, isBefore } from 'date-fns';
 
 // This is required to force Vercel to treat this as a dynamic endpoint for cron jobs
@@ -40,7 +41,7 @@ export async function GET(request: Request) {
             title: 'Internship Expiring Soon',
             message: `${emp.fullName}'s internship ends on ${emp.internEndDate}.`,
             targetRoles: ['MANAGE_USERS'],
-            createdAt: adminDb.FieldValue.serverTimestamp(),
+            createdAt: FieldValue.serverTimestamp(),
             readBy: [],
             link: `/dashboard/hr/${doc.id}`
           });
@@ -64,7 +65,7 @@ export async function GET(request: Request) {
             title: 'Invoice Overdue',
             message: `Invoice #${invoice.invoiceNumber || doc.id} is overdue.`,
             targetRoles: ['MANAGE_FINANCE'],
-            createdAt: adminDb.FieldValue.serverTimestamp(),
+            createdAt: FieldValue.serverTimestamp(),
             readBy: [],
             link: `/dashboard/finance`
           });
