@@ -13,17 +13,7 @@ import { generatePayslip } from "@/lib/pdfGenerator";
 import { Banknote, FileDown, Calculator, Download } from "lucide-react";
 import { motion } from "framer-motion";
 
-interface PayrollData {
-  userId: string;
-  name: string;
-  role: string;
-  avatar: string;
-  baseSalary: number;
-  unpaidLeaves: number;
-  deductions: number;
-  netPay: number;
-  status: "Paid" | "Pending";
-}
+import { PayrollData } from "@/types";
 
 export default function PayrollDashboard() {
   const [payroll, setPayroll] = useState<PayrollData[]>([]);

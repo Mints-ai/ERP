@@ -11,32 +11,7 @@ import { useToast } from "@/context/ToastContext";
 import { GanttChartSquare, Users, AlertTriangle, CheckCircle2, Clock, Calendar, Plus, Trash2, FileSpreadsheet, Send, TrendingUp } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-
-interface CapacityData {
-  userId: string;
-  name: string;
-  role: string;
-  avatar: string;
-  activeTasks: number;
-  totalEstimatedHours: number;
-  status: "Overbooked" | "Healthy" | "Available";
-  utilization: number; // 0-100%
-}
-
-interface TimesheetRow {
-  id: string;
-  projectId: string;
-  clientId: string;
-  hours: {
-    mon: number;
-    tue: number;
-    wed: number;
-    thu: number;
-    fri: number;
-    sat: number;
-    sun: number;
-  };
-}
+import { CapacityData, TimesheetRow } from "@/types";
 
 export default function CapacityPlanning() {
   const { showToast } = useToast();

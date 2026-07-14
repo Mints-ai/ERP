@@ -14,14 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { FileText, Image as ImageIcon, File, FileArchive, FileAudio, FileVideo, Upload, Trash2, Download, MoreVertical, Loader2, Cloud, Database } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface StorageFile {
-  name: string;
-  url: string;
-  path: string;
-  size: number;
-  contentType: string;
-  timeCreated: string;
-}
+import { StorageFile } from "@/types";
 
 // IndexedDB Helper functions for persistent, 100% free browser-based storage
 const openLocalDB = (): Promise<IDBDatabase> => {

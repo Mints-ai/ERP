@@ -16,27 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type FolderType = "inbox" | "sent" | "starred" | "trash";
-type PriorityType = "low" | "normal" | "urgent";
-
-interface InternalMail {
-  id: string;
-  senderId: string;
-  senderName: string;
-  senderEmail: string;
-  receiverId: string;
-  receiverName: string;
-  receiverEmail: string;
-  subject: string;
-  body: string;
-  priority: PriorityType;
-  readStatus: boolean;
-  isStarredByReceiver: boolean;
-  isStarredBySender: boolean;
-  isDeletedBySender: boolean;
-  isDeletedByReceiver: boolean;
-  attachments?: { name: string; url: string }[];
-  createdAt: any;
-}
+import { InternalMail, PriorityType } from "@/types";
 
 export default function SecureMail() {
   const { user } = useAuth();

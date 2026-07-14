@@ -22,28 +22,13 @@ import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend
 } from "recharts";
+import { DataTable } from "@/components/ui/data-table";
+import { ColumnDef } from "@tanstack/react-table";
 
 
 // ─── Event Taxonomy ────────────────────────────────────────────────────────────
 
-interface AuditEvent {
-  id: string;
-  actorId?: string;
-  actorName?: string;
-  action: string;
-  targetCollection?: string;
-  targetId?: string;
-  details?: string;
-  createdAt?: any;
-}
-
-type SeverityLevel = "critical" | "high" | "medium" | "low" | "info";
-
-interface ActionMeta {
-  label: string;
-  severity: SeverityLevel;
-  icon: React.ElementType;
-}
+import { AuditEvent, SeverityLevel, ActionMeta } from "@/types";
 
 const ACTION_META: Record<string, ActionMeta> = {
   CREATE_INVOICE:     { label: "Invoice Created",       severity: "info",     icon: FileText     },
@@ -135,6 +120,142 @@ export default function SecurityAuditDashboard() {
   const [loginEvents, setLoginEvents] = useState<any[]>([]);
   const [loginSearch, setLoginSearch] = useState("");
   const [search, setSearch] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
+
+  const loginColumns: ColumnDef<any>[] = [
+    {
+      accessorKey: "employee",
+      header: "Employee",
+      cell: ({ row }) => {
+        const ev = row.original;
+        return (
+          <div>
+            <div className="font-bold text-foreground">{ev.fullName || ev.email}</div>
+            <div className="text-xs text-foreground/40 font-mono">{ev.email}</div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "ip",
+      header: "IP Address",
+      cell: ({ row }) => <span className="font-mono text-xs text-primary/80">{row.original.ip || '—'}</span>,
+    },
+    {
+      accessorKey: "browser",
+      header: "Browser / Device",
+      cell: ({ row }) => {
+        const ev = row.original;
+        return (
+          <div>
+            <div className="flex items-center gap-1.5">
+              {ev.device === 'Mobile' ? <Smartphone className="w-3.5 h-3.5 text-amber-400" /> : <Monitor className="w-3.5 h-3.5 text-primary" />}
+              <span className="font-semibold">{ev.browser || 'Unknown'}</span>
+            </div>
+            <div className="text-xs text-foreground/30 mt-0.5">{ev.device}</div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "platform",
+      header: "Platform",
+      cell: ({ row }) => <span className="text-foreground/60 text-xs">{row.original.platform || '—'}</span>,
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const ev = row.original;
+        return (
+          <Badge className={cn("text-xs font-bold uppercase tracking-wider shadow-none border",
+            ev.status === 'success' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-rose-500/10 text-rose-300 border-rose-500/20'
+          )}>
+            {ev.status || 'success'}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: "Time",
+      cell: ({ row }) => <span className="font-mono text-xs text-foreground/40">{formatTimestamp(row.original.createdAt)}</span>,
+    },
+  ];
+
+  const auditColumns: ColumnDef<AuditEvent>[] = [
+    {
+      accessorKey: "action",
+      header: "Action",
+      cell: ({ row }) => {
+        const ev = row.original;
+        const meta = getActionMeta(ev.action);
+        const Icon = meta.icon;
+        return (
+          <div className="flex items-center gap-3">
+            <div className={cn("p-2 rounded-lg border shrink-0", SEVERITY_STYLES[meta.severity])}>
+              <Icon className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-foreground">{meta.label}</span>
+                <Badge
+                  variant="outline"
+                  className={cn("text-[10px] font-bold tracking-wider uppercase shadow-none", SEVERITY_STYLES[meta.severity])}
+                >
+                  {meta.severity}
+                </Badge>
+              </div>
+              <span className="text-xs font-mono text-foreground/40">{ev.action}</span>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "details",
+      header: "Details",
+      cell: ({ row }) => {
+        const ev = row.original;
+        return (
+          <div className="max-w-[300px]">
+            {ev.targetCollection && (
+              <div className="text-xs text-foreground/40 font-mono mb-1">
+                → {ev.targetCollection}{ev.targetId ? `/${ev.targetId.slice(0, 8)}…` : ""}
+              </div>
+            )}
+            <div className="text-xs text-foreground/60 leading-relaxed truncate" title={ev.details}>
+              {ev.details || "—"}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "actor",
+      header: "Actor",
+      cell: ({ row }) => {
+        const ev = row.original;
+        return (
+          <div className="flex items-center gap-1.5 text-sm text-foreground/80 font-medium">
+            <UserX className="h-3.5 w-3.5 text-foreground/40" />
+            {ev.actorName || (ev.actorId ? ev.actorId.slice(0, 12) + "…" : "System")}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: "Time",
+      cell: ({ row }) => (
+        <span className="flex items-center gap-1.5 text-xs font-mono text-foreground/60">
+          <Clock className="h-3.5 w-3.5 text-foreground/40" />
+          {formatTimestamp(row.original.createdAt)}
+        </span>
+      ),
+    },
+  ];
+
   const [filterSeverity, setFilterSeverity] = useState<SeverityLevel | "all">("all");
 
   // 1. Session tracking state & effects
@@ -632,70 +753,8 @@ export default function SecurityAuditDashboard() {
                       <p className="text-xs text-foreground/20">Try adjusting your search or severity filter.</p>
                     </div>
                   ) : (
-                    <div className="divide-y divide-white/[0.04]">
-                      {filtered.map((ev, i) => {
-                        const meta = getActionMeta(ev.action);
-                        const Icon = meta.icon;
-                        return (
-                          <motion.div
-                            key={ev.id}
-                            initial={{ opacity: 0, y: 4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: Math.min(i * 0.02, 0.3) }}
-                            className="flex items-start gap-4 px-5 py-3.5 hover: transition-colors group"
-                          >
-                            {/* Severity dot */}
-                            <div className="pt-1 shrink-0">
-                              <div className={cn("w-2 h-2 rounded-full", SEVERITY_DOT[meta.severity])} />
-                            </div>
-
-                            {/* Icon */}
-                            <div className={cn("p-2 rounded-lg border shrink-0", SEVERITY_STYLES[meta.severity])}>
-                              <Icon className="h-3.5 w-3.5" />
-                            </div>
-
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                                <span className="text-xs font-bold text-foreground">{meta.label}</span>
-                                <Badge
-                                  variant="outline"
-                                  className={cn("text-xs font-bold tracking-wider uppercase shadow-none w-fit", SEVERITY_STYLES[meta.severity])}
-                                >
-                                  {meta.severity}
-                                </Badge>
-                                {ev.targetCollection && (
-                                  <span className="text-xs text-foreground/30 font-mono">
-                                    → {ev.targetCollection}{ev.targetId ? `/${ev.targetId.slice(0, 8)}…` : ""}
-                                  </span>
-                                )}
-                              </div>
-                              {ev.details && (
-                                <p className="text-xs text-foreground/50 mt-0.5 leading-relaxed line-clamp-2 group-hover:line-clamp-none transition-all">
-                                  {ev.details}
-                                </p>
-                              )}
-                              <div className="flex items-center gap-3 mt-1.5 text-xs text-foreground/25 font-mono">
-                                {ev.actorId && (
-                                  <span className="flex items-center gap-1">
-                                    <UserX className="h-3 w-3" />
-                                    {ev.actorName || ev.actorId.slice(0, 12) + "…"}
-                                  </span>
-                                )}
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {formatTimestamp(ev.createdAt)}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Raw action code */}
-                            <span className="text-xs font-mono text-foreground/15 hidden lg:block shrink-0 pt-1">
-                              {ev.action}
-                            </span>
-                          </motion.div>
-                        );
-                      })}
+                    <div className="p-4">
+                      <DataTable columns={auditColumns} data={filtered} searchKey="action" searchPlaceholder="Search events..." />
                     </div>
                   )}
                 </CardContent>
@@ -918,53 +977,7 @@ export default function SecurityAuditDashboard() {
                       <p className="text-xs font-bold text-foreground/30 uppercase tracking-wider">No login sessions recorded yet</p>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead>
-                          <tr className="border-b border-border text-foreground/40 font-bold uppercase tracking-wider text-xs">
-                            <th className="p-3">Employee</th>
-                            <th className="p-3">IP Address</th>
-                            <th className="p-3">Browser / Device</th>
-                            <th className="p-3">Platform</th>
-                            <th className="p-3">Status</th>
-                            <th className="p-3">Time</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {loginEvents
-                            .filter((ev: any) =>
-                              !loginSearch ||
-                              (ev.fullName || "").toLowerCase().includes(loginSearch.toLowerCase()) ||
-                              (ev.email || "").toLowerCase().includes(loginSearch.toLowerCase()) ||
-                              (ev.ip || "").includes(loginSearch) ||
-                              (ev.browser || "").toLowerCase().includes(loginSearch.toLowerCase())
-                            )
-                            .map((ev: any) => (
-                              <tr key={ev.id} className="border-b border-border hover: transition-colors">
-                                <td className="p-3">
-                                  <div className="font-bold text-foreground">{ev.fullName || ev.email}</div>
-                                  <div className="text-xs text-foreground/40 font-mono">{ev.email}</div>
-                                </td>
-                                <td className="p-3 font-mono text-xs text-primary/80">{ev.ip || '—'}</td>
-                                <td className="p-3">
-                                  <div className="flex items-center gap-1.5">
-                                    {ev.device === 'Mobile' ? <Smartphone className="w-3.5 h-3.5 text-amber-400" /> : <Monitor className="w-3.5 h-3.5 text-primary" />}
-                                    <span className="font-semibold">{ev.browser || 'Unknown'}</span>
-                                  </div>
-                                  <div className="text-xs text-foreground/30 mt-0.5">{ev.device}</div>
-                                </td>
-                                <td className="p-3 text-foreground/60 text-xs">{ev.platform || '—'}</td>
-                                <td className="p-3">
-                                  <Badge className={cn("text-xs font-bold uppercase tracking-wider shadow-none border",
-                                    ev.status === 'success' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-rose-500/10 text-rose-300 border-rose-500/20'
-                                  )}>{ev.status || 'success'}</Badge>
-                                </td>
-                                <td className="p-3 font-mono text-xs text-foreground/40">{formatTimestamp(ev.createdAt)}</td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
+                    <DataTable columns={loginColumns} data={loginEvents} searchKey="employee" searchPlaceholder="Search by employee..." />
                   )}
                 </CardContent>
               </Card>

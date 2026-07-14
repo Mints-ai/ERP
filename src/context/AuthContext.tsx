@@ -183,6 +183,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        // Set secure cookie for Next.js Middleware route protection
+        if (typeof window !== "undefined") {
+          document.cookie = `auth-token=${firebaseUser.uid}; path=/; max-age=604800; SameSite=Lax`;
+        }
+
         const emailLower = firebaseUser.email?.toLowerCase().trim() || "";
         const adminEmailsEnv = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
         const adminEmails = adminEmailsEnv.split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
@@ -518,6 +523,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         }
       } else {
+        if (typeof window !== "undefined") {
+          document.cookie = 'auth-token=; path=/; max-age=0; SameSite=Lax';
+        }
         setUser(null);
       }
       setLoading(false);

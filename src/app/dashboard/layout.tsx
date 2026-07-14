@@ -19,7 +19,7 @@ export default function DashboardLayout({
           <Sidebar />
           <div className="lg:pl-[68px] flex flex-col min-h-screen transition-all duration-300">
             <TopNav />
-            <main className="flex-1 p-4 md:p-8 overflow-y-auto relative">
+            <main className="flex-1 p-4 md:p-8 overflow-x-hidden relative">
               {children}
             </main>
           </div>

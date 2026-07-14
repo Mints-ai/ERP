@@ -16,30 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGr
 import { Input } from "@/components/ui/input";
 import { downloadCSV } from "@/lib/exportUtils";
 
-type TaskStatus = "backlog" | "in_progress" | "review" | "done";
-type TaskPriority = "low" | "normal" | "high" | "urgent";
-
-interface TaskRemark {
-  id: string;
-  text: string;
-  authorName: string;
-  authorId: string;
-  createdAt: string;
-}
-
-interface Task {
-  id: string;
-  title: string;
-  projectId: string;
-  projectName?: string;
-  assignedTo: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  dueDate?: string;
-  createdAt: any;
-  blocked?: boolean;
-  remarks?: TaskRemark[];
-}
+import { TaskStatus, TaskPriority, TaskRemark, Task } from "@/types";
 
 const COLUMNS: { id: TaskStatus; title: string }[] = [
   { id: "backlog", title: "Backlog" },

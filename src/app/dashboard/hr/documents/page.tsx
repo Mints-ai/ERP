@@ -32,15 +32,7 @@ function expiryStatus(days: number): { label: string; color: string; dot: string
   return             { label: "Valid",       color: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20", dot: "bg-emerald-400",           priority: 4 };
 }
 
-interface DocRecord {
-  id: string;
-  employeeId: string;
-  employeeName: string;
-  docType: string;
-  expiryDate: string;
-  notes?: string;
-  createdAt?: any;
-}
+import { DocRecord } from "@/types";
 
 export default function DocumentExpiryTracker() {
   const { user, role } = useAuth();

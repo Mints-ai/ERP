@@ -112,22 +112,7 @@ const formSchema = z.object({
   }
 });
 
-interface ParsedEmployee {
-  fullName: string;
-  email: string;
-  role: string;
-  jobTitle: string;
-  phone: string;
-  departments: string[];
-  subRoles: string[];
-  isIntern: boolean;
-  internEndDate: string;
-  temporaryPassword?: string;
-  errors: Record<string, string>;
-  status: "pending" | "provisioning" | "success" | "failed";
-  errorMessage?: string;
-  employeeId?: string;
-}
+import { ParsedEmployee } from "@/types";
 
 // Custom simple CSV Parser that handles quotes and line breaks
 function parseCSV(text: string): Record<string, string>[] {

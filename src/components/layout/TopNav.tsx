@@ -5,7 +5,7 @@ import { collection, query, where, orderBy, limit, onSnapshot, writeBatch, doc, 
 import { db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "next-themes";
 import { useToast } from "@/context/ToastContext";
 import { Bell, Search, Check, Trash2, Sun, Moon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,7 +16,7 @@ import { ROLE_META } from "@/lib/permissions";
 
 export function TopNav() {
   const { user, role, simulatedRole, setSimulatedRole, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { showToast } = useToast();
   const router = useRouter();
   const [cmdOpen, setCmdOpen] = useState(false);
@@ -173,7 +173,7 @@ export function TopNav() {
 
           {/* Theme Toggler */}
           <button 
-            onClick={toggleTheme}
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             className="text-muted-foreground hover:text-foreground p-2 rounded-xl hover:bg-secondary/80 border border-transparent hover:border-border transition-all cursor-pointer"
             title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
           >

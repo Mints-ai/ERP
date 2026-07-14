@@ -1,12 +1,14 @@
 "use client";
 
+import { z } from "zod";
+
 import { useState, useEffect } from "react";
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { canAccess, ROLE_META, PERMISSIONS } from "@/lib/permissions";
 import { useToast } from "@/context/ToastContext";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "next-themes";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,11 +49,22 @@ const PRESET_AVATARS = [
   "https://api.dicebear.com/7.x/avataaars/svg?seed=Luna"
 ];
 
+const holidaySchema = z.object({
+  name: z.string().min(2, "Holiday name must be at least 2 characters long."),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format.")
+});
+
+const companySchema = z.object({
+  name: z.string().min(2, "Company Name must be at least 2 characters long."),
+  vatNumber: z.string().min(5, "VAT Number must be at least 5 characters long."),
+  currency: z.string().length(3, "Currency must be exactly 3 characters (e.g., AED)."),
+  address: z.string().min(5, "Company Address must be at least 5 characters long.")
+});
 
 export default function SettingsDashboard() {
   const { user, role } = useAuth();
   const { showToast } = useToast();
-  const { theme, setThemeMode } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [employees, setEmployees] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"preferences" | "users" | "roles" | "company" | "holidays" | "audit" | "integrations" | "security">("preferences");
@@ -247,7 +260,7 @@ export default function SettingsDashboard() {
         if (data.preferences) {
           const prefs = data.preferences;
           if (prefs.theme !== undefined) {
-            setThemeMode(prefs.theme as "light" | "dark");
+            setTheme(prefs.theme as "light" | "dark");
           }
           if (prefs.hideGrid !== undefined) {
             setPrefGrid(!prefs.hideGrid);
@@ -377,11 +390,18 @@ export default function SettingsDashboard() {
   };
 
   const handleAddHoliday = async () => {
-    if (!newHoliday.date || !newHoliday.name) return;
+    try {
+      holidaySchema.parse(newHoliday);
+    } catch (err: any) {
+      if (err.errors) {
+        showToast(err.errors[0].message, "warning");
+      }
+      return;
+    }
     
     try {
       const updatedHolidays = [...(companySettings.holidays || []), newHoliday];
-      await updateDoc(doc(db, "settings", "company"), { holidays: updatedHolidays });
+      await setDoc(doc(db, "settings", "company"), { holidays: updatedHolidays }, { merge: true });
       setNewHoliday({ date: "", name: "" });
       showToast(`Public holiday "${newHoliday.name}" registered successfully.`, "success");
     } catch (err) {
@@ -395,7 +415,7 @@ export default function SettingsDashboard() {
       const updatedHolidays = [...companySettings.holidays];
       const deletedName = updatedHolidays[index]?.name || "Holiday";
       updatedHolidays.splice(index, 1);
-      await updateDoc(doc(db, "settings", "company"), { holidays: updatedHolidays });
+      await setDoc(doc(db, "settings", "company"), { holidays: updatedHolidays }, { merge: true });
       showToast(`Public holiday "${deletedName}" removed successfully.`, "success");
     } catch (err) {
       console.error("Error deleting holiday:", err);
@@ -425,7 +445,7 @@ export default function SettingsDashboard() {
         localStorage.setItem("hideGrid", String(!prefGrid));
         localStorage.setItem("notifEmail", String(prefNotifs.email));
         localStorage.setItem("notifApp", String(prefNotifs.app));
-        localStorage.setItem("theme", theme);
+        localStorage.setItem("theme", theme ?? "system");
         
         if (!prefGrid) {
           document.documentElement.classList.add("no-grid");
@@ -442,14 +462,28 @@ export default function SettingsDashboard() {
   };
 
   const handleSaveCompanySettings = async () => {
-    setSavingCompany(true);
     try {
-      await updateDoc(doc(db, "settings", "company"), {
+      companySchema.parse({
         name: compName,
         vatNumber: compVat,
         currency: compCurrency,
         address: compAddress
       });
+    } catch (err: any) {
+      if (err.errors) {
+        showToast(err.errors[0].message, "warning");
+      }
+      return;
+    }
+
+    setSavingCompany(true);
+    try {
+      await setDoc(doc(db, "settings", "company"), {
+        name: compName,
+        vatNumber: compVat,
+        currency: compCurrency,
+        address: compAddress
+      }, { merge: true });
       showToast("Company profile settings successfully updated across all corporate departments.", "success");
     } catch (err) {
       console.error("Error saving company settings:", err);
@@ -924,7 +958,7 @@ export default function SettingsDashboard() {
                     </div>
                     <Switch 
                       checked={theme === "light"} 
-                      onCheckedChange={(val) => setThemeMode(val ? "light" : "dark")}
+                      onCheckedChange={(val) => setTheme(val ? "light" : "dark")}
                       className="data-[state=checked]:bg-primary"
                     />
                   </div>
