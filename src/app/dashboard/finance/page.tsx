@@ -22,6 +22,7 @@ import { motion } from "framer-motion";
 import { CHART_COLORS, CHART_STYLE } from "@/lib/chartTheme";
 import { cn } from "@/lib/utils";
 import { downloadCSV } from "@/lib/exportUtils";
+import { ApprovalsWidget } from "@/components/dashboard/ApprovalsWidget";
 
 
 
@@ -30,6 +31,40 @@ const STATUS_COLORS: Record<string, string> = {
   sent: "bg-primary/15 text-primary/80 border-primary/20",
   paid: "bg-emerald-600/15 text-emerald-300 border-emerald-500/20",
   overdue: "bg-rose-600/15 text-rose-300 border-rose-500/20",
+};
+
+const evaluateExpenseWorkflows = async (expenseAmount: number) => {
+  try {
+    const { collection, query, where, getDocs } = await import("firebase/firestore");
+    const q = query(collection(db, "workflows"), where("isActive", "==", true), where("triggerType", "==", "Expense"));
+    const snap = await getDocs(q);
+    
+    // Find the first matching workflow
+    for (const docSnap of snap.docs) {
+      const wf = docSnap.data();
+      let match = true;
+      for (const cond of (wf.conditions || [])) {
+        if (cond.field === "amount") {
+          const val = Number(cond.value);
+          if (cond.operator === ">=" && !(expenseAmount >= val)) match = false;
+          if (cond.operator === "<=" && !(expenseAmount <= val)) match = false;
+          if (cond.operator === ">" && !(expenseAmount > val)) match = false;
+          if (cond.operator === "<" && !(expenseAmount < val)) match = false;
+          if (cond.operator === "==" && !(expenseAmount === val)) match = false;
+        }
+      }
+      if (match && wf.approvalChain && wf.approvalChain.length > 0) {
+        return {
+          workflowId: docSnap.id,
+          requiredApprovals: wf.approvalChain,
+          currentApprovalStep: 0,
+        };
+      }
+    }
+  } catch (err) {
+    console.error("Error evaluating workflows", err);
+  }
+  return { requiredApprovals: [], currentApprovalStep: 0 };
 };
 
 export default function FinanceDashboard() {
@@ -249,17 +284,22 @@ export default function FinanceDashboard() {
     
     setSavingManual(true);
     try {
+      const amount = Number(manualAmount);
+      const wfResult = await evaluateExpenseWorkflows(amount);
       const { addDoc, collection, serverTimestamp } = await import("firebase/firestore");
       await addDoc(collection(db, "expenses"), {
         submittedBy: user?.displayName || "Mints Team Member",
         submittedById: user?.uid || "",
         vendor: manualVendor.trim(),
         category: manualCategory,
-        amount: Number(manualAmount),
+        amount: amount,
         currency: compCurrency,
-        status: "pending",
+        status: wfResult.requiredApprovals.length > 0 ? "pending_approval" : "pending",
         date: manualDate,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        workflowId: wfResult.workflowId || null,
+        requiredApprovals: wfResult.requiredApprovals,
+        currentApprovalStep: wfResult.currentApprovalStep
       });
       
       setManualVendor("");
@@ -278,17 +318,22 @@ export default function FinanceDashboard() {
     if (!ocrVendor.trim() || !ocrAmount) return;
     
     try {
+      const amount = Number(ocrAmount);
+      const wfResult = await evaluateExpenseWorkflows(amount);
       const { addDoc, collection, serverTimestamp } = await import("firebase/firestore");
       await addDoc(collection(db, "expenses"), {
         submittedBy: user?.displayName || "Mints Team Member",
         submittedById: user?.uid || "",
         vendor: ocrVendor.trim(),
         category: "Software", 
-        amount: Number(ocrAmount),
+        amount: amount,
         currency: compCurrency,
-        status: "pending",
+        status: wfResult.requiredApprovals.length > 0 ? "pending_approval" : "pending",
         date: ocrDate,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        workflowId: wfResult.workflowId || null,
+        requiredApprovals: wfResult.requiredApprovals,
+        currentApprovalStep: wfResult.currentApprovalStep
       });
       
       setOcrResult(null);
@@ -459,6 +504,8 @@ export default function FinanceDashboard() {
             </button>
           </div>
         </div>
+
+        <ApprovalsWidget />
 
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="mb-6 border border-border shadow-inner p-1 rounded-xl">

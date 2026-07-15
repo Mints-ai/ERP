@@ -10,7 +10,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["firebase-admin", "jwks-rsa", "jose"],
+  serverExternalPackages: ["firebase-admin"],
   turbopack: {
     root: __dirname,
   },

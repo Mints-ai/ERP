@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Settings, Users, Building2, Calendar, ShieldAlert, UploadCloud, Plus, Trash2, User, Shield, Activity, ShieldCheck, Laptop, Wifi, Clock, Search } from "lucide-react";
+import { Settings, Users, Building2, Calendar, ShieldAlert, UploadCloud, Plus, Trash2, User, Shield, Activity, ShieldCheck, Laptop, Wifi, Clock, Search, Zap } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -697,6 +697,13 @@ export default function SettingsDashboard() {
                 <Wifi className="w-5 h-5" />
                 Integrations Center
               </button>
+              <Link 
+                href="/dashboard/settings/workflows"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-left border text-muted-foreground border-transparent hover:text-foreground hover:bg-secondary/40"
+              >
+                <Zap className="w-5 h-5" />
+                Workflow Builder
+              </Link>
             </>
           )}
         </div>

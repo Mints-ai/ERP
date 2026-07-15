@@ -13,7 +13,7 @@ import { Zap } from "lucide-react";
 import { sendDiscordNotification } from "@/lib/utils";
 
 export default function LoginPage() {
-  const { user, loginWithGoogle, loading, authError, setAuthError } = useAuth();
+  const { user, role, loginWithGoogle, loading, authError, setAuthError } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,9 +29,13 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push("/dashboard");
+      if (role === "client") {
+        router.push("/client-portal");
+      } else {
+        router.push("/dashboard");
+      }
     }
-  }, [user, loading, router]);
+  }, [user, role, loading, router]);
 
   useEffect(() => {
     if (authError) {

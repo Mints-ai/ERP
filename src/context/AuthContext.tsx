@@ -14,6 +14,7 @@ interface AppUser extends User {
   departments?: string[];
   fullName?: string;
   jobTitle?: string;
+  clientId?: string;
 }
 
 interface AuthContextType {
@@ -192,8 +193,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const adminEmailsEnv = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
         const adminEmails = adminEmailsEnv.split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
         
-        // Enforce restriction: Block public @gmail.com accounts except admin accounts
-        if (emailLower.endsWith("@gmail.com") && !adminEmails.includes(emailLower)) {
+        // Define super admin emails
+        const isSuperAdmin = adminEmails.includes(emailLower);
+
+        // Check if this is a client email first (to allow client gmail accounts)
+        let isClientEmail = false;
+        let clientData: any = null;
+        try {
+          const clientQ = query(collection(db, "clients"), where("email", "==", firebaseUser.email));
+          const clientSnap = await getDocs(clientQ);
+          if (!clientSnap.empty) {
+            isClientEmail = true;
+            clientData = { id: clientSnap.docs[0].id, ...clientSnap.docs[0].data() };
+          }
+        } catch (err) {
+          console.error("Error checking client email:", err);
+        }
+
+        // Enforce restriction: Block public @gmail.com accounts except admin accounts OR clients
+        if (emailLower.endsWith("@gmail.com") && !adminEmails.includes(emailLower) && !isClientEmail) {
           setAuthError("Access Denied: Logins with public @gmail.com accounts are restricted. Please use your corporate static email provided by your administrator.");
           
           (async () => {
@@ -252,7 +270,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         // Enforce super admin self-healing credentials for key admin accounts
-        const isSuperAdmin = adminEmails.includes(emailLower);
         
         const getAdminFallbackName = (email: string) => {
           if (email.startsWith("admin")) return "System Administrator";
@@ -495,11 +512,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               }
             })();
           }
+        } else if (isClientEmail && clientData) {
+          // User is a Client! Construct appUser as client
+          appUser = { 
+            ...firebaseUser, 
+            role: "client", 
+            fullName: clientData.contactPerson || clientData.companyName || firebaseUser.displayName || emailLower,
+            jobTitle: "Client Representative",
+            clientId: clientData.id
+          };
+          setUser(appUser);
+          
+          // Optional: log client sign-in to loginActivity
+          (async () => {
+            try {
+              const { addDoc: addLoginDoc } = await import("firebase/firestore");
+              await addLoginDoc(collection(db, "loginActivity"), {
+                uid: firebaseUser.uid,
+                email: emailLower,
+                fullName: appUser.fullName,
+                role: "client",
+                sessionType: "Google/Credentials",
+                status: "success",
+                createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 },
+                loginAt: new Date().toISOString(),
+              });
+            } catch (e) {
+              console.error(e);
+            }
+          })();
+
         } else {
           // SELF-HEALING FALLBACK: If the database was wiped but the user is authenticated in Firebase Auth,
           // automatically reconstruct their Firestore employee record to prevent lockout!
           try {
-            const emailLower = firebaseUser.email?.toLowerCase().trim() || "";
             const defaultRole = "employee";
             
             // Format name cleanly from email

@@ -1,7 +1,5 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { getAuth } from 'firebase-admin/auth';
-import { getMessaging } from 'firebase-admin/messaging';
 
 if (!getApps().length) {
   try {
@@ -17,7 +15,11 @@ if (!getApps().length) {
   }
 }
 
-export const adminDb = getFirestore();
-export const adminAuth = getAuth();
-export const adminMessaging = getMessaging();
-export { FieldValue };
+let adminDb: any;
+try {
+  adminDb = getFirestore();
+} catch (error) {
+  console.warn('Firestore failed to initialize. Skipping in build environment.');
+}
+
+export { adminDb, FieldValue };

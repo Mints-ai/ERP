@@ -81,24 +81,15 @@ export default function ClientDashboard() {
 
     const fetchClientData = async () => {
       try {
-        // In a production app, we would strictly query by clientId == user.uid
-        // For demo purposes, if they don't have specific data, we'll show some mock data 
-        // so the UI doesn't look completely empty to an admin testing the portal.
-        
-        const projQ = query(collection(db, "projects"), orderBy("createdAt", "desc"));
-        const invQ = query(collection(db, "invoices"), orderBy("createdAt", "desc"));
+        // Connect firmly to live collections and query securely by clientId.
+        // We ensure that only projects and invoices matching the client's ID are fetched.
+        const projQ = query(collection(db, "projects"), where("clientId", "==", user.clientId || user.uid));
+        const invQ = query(collection(db, "invoices"), where("clientId", "==", user.clientId || user.uid));
 
         const [projSnap, invSnap] = await Promise.all([getDocs(projQ), getDocs(invQ)]);
 
         let fetchedProjects = projSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
         let fetchedInvoices = invSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
-
-        // Simulate client filtering (only show their stuff)
-        // If they are literally named "Client", show everything for the demo.
-        if (user.role === 'client') {
-           fetchedProjects = fetchedProjects.filter(p => p.clientId === user.uid || p.clientName === user.displayName);
-           fetchedInvoices = fetchedInvoices.filter(i => i.clientId === user.uid || i.clientName === user.displayName);
-        }
 
         // If completely empty (like a fresh database), provide 1 mock project and 1 mock invoice just for visual feedback.
         if (fetchedProjects.length === 0) {

@@ -199,6 +199,26 @@ service cloud.firestore {
     // OKRs Collection Rules
     match /okrs/{okrId} {
       allow read: if isAuth();
+      allow write: if isAuth() && (
+        isManagerOrAbove() ||
+        (resource != null && resource.data.ownerUid == request.auth.uid) ||
+        (request.resource != null && request.resource.data.ownerUid == request.auth.uid)
+      );
+    }
+
+    // Recruitment (Jobs & Candidates) Collection Rules
+    match /jobs/{jobId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrAbove();
+    }
+    match /candidates/{candidateId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrAbove();
+    }
+
+    // Payroll Runs Rules
+    match /payroll_runs/{runId} {
+      allow read: if isAuth() && isManagerOrAbove();
       allow write: if isAuth() && isManagerOrAbove();
     }
 

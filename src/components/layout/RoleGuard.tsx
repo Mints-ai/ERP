@@ -25,17 +25,29 @@ export function RoleGuard({
 }
 
 export function RouteGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, role, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
+    if (!loading) {
+      if (!user) {
+        router.push("/login");
+      } else if (role === "client") {
+        // Strict ban on clients accessing the internal dashboard
+        if (window.location.pathname.startsWith("/dashboard")) {
+          router.replace("/client-portal");
+        }
+      }
     }
-  }, [user, loading, router]);
+  }, [user, role, loading, router]);
 
   if (loading || !user) {
     return <div className="h-screen w-full flex items-center justify-center bg-background">Loading...</div>;
+  }
+
+  // Double check during render
+  if (role === "client" && typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")) {
+    return <div className="h-screen w-full flex items-center justify-center bg-background">Redirecting to Secure Portal...</div>;
   }
 
   return <>{children}</>;

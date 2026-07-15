@@ -620,7 +620,7 @@ export default function AttendancePage() {
               </div>
 
               {/* Right Rail - Logs & Summary */}
-              <div className="space-y-6 flex flex-col h-auto lg:h-full justify-start lg:justify-between">
+              <div className="space-y-6 flex flex-col h-auto lg:h-full justify-start">
                 {/* User Profile Summary */}
                 <Card className="border-border shadow-card rounded-2xl overflow-hidden shrink-0">
                   <CardContent className="p-6">

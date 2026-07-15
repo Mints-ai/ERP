@@ -13,6 +13,7 @@ import { LineChart, Line, ResponsiveContainer, AreaChart, Area } from "recharts"
 import { motion } from "framer-motion";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { doc, onSnapshot, collection, addDoc, setDoc, updateDoc } from "firebase/firestore";
+import { ApprovalsWidget } from "@/components/dashboard/ApprovalsWidget";
 
 const taskData = [{ v: 5 }, { v: 8 }, { v: 6 }, { v: 12 }, { v: 8 }, { v: 14 }];
 const projData = [{ v: 2 }, { v: 4 }, { v: 3 }, { v: 6 }, { v: 5 }, { v: 7 }];
@@ -309,6 +310,8 @@ export default function DashboardHome() {
               : `Welcome back, ${user?.displayName?.split(" ")[0] || "User"}. Here's what's on your desk today.`}
           </p>
         </div>
+
+        <ApprovalsWidget />
 
         {/* Sparkline Stat Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

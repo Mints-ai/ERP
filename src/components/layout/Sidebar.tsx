@@ -37,15 +37,16 @@ const NAV_GROUPS = [
       { name: "Capacity",     href: "/dashboard/projects/capacity",  icon: AlignLeft,        permission: "CREATE_PROJECT" },
       { name: "CRM & Sales",  href: "/dashboard/crm",               icon: TrendingUp,       permission: "CREATE_PROJECT" },
       { name: "Clients",      href: "/dashboard/clients",            icon: UserSquare2,      permission: "VIEW_ALL_EMPLOYEES" },
+      { name: "Assets",       href: "/dashboard/assets",             icon: Monitor,          permission: "MANAGE_USERS" },
     ]
   },
   {
     label: "People",
     items: [
       { name: "HR & Team",    href: "/dashboard/hr",                 icon: Users,            permission: null },
+      { name: "Recruitment",  href: "/dashboard/hr/recruitment",     icon: Briefcase,        permission: "MANAGE_USERS" },
       { name: "Payroll",      href: "/dashboard/hr/payroll",         icon: Wallet,           permission: "MANAGE_USERS" },
       { name: "Goals (OKRs)", href: "/dashboard/hr/okrs",            icon: Target,           permission: "MANAGE_USERS" },
-      { name: "Assets",       href: "/dashboard/hr/assets",          icon: Monitor,          permission: "MANAGE_USERS" },
       { name: "Attendance",   href: "/dashboard/attendance",         icon: Clock,            permission: null },
       { name: "Leaves",       href: "/dashboard/leaves",             icon: CalendarOff,      permission: null },
       { name: "Doc Expiry",   href: "/dashboard/hr/documents",       icon: FileWarning,      permission: "MANAGE_USERS" },

@@ -1,173 +1,280 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
-import { RoleGuard } from "@/components/layout/RoleGuard";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useToast } from "@/context/ToastContext";
+import { db } from "@/lib/firebase";
+import { collection, query, onSnapshot, doc, deleteDoc, updateDoc } from "firebase/firestore";
+import { Objective, KeyResult, OKRStatus } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Target, TrendingUp, Plus, CheckCircle2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Target, Plus, Search, Trash2, Edit2, CheckCircle2, AlertTriangle, XCircle, MoreVertical } from "lucide-react";
+import { CreateOKRDialog } from "./components/CreateOKRDialog";
+import { canAccess } from "@/lib/permissions";
 
-export default function OKRManagement() {
-  const { user, role } = useAuth();
-  const [okrs, setOkrs] = useState<any[]>([]);
+export default function OKRsPage() {
+  const { role, user } = useAuth();
+  const { showToast } = useToast();
+  
+  const [okrs, setOkrs] = useState<Objective[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAddOpen, setIsAddOpen] = useState(false);
-
-  // Form State
-  const [objective, setObjective] = useState("");
-  const [keyResult, setKeyResult] = useState("");
-  const [targetValue, setTargetValue] = useState("");
-  const [assignedTo, setAssignedTo] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
-    const q = query(collection(db, "okrs"), orderBy("createdAt", "desc"));
+    // Note: We fetch all okrs and filter client-side based on permission, 
+    // since firestore rules also enforce this. 
+    // Individual OKRs not owned by user will be rejected by firestore rules 
+    // if we don't have manager access, but since we fetch all, the query itself 
+    // might fail for non-managers unless we specifically query only their own + company + dept.
+    // However, in this ERP app, if the user isn't a manager they shouldn't even be able to see the page,
+    // OR we only let managers write and anyone can read Company/Dept.
+    // For simplicity, we just run the query and let it filter.
+    const q = query(collection(db, "okrs"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setOkrs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Objective[];
+      // Client side filter just in case
+      const allowedList = list.filter(okr => {
+        if (okr.level !== "Individual") return true;
+        if (okr.ownerUid === user?.uid) return true;
+        if (canAccess(role, "MANAGE_USERS")) return true;
+        return false;
+      });
+      setOkrs(allowedList);
       setLoading(false);
     }, (error) => {
-      console.error("Firestore onSnapshot error (okrs):", error);
+      console.error("Error fetching OKRs", error);
+      showToast("Error loading OKRs. Missing permissions?", "error");
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [user, role, showToast]);
 
-  const handleAddOKR = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!objective || !keyResult) return;
-    
-    setIsSubmitting(true);
+  const handleDelete = async (okr: Objective) => {
+    if (!confirm(`Are you sure you want to delete this OKR: ${okr.title}?`)) return;
     try {
-      await addDoc(collection(db, "okrs"), {
-        objective,
-        keyResult,
-        targetValue,
-        currentValue: 0,
-        assignedTo: assignedTo || "Company-Wide",
-        status: "on_track",
-        createdAt: serverTimestamp(),
-        createdBy: user?.uid
-      });
-      setIsAddOpen(false);
-      setObjective("");
-      setKeyResult("");
-      setTargetValue("");
-      setAssignedTo("");
-    } catch (err) {
-      console.error("Error adding OKR:", err);
+      await deleteDoc(doc(db, "okrs", okr.id));
+      showToast("OKR deleted.", "success");
+    } catch (err: any) {
+      showToast(err.message, "error");
     }
-    setIsSubmitting(false);
+  };
+
+  const handleUpdateKR = async (okr: Objective, krId: string, newValue: number) => {
+    try {
+      const newKrs = okr.keyResults.map(kr => {
+        if (kr.id === krId) {
+          return { ...kr, currentValue: newValue };
+        }
+        return kr;
+      });
+
+      // Recalculate progress
+      let totalProgress = 0;
+      newKrs.forEach(kr => {
+        const p = Math.min(100, Math.max(0, (kr.currentValue / kr.targetValue) * 100));
+        totalProgress += p;
+      });
+      const overallProgress = newKrs.length > 0 ? totalProgress / newKrs.length : 0;
+      
+      let status: OKRStatus = "On Track";
+      if (overallProgress === 100) status = "Completed";
+      else if (overallProgress < 30) status = "At Risk";
+
+      await updateDoc(doc(db, "okrs", okr.id), {
+        keyResults: newKrs,
+        progress: overallProgress,
+        status
+      });
+      showToast("Progress updated", "success");
+    } catch (err: any) {
+      showToast(err.message, "error");
+    }
+  };
+
+  const queryStr = searchQuery.toLowerCase();
+  const filtered = okrs.filter(o => {
+    const titleMatch = o.title ? o.title.toLowerCase().includes(queryStr) : false;
+    const quarterMatch = o.quarter ? o.quarter.toLowerCase().includes(queryStr) : false;
+    const ownerMatch = o.ownerName ? o.ownerName.toLowerCase().includes(queryStr) : false;
+    const deptMatch = o.department ? o.department.toLowerCase().includes(queryStr) : false;
+    return titleMatch || quarterMatch || ownerMatch || deptMatch;
+  });
+
+  const companyOkrs = filtered.filter(o => o.level === "Company");
+  const deptOkrs = filtered.filter(o => o.level === "Department");
+  const individualOkrs = filtered.filter(o => o.level === "Individual");
+
+  const renderOkrCard = (okr: Objective) => {
+    const isOwner = okr.ownerUid === user?.uid;
+    const canEdit = canAccess(role, "MANAGE_USERS") || isOwner;
+
+    return (
+      <Card key={okr.id} className="border-border bg-card shadow-sm hover:shadow-md transition-shadow">
+        <CardHeader className="pb-3 flex flex-row items-start justify-between">
+          <div>
+            <div className="flex gap-2 items-center mb-1">
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
+                {okr.quarter}
+              </Badge>
+              {okr.level === "Department" && (
+                <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-xs">
+                  {okr.department}
+                </Badge>
+              )}
+              {okr.level === "Individual" && (
+                <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20 text-xs">
+                  {okr.ownerName}
+                </Badge>
+              )}
+              <Badge variant="outline" className={
+                okr.status === "Completed" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
+                okr.status === "On Track" ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
+                "bg-amber-500/10 text-amber-500 border-amber-500/20"
+              }>
+                {okr.status}
+              </Badge>
+            </div>
+            <CardTitle className="text-lg leading-tight mt-2">{okr.title}</CardTitle>
+          </div>
+          {canAccess(role, "MANAGE_USERS") && (
+            <Button size="icon" variant="ghost" className="text-foreground/40 hover:text-rose-500 -mt-2 -mr-2" onClick={() => handleDelete(okr)}>
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          {/* Main Progress Bar */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-bold text-foreground/70 uppercase">Overall Progress</span>
+              <span className="font-bold text-primary">{Math.round(okr.progress)}%</span>
+            </div>
+            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+              <div 
+                className={`h-full ${okr.progress === 100 ? 'bg-emerald-500' : 'bg-primary'}`} 
+                style={{ width: `${okr.progress}%` }} 
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <p className="text-xs font-bold text-foreground/50 uppercase tracking-widest border-b border-border pb-1">Key Results</p>
+            {okr.keyResults.map(kr => {
+              const krProgress = Math.min(100, Math.max(0, (kr.currentValue / kr.targetValue) * 100));
+              return (
+                <div key={kr.id} className="group relative">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-foreground font-medium flex-1 pr-4">{kr.title}</span>
+                    <span className="text-foreground/70 font-mono">
+                      {kr.currentValue} / {kr.targetValue} <span className="text-foreground/40">{kr.unit}</span>
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full bg-muted/50 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-foreground/30 transition-all" 
+                      style={{ width: `${krProgress}%` }} 
+                    />
+                  </div>
+                  {/* Inline Edit (Hidden until hover if editable) */}
+                  {canEdit && okr.status !== "Completed" && (
+                    <div className="absolute -top-1 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-card p-1 rounded border border-border shadow-sm flex gap-1 items-center z-10">
+                      <Input 
+                        type="number" 
+                        defaultValue={kr.currentValue}
+                        className="h-7 w-20 text-xs bg-background border-border"
+                        onBlur={(e) => {
+                          const val = Number(e.target.value);
+                          if (val !== kr.currentValue) handleUpdateKR(okr, kr.id, val);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.currentTarget.blur();
+                          }
+                        }}
+                      />
+                      <span className="text-xs text-foreground/50 mr-1">Enter to save</span>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
-    <RoleGuard permission="MANAGE_USERS" fallback={<div className="p-8 text-center text-foreground/40 font-bold uppercase tracking-wider text-xs">Access Denied. Only authorized HR personnel can manage corporate OKRs.</div>}>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2 text-foreground">
-              <Target className="h-8 w-8 text-primary" /> Goal Tracking (OKRs)
-            </h1>
-            <p className="text-foreground/40 mt-1">Set, track, and manage Objectives and Key Results.</p>
-          </div>
-          
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold h-10 px-5 bg-primary hover:bg-blue-700 text-foreground shadow-md transition-all hover:translate-y-[-1px]">
-              <Plus className="mr-2 h-4 w-4" /> New Goal
-            </DialogTrigger>
-            <DialogContent className="bg-background border-border rounded-2xl shadow-xl text-foreground">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-bold text-foreground">Create New Objective</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleAddOKR} className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-foreground/60 uppercase">Objective (The Goal)</label>
-                  <Input required placeholder="E.g., Increase organic website traffic" value={objective} onChange={e => setObjective(e.target.value)} className="border-border rounded-xl text-foreground" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-foreground/60 uppercase">Key Result (How to measure it)</label>
-                  <Input required placeholder="E.g., Reach 50k monthly visitors" value={keyResult} onChange={e => setKeyResult(e.target.value)} className="border-border rounded-xl text-foreground" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-foreground/60 uppercase">Target Value (Numeric)</label>
-                    <Input required type="number" placeholder="50000" value={targetValue} onChange={e => setTargetValue(e.target.value)} className="border-border rounded-xl text-foreground" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-foreground/60 uppercase">Assign To</label>
-                    <Input placeholder="Employee Name or Dept" value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className="border-border rounded-xl text-foreground" />
-                  </div>
-                </div>
-                <DialogFooter className="pt-4 gap-2 sm:gap-0">
-                  <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)} className="rounded-xl border-border text-foreground bg-transparent hover:">Cancel</Button>
-                  <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-blue-700 text-foreground rounded-xl font-semibold">Save OKR</Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Goals & OKRs</h1>
+          <p className="text-foreground/50 mt-1">Track Objectives and Key Results across the organization.</p>
         </div>
-
-        {loading ? (
-          <div className="p-8 text-center text-foreground/40">Loading goals...</div>
-        ) : okrs.length === 0 ? (
-          <Card className="border-dashed border-border rounded-2xl">
-            <CardContent className="p-12 text-center flex flex-col items-center justify-center">
-              <TrendingUp className="h-12 w-12 text-foreground/20 mb-3" />
-              <h3 className="text-lg font-bold text-foreground">No Goals Set</h3>
-              <p className="text-sm text-foreground/40 mt-1">Start by adding a company-wide or department OKR.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {okrs.map(okr => {
-              const target = parseFloat(okr.targetValue) || 100;
-              const current = parseFloat(okr.currentValue) || 0;
-              const progress = Math.min(100, Math.round((current / target) * 100));
-              
-              return (
-                <Card key={okr.id} className="border-border hover: transition-all duration-300 rounded-2xl overflow-hidden shadow-sm hover:shadow-md">
-                  <CardHeader className="pb-3 border-b border-border/30">
-                    <div className="flex justify-between items-start gap-4">
-                      <CardTitle className="text-lg font-bold leading-tight text-foreground">{okr.objective}</CardTitle>
-                      <Badge variant="outline" className={cn("whitespace-nowrap capitalize font-semibold shadow-none rounded-lg",
-                        progress >= 100 ? "border-emerald-500/20 text-accent bg-emerald-500/10" : 
-                        progress > 30 ? "border-primary/20 text-primary bg-primary/10" : "border-amber-500/20 text-amber-400 bg-amber-500/10"
-                      )}>
-                        {progress >= 100 ? "Completed" : okr.status.replace("_", " ")}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-4 space-y-4">
-                    <div>
-                      <p className="text-xs font-bold text-foreground/40 uppercase tracking-wider mb-1">Key Result</p>
-                      <p className="text-sm text-foreground/80 font-medium">{okr.keyResult}</p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-foreground/40 font-medium">{current} / {target}</span>
-                        <span className="font-bold text-primary">{progress}%</span>
-                      </div>
-                      <Progress value={progress} className="h-2 bg-muted/80" />
-                    </div>
-                    
-                    <div className="pt-3 border-t border-border/30 flex justify-between items-center text-xs">
-                      <span className="text-foreground/40">Assigned: <strong className="text-primary/80">{okr.assignedTo}</strong></span>
-                      <button className="text-primary hover:text-primary/80 font-semibold hover:underline">Update Progress</button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+        
+        {canAccess(role, "MANAGE_USERS") && (
+          <Button onClick={() => setCreateOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
+            <Plus className="w-4 h-4 mr-2" /> Create Objective
+          </Button>
         )}
       </div>
-    </RoleGuard>
+
+      <div className="relative w-full max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
+        <Input
+          placeholder="Search goals, departments, or owners..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9 bg-background border-border"
+        />
+      </div>
+
+      <Tabs defaultValue="company" className="w-full">
+        <TabsList className="bg-muted/50 border border-border p-1">
+          <TabsTrigger value="company" className="data-[state=active]:bg-background data-[state=active]:text-foreground">
+            Company OKRs ({companyOkrs.length})
+          </TabsTrigger>
+          <TabsTrigger value="department" className="data-[state=active]:bg-background data-[state=active]:text-foreground">
+            Department OKRs ({deptOkrs.length})
+          </TabsTrigger>
+          <TabsTrigger value="individual" className="data-[state=active]:bg-background data-[state=active]:text-foreground">
+            Individual OKRs ({individualOkrs.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="company" className="mt-6 focus-visible:outline-none">
+          {loading ? <div className="text-foreground/50">Loading...</div> : 
+           companyOkrs.length === 0 ? <div className="text-foreground/50">No company OKRs found.</div> :
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+             {companyOkrs.map(renderOkrCard)}
+           </div>
+          }
+        </TabsContent>
+
+        <TabsContent value="department" className="mt-6 focus-visible:outline-none">
+          {loading ? <div className="text-foreground/50">Loading...</div> : 
+           deptOkrs.length === 0 ? <div className="text-foreground/50">No department OKRs found.</div> :
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+             {deptOkrs.map(renderOkrCard)}
+           </div>
+          }
+        </TabsContent>
+
+        <TabsContent value="individual" className="mt-6 focus-visible:outline-none">
+          {loading ? <div className="text-foreground/50">Loading...</div> : 
+           individualOkrs.length === 0 ? <div className="text-foreground/50">No individual OKRs found.</div> :
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+             {individualOkrs.map(renderOkrCard)}
+           </div>
+          }
+        </TabsContent>
+      </Tabs>
+
+      <CreateOKRDialog open={createOpen} onOpenChange={setCreateOpen} />
+    </div>
   );
 }
