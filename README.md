@@ -36,12 +36,21 @@ Welcome to the **Mints Global ERP**, a state-of-the-art enterprise resource plan
   <img src="public/chat_channels.png" alt="Mints Global ERP Deduplicated Corporate Chat" width="49%" />
 </div>
 
+<div align="center">
+  <img src="public/workflow_builder.png" alt="Mints Global ERP Automated Workflow Builder" width="49%" />
+  &nbsp;
+  <img src="public/client_portal.png" alt="Mints Global ERP External Client Portal" width="49%" />
+</div>
+
 ---
 
 ## ✨ Recent Feature Updates
 
 The ERP has been recently upgraded with the following powerful modules and enhancements:
 
+- **Automated Workflow Builder**: Create powerful, multi-stage approval chains conditionally triggered by rules (e.g. expenses > $500 route to Founder). Features a gorgeous visual builder.
+- **External Client Portal**: A secure, stripped-down view restricted explicitly to external clients. Automatically scopes invoices and project tracking to the logged-in client using secure server-side verification.
+- **Approvals Dashboard Widget**: Internal dashboard widget that notifies employees of pending tasks requiring their specific approval.
 - **Unified Global Search (Command Palette)**: Press `Cmd/Ctrl + K` to instantly search and navigate across Employees, Projects, Clients, and Chat Channels from anywhere in the app.
 - **Interactive Organization Chart (HR)**: Added a visual, multi-level hierarchical tree-view in the HR Directory showing Founder -> Core Team -> Departments.
 - **Internal IT & Helpdesk Ticketing**: Created a full Kanban-style module for submitting, assigning, and tracking internal IT and HR support tickets.

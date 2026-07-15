@@ -32,6 +32,8 @@ As part of our continuous ERP upgrades, several new integrated modules have been
 - **Admin Audit Trail Logs**: Automated background activity tracking giving administrators complete visibility over sensitive system events.
 - **Live Attendance Widget**: A robust dashboard Clock-In/Out tracker that logs daily operational hours directly into the HR attendance module.
 - **Project Gantt Charts**: A visual Timeline mode added to the Project Tasks view, allowing managers to effortlessly track multi-day task dependencies.
+- **Automated Workflow Builder**: Dynamic rules engine to conditionally route tasks (like expenses) to specific roles for sequential approval chains.
+- **External Client Portal**: A secure, isolated environment explicitly restricted for clients to track their own projects and invoices safely.
 
 ---
 
