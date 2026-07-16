@@ -641,7 +641,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const logout = async () => {
+  async function logout() {
     if (user) {
       await sendDiscordNotification(`🔒 **${user.fullName || user.email}** logged out of the ERP.`, undefined, 'auth');
     }
