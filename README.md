@@ -393,4 +393,5 @@ Mints Global ERP enforces strict Role-Based Access Control (RBAC). Here is a det
 | **v1.0** | May 2026 | Released | Initial release (Core HR Directory, Attendance Location Logs, Lead CRM Hub) |
 | **v1.1** | May 2026 | Released | Leave Planner workflow, Multi-department employee database structures, Static Webhooks |
 | **v1.2** | May 2026 | Released | Complete Client Billing Suite, Secure File Explorer Drive (RBAC), Gantt Capacity Heatmap, dynamic Weekly Timesheet matrix spreadsheet, Live Presence Map, and custom Discord settings telemetry center. |
-| **v1.3** | May 2026 | **Active Production** | Implemented dynamic department-based specialization subroles, multi-card badge limits (with dynamic overflow +N counts), self-healing deduplicated department chat rooms (Marketing, IT, Operations), and admin add-member action routing controls. |
+| **v1.3** | May 2026 | Released | Implemented dynamic department-based specialization subroles, multi-card badge limits (with dynamic overflow +N counts), self-healing deduplicated department chat rooms (Marketing, IT, Operations), and admin add-member action routing controls. |
+| **v1.4** | July 2026 | **Active Production** | Introduced the Automated Workflow Builder, External Client Portal, Global Command Palette, IT/HR Ticketing Kanban, HR Tree View, Admin Audit Trails, Live Time Tracking, and Project Gantt view. |
