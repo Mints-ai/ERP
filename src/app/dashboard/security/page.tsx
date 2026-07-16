@@ -5,7 +5,7 @@ import { collection, query, orderBy, limit, onSnapshot, doc, updateDoc, addDoc, 
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { RoleGuard } from "@/components/layout/RoleGuard";
-import { canAccess } from "@/lib/permissions";
+import { canAccess, PERMISSIONS } from "@/lib/permissions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -371,10 +371,9 @@ export default function SecurityAuditDashboard() {
       if (docSnap.exists()) {
         setPermMatrix(docSnap.data() as Record<string, string[]>);
       } else {
-        const { PERMISSIONS } = require("@/lib/permissions");
         const initialMap: Record<string, string[]> = {};
         Object.entries(PERMISSIONS).forEach(([key, val]) => {
-          initialMap[key] = [...(val as any)];
+          initialMap[key] = Array.from(val);
         });
         setPermMatrix(initialMap);
       }

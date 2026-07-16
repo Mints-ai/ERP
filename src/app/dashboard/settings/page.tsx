@@ -1,6 +1,7 @@
 "use client";
 
 import { z } from "zod";
+import Image from "next/image";
 
 import { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
@@ -1213,7 +1214,7 @@ export default function SettingsDashboard() {
                 <div className="flex items-center gap-6 pb-8 border-b border-border">
                   <div className="w-24 h-24 bg-secondary rounded-xl flex items-center justify-center border-2 border-dashed border-border">
                     {companySettings.logoURL ? (
-                      <img src={companySettings.logoURL} alt="Company Logo" className="max-w-full max-h-full object-contain" />
+                      <Image src={companySettings.logoURL} alt="Company Logo" height={96} width={96} className="max-w-full max-h-full object-contain" />
                     ) : (
                       <Building2 className="h-8 w-8 text-muted-foreground opacity-50" />
                     )}

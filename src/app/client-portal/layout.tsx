@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Loader2, LogOut, Hexagon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 export default function ClientPortalLayout({
   children,
@@ -61,7 +62,7 @@ export default function ClientPortalLayout({
       {/* Client Portal Header */}
       <header className="h-16 bg-background/80 backdrop-blur-md border-b border-border px-6 flex items-center justify-between sticky top-0 z-50 shadow-sm">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="Mints Logo" className="h-6 w-auto object-contain" />
+          <Image src="/logo.png" alt="Mints Logo" height={24} width={80} className="h-6 w-auto object-contain" />
           <span className="font-bold text-xl tracking-tight text-foreground border-l pl-3 border-border"><span className="text-muted-foreground font-normal">Client Portal</span></span>
         </div>
 

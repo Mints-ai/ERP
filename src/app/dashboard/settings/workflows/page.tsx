@@ -34,7 +34,7 @@ export default function WorkflowsPage() {
     fetchWorkflows();
   }, []);
 
-  const fetchWorkflows = async () => {
+  async function fetchWorkflows() {
     setLoading(true);
     try {
       const q = query(collection(db, "workflows"));
