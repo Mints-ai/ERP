@@ -183,7 +183,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
+      try {
+        if (firebaseUser) {
         // Set secure cookie for Next.js Middleware route protection
         if (typeof window !== "undefined") {
           document.cookie = `auth-token=${firebaseUser.uid}; path=/; max-age=604800; SameSite=Lax`;
@@ -592,7 +593,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
         setUser(null);
       }
-      setLoading(false);
+      } catch (err) {
+        console.error("Auth state change error:", err);
+      } finally {
+        setLoading(false);
+      }
     });
 
     return () => unsubscribe();

@@ -58,9 +58,15 @@ service cloud.firestore {
     // Tasks Collection Rules
     match /tasks/{taskId} {
       allow read: if isAuth();
-      allow create: if isAuth() && isManagerOrAbove();
-      allow update: if isAuth() && (resource.data.assignedTo == request.auth.uid || isManagerOrAbove());
+      allow create: if isAuth() && (isManagerOrAbove() || request.resource.data.assignedTo == request.auth.uid);
+      allow update: if isAuth() && (resource.data.assignedTo == request.auth.uid || resource.data.assignedBy == request.auth.uid || isManagerOrAbove());
       allow delete: if isAuth() && isManagerOrAbove();
+
+      match /remarks/{remarkId} {
+        allow read: if isAuth();
+        allow create: if isAuth();
+        allow update, delete: if isAuth() && (resource.data.createdBy == request.auth.uid || isManagerOrAbove());
+      }
     }
 
     // Tickets Collection Rules

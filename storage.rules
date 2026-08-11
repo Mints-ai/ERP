@@ -17,6 +17,12 @@ service firebase.storage {
       allow read, write: if isAuth();
     }
 
+    // Task Attachments: Max 10MB
+    match /task_attachments/{taskId}/{fileName} {
+      allow read: if isAuth();
+      allow write: if isAuth() && request.resource.size < 10 * 1024 * 1024; 
+    }
+
     // Default fallback: Deny everything else by default
     match /{allPaths=**} {
       allow read, write: if false;
