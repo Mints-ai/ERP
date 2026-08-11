@@ -654,8 +654,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await signOut(auth);
   };
 
-  let activeRole = simulatedRole !== null ? simulatedRole : (delegatedRole || user?.role || null);
-  if (user?.email?.toLowerCase().includes("arya@mintsglobal.ae") && !simulatedRole) {
+  const canSimulate = user?.role === "founder" || user?.role === "system_admin";
+  let activeRole = (canSimulate && simulatedRole !== null) ? simulatedRole : (delegatedRole || user?.role || null);
+  if (user?.email?.toLowerCase().includes("arya@mintsglobal.ae") && !(canSimulate && simulatedRole !== null)) {
     activeRole = "founder";
   }
 
