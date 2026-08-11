@@ -55,4 +55,5 @@ export interface Task {
   updatedAt: string;
   
   isRecheck?: boolean;
+  blocked?: boolean;
 }

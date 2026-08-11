@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckSquare, Clock, Play, Pause, X, Lock } from "lucide-react";
+import { CheckSquare, Clock, Play, Pause, X, Lock, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Task } from "@/types/task";
 import { cn } from "@/lib/utils";

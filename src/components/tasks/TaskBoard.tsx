@@ -43,7 +43,7 @@ export default function TaskBoard() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addingToStatus, setAddingToStatus] = useState<TaskStatus>("backlog");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [newTask, setNewTask] = useState({ title: "", priority: "normal" as TaskPriority, dueDate: "", assignedTo: "" });
+  const [newTask, setNewTask] = useState({ title: "", priority: "Normal" as TaskPriority, dueDate: "", assignedTo: "" });
 
   // Detail Modal State
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -162,7 +162,7 @@ export default function TaskBoard() {
       });
 
       setIsAddOpen(false);
-      setNewTask({ title: "", priority: "normal", dueDate: "", assignedTo: "" });
+      setNewTask({ title: "", priority: "Normal", dueDate: "", assignedTo: "" });
     } catch (error) {
       console.error("Error adding task:", error);
     } finally {
@@ -202,7 +202,7 @@ export default function TaskBoard() {
       ...tasks.in_progress,
       ...tasks.review
     ].filter(t => t.assignedTo === user?.uid)
-     .sort((a, b) => (a.priority === "urgent" ? -1 : 1));
+     .sort((a, b) => (a.priority === "Urgent" ? -1 : 1));
 
     return (
       <FocusModeOverlay 
