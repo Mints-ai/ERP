@@ -1,3 +1,5 @@
+export type Role = "admin" | "manager" | "employee" | "intern" | "client";
+
 export type TaskStatus = "backlog" | "in_progress" | "review" | "done";
 export type TaskPriority = "low" | "normal" | "high" | "urgent";
 

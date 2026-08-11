@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, where, orderBy, onSnapshot, doc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { subscribeToEmployees, subscribeToLeaveBalance, subscribeToEmployeeProjects, deprovisionEmployee } from "@/lib/hr-services";
 import { ROLE_META, canAccess } from "@/lib/permissions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -41,21 +40,12 @@ export default function EmployeeDirectory() {
       return;
     }
     const currentYear = new Date().getFullYear();
-    const unsubLeaves = onSnapshot(doc(db, "leaveBalances", `${selectedEmployee.id}_${currentYear}`), (docSnap: any) => {
-      if (docSnap.exists()) {
-        setSelectedEmployeeLeaveBalance(docSnap.data() as any);
-      } else {
-        setSelectedEmployeeLeaveBalance({ totalAnnual: 30, usedAnnual: 0, usedSick: 0 }); // default fallback
-      }
+    const unsubLeaves = subscribeToLeaveBalance(selectedEmployee.id, currentYear, (balance) => {
+      setSelectedEmployeeLeaveBalance(balance);
     });
     
-    const qProjects = query(
-      collection(db, "projects"),
-      where("memberIds", "array-contains", selectedEmployee.id),
-      where("status", "==", "active")
-    );
-    const unsubProjects = onSnapshot(qProjects, (snap) => {
-      setSelectedEmployeeProjects(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    const unsubProjects = subscribeToEmployeeProjects(selectedEmployee.id, (projects) => {
+      setSelectedEmployeeProjects(projects);
     });
 
     return () => {
@@ -65,14 +55,7 @@ export default function EmployeeDirectory() {
   }, [selectedEmployee]);
 
   useEffect(() => {
-    const q = query(
-      collection(db, "employees"),
-      where("isActive", "==", true),
-      orderBy("fullName")
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const emps = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const unsubscribe = subscribeToEmployees((emps) => {
       setEmployees(emps);
       setLoading(false);
     });
@@ -561,13 +544,7 @@ export default function EmployeeDirectory() {
                       onClick={async () => {
                         if (confirm(`WARNING: Are you absolutely sure you want to deprovision the employee profile for "${selectedEmployee.fullName}"? This will deactivate their ERP access, archive their profile, and sign them out of all active sessions.`)) {
                           try {
-                            const { updateDoc, doc } = await import("firebase/firestore");
-                            await updateDoc(doc(db, "employees", selectedEmployee.id), {
-                              isActive: false,
-                              isArchived: true,
-                              role: "employee", // Downgrade system role for security
-                              updatedAt: new Date().toISOString()
-                            });
+                            await deprovisionEmployee(selectedEmployee.id);
                             setSelectedEmployee(null);
                           } catch (err) {
                             console.error("Error deprovisioning employee:", err);
