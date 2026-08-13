@@ -268,165 +268,106 @@ export default function AttendancePage() {
   };
 
   // State Machine Action Commands
+  const callAttendanceAPI = async (action: string) => {
+    if (!user) return null;
+    try {
+      const { auth } = await import("@/lib/firebase");
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) throw new Error("Authentication token not found.");
+      
+      const res = await fetch("/api/attendance", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ action, employeeName: user.fullName || user.email || "Employee" })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to update attendance");
+      }
+      return await res.json();
+    } catch (err: any) {
+      console.error(`Error performing attendance action '${action}':`, err);
+      alert(`Attendance Action Failed: ${err.message}`);
+      return null;
+    }
+  };
+
   const handleClockIn = async () => {
     if (!user) return;
-    const dateString = new Date().toISOString().split('T')[0];
-    const docRef = doc(db, "attendance", `${user.uid}_${dateString}`);
-    
-    const now = new Date();
-    const newLog = {
-      type: "in",
-      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      timestamp: now.toISOString(),
-      label: "Clocked In"
-    };
-
-    try {
-      const { setDoc } = await import("firebase/firestore");
-      await setDoc(docRef, {
-        uid: user.uid,
-        employeeName: user.fullName || user.email || "Employee",
-        date: dateString,
-        status: "in",
-        logs: [...logs, newLog], // Append if exists
-        totalWorkingSeconds: totalWorkingSeconds,
-        totalBreakSeconds: totalBreakSeconds,
-        lastActionTimestamp: Date.now()
-      }, { merge: true });
-      
+    const res = await callAttendanceAPI("in");
+    if (res) {
+      const { addDoc, collection } = await import("firebase/firestore");
+      const dateString = new Date().toISOString().split('T')[0];
       await addDoc(collection(db, "auditLog"), {
         actorId: user.uid,
         actorName: user.fullName || user.email || "Employee",
         action: "ATTENDANCE_CLOCK_IN",
         targetCollection: "attendance",
         targetId: `${user.uid}_${dateString}`,
-        details: `Clocked in for the day at ${newLog.time}`,
+        details: `Clocked in for the day (Secure Server Time)`,
         createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
       });
-
       await sendDiscordNotification(`⏱️ **${user.fullName || user.email}** clocked **IN** for the day.`, undefined, 'hr');
-    } catch (err) {
-      console.error("Error creating attendance clock-in:", err);
     }
   };
 
   const handleTakeBreak = async () => {
     if (!user) return;
-    const dateString = new Date().toISOString().split('T')[0];
-    const docRef = doc(db, "attendance", `${user.uid}_${dateString}`);
-    
-    const now = new Date();
-    const newLog = {
-      type: "break",
-      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      timestamp: now.toISOString(),
-      label: "Lunch Break Start"
-    };
-
-    const elapsedWorking = lastActionTimestamp > 0 ? Math.floor((Date.now() - lastActionTimestamp) / 1000) : 0;
-
-    try {
-      const { updateDoc } = await import("firebase/firestore");
-      await updateDoc(docRef, {
-        status: "break",
-        logs: [...logs, newLog],
-        totalWorkingSeconds: totalWorkingSeconds + elapsedWorking,
-        lastActionTimestamp: Date.now()
-      });
-      
+    const res = await callAttendanceAPI("break");
+    if (res) {
+      const { addDoc, collection } = await import("firebase/firestore");
+      const dateString = new Date().toISOString().split('T')[0];
       await addDoc(collection(db, "auditLog"), {
         actorId: user.uid,
         actorName: user.fullName || user.email || "Employee",
         action: "ATTENDANCE_BREAK_START",
         targetCollection: "attendance",
         targetId: `${user.uid}_${dateString}`,
-        details: `Started a lunch break at ${newLog.time}`,
+        details: `Started a lunch break (Secure Server Time)`,
         createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
       });
-
       await sendDiscordNotification(`☕ **${user.fullName || user.email}** started a **Lunch Break**.`, undefined, 'hr');
-    } catch (err) {
-      console.error("Error starting break:", err);
     }
   };
 
   const handleResume = async () => {
     if (!user) return;
-    const dateString = new Date().toISOString().split('T')[0];
-    const docRef = doc(db, "attendance", `${user.uid}_${dateString}`);
-    
-    const now = new Date();
-    const newLog = {
-      type: "in",
-      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      timestamp: now.toISOString(),
-      label: "Lunch Break End"
-    };
-
-    const elapsedBreak = lastActionTimestamp > 0 ? Math.floor((Date.now() - lastActionTimestamp) / 1000) : 0;
-
-    try {
-      const { updateDoc } = await import("firebase/firestore");
-      await updateDoc(docRef, {
-        status: "in",
-        logs: [...logs, newLog],
-        totalBreakSeconds: totalBreakSeconds + elapsedBreak,
-        lastActionTimestamp: Date.now()
-      });
-      
+    const res = await callAttendanceAPI("resume");
+    if (res) {
+      const { addDoc, collection } = await import("firebase/firestore");
+      const dateString = new Date().toISOString().split('T')[0];
       await addDoc(collection(db, "auditLog"), {
         actorId: user.uid,
         actorName: user.fullName || user.email || "Employee",
         action: "ATTENDANCE_BREAK_END",
         targetCollection: "attendance",
         targetId: `${user.uid}_${dateString}`,
-        details: `Ended break and resumed work at ${newLog.time}`,
+        details: `Ended break and resumed work (Secure Server Time)`,
         createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
       });
-
       await sendDiscordNotification(`💼 **${user.fullName || user.email}** ended break and **Resumed Work**.`, undefined, 'hr');
-    } catch (err) {
-      console.error("Error resuming work:", err);
     }
   };
 
   const handleClockOut = async () => {
     if (!user) return;
-    const dateString = new Date().toISOString().split('T')[0];
-    const docRef = doc(db, "attendance", `${user.uid}_${dateString}`);
-    
-    const now = new Date();
-    const newLog = {
-      type: "out",
-      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      timestamp: now.toISOString(),
-      label: "Clocked Out"
-    };
-
-    const elapsedWorking = status === "in" && lastActionTimestamp > 0 ? Math.floor((Date.now() - lastActionTimestamp) / 1000) : 0;
-
-    try {
-      const { updateDoc } = await import("firebase/firestore");
-      await updateDoc(docRef, {
-        status: "out",
-        logs: [...logs, newLog],
-        totalWorkingSeconds: totalWorkingSeconds + elapsedWorking,
-        lastActionTimestamp: Date.now()
-      });
-      
+    const res = await callAttendanceAPI("out");
+    if (res) {
+      const { addDoc, collection } = await import("firebase/firestore");
+      const dateString = new Date().toISOString().split('T')[0];
       await addDoc(collection(db, "auditLog"), {
         actorId: user.uid,
         actorName: user.fullName || user.email || "Employee",
         action: "ATTENDANCE_CLOCK_OUT",
         targetCollection: "attendance",
         targetId: `${user.uid}_${dateString}`,
-        details: `Clocked out for the day at ${newLog.time}`,
+        details: `Clocked out for the day (Secure Server Time)`,
         createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
       });
-
       await sendDiscordNotification(`🏁 **${user.fullName || user.email}** clocked **OUT** for the day.`, undefined, 'hr');
-    } catch (err) {
-      console.error("Error clocking out:", err);
     }
   };
 
