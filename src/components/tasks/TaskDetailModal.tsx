@@ -119,10 +119,10 @@ export default function TaskDetailModal({ task, isOpen, onClose, employeesList }
               <span className="font-bold text-foreground flex items-center gap-1.5">
                 <Avatar className="w-4 h-4 border border-border">
                   <AvatarFallback className="bg-primary/20 text-xs font-bold text-primary/70">
-                    {task.assignedToName?.substring(0, 2).toUpperCase() || "UN"}
+                    {(task.assignedToName || employeesList?.find(e => e.id === task.assignedTo)?.fullName || "UN").substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                {task.assignedToName || "Unassigned"}
+                {task.assignedToName || employeesList?.find(e => e.id === task.assignedTo)?.fullName || "Unassigned"}
               </span>
             </div>
             <div>
