@@ -62,13 +62,13 @@ export async function POST(req: Request) {
       newLog.label = "Clocked In";
     } else if (action === "break") {
       if (currentStatus !== "in") return NextResponse.json({ error: "Not clocked in." }, { status: 400 });
-      const elapsedWorking = lastActionTimestamp > 0 ? Math.floor((serverTimestamp - lastActionTimestamp) / 1000) : 0;
+      const elapsedWorking = lastActionTimestamp > 0 ? Math.max(0, Math.floor((serverTimestamp - lastActionTimestamp) / 1000)) : 0;
       newWorkingSeconds += elapsedWorking;
       newStatus = "break";
       newLog.label = "Lunch Break Start";
     } else if (action === "resume") {
       if (currentStatus !== "break") return NextResponse.json({ error: "Not on break." }, { status: 400 });
-      const elapsedBreak = lastActionTimestamp > 0 ? Math.floor((serverTimestamp - lastActionTimestamp) / 1000) : 0;
+      const elapsedBreak = lastActionTimestamp > 0 ? Math.max(0, Math.floor((serverTimestamp - lastActionTimestamp) / 1000)) : 0;
       newBreakSeconds += elapsedBreak;
       newStatus = "in";
       newLog.label = "Lunch Break End";

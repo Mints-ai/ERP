@@ -76,9 +76,10 @@ export default function DashboardHome() {
   // Derived helpers
   const isClockedIn = attStatus === "in";
   const formatElapsed = (s: number) => {
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = s % 60;
+    const safe = Math.max(0, Math.floor(s || 0));
+    const h = Math.floor(safe / 3600);
+    const m = Math.floor((safe % 3600) / 60);
+    const sec = safe % 60;
     return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
   };
   const elapsedTime = formatElapsed(tickingSeconds);
@@ -109,9 +110,10 @@ export default function DashboardHome() {
   useEffect(() => {
     const getLive = () => {
       if (attStatus === "in" && lastActionTimestamp > 0) {
-        return totalWorkingSeconds + Math.floor((Date.now() - lastActionTimestamp) / 1000);
+        const delta = Math.max(0, Math.floor((Date.now() - lastActionTimestamp) / 1000));
+        return Math.max(0, totalWorkingSeconds) + delta;
       }
-      return totalWorkingSeconds;
+      return Math.max(0, totalWorkingSeconds);
     };
     setTickingSeconds(getLive());
     const t = setInterval(() => setTickingSeconds(getLive()), 1000);

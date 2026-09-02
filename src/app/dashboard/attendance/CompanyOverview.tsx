@@ -90,10 +90,10 @@ export function CompanyOverview() {
       };
 
       if (record.status === "in" && record.lastActionTimestamp > 0) {
-        const elapsedWorking = Math.floor((Date.now() - record.lastActionTimestamp) / 1000);
+        const elapsedWorking = Math.max(0, Math.floor((Date.now() - record.lastActionTimestamp) / 1000));
         updateFields.totalWorkingSeconds = (record.totalWorkingSeconds || 0) + elapsedWorking;
       } else if (record.status === "break" && record.lastActionTimestamp > 0) {
-        const elapsedBreak = Math.floor((Date.now() - record.lastActionTimestamp) / 1000);
+        const elapsedBreak = Math.max(0, Math.floor((Date.now() - record.lastActionTimestamp) / 1000));
         updateFields.totalBreakSeconds = (record.totalBreakSeconds || 0) + elapsedBreak;
       }
 
@@ -322,7 +322,7 @@ export function CompanyOverview() {
                     // Ticking work calculations only apply if the selectedDate is today
                     const isToday = selectedDate === todayStr;
                     if (status === "in" && record?.lastActionTimestamp && isToday) {
-                      liveWorkingSeconds += Math.floor((Date.now() - record.lastActionTimestamp) / 1000);
+                      liveWorkingSeconds += Math.max(0, Math.floor((Date.now() - record.lastActionTimestamp) / 1000));
                     }
 
                     const lastLog = record?.logs?.length > 0 ? record.logs[record.logs.length - 1] : null;

@@ -238,9 +238,10 @@ export default function AttendancePage() {
   useEffect(() => {
     const getLiveElapsedSeconds = () => {
       if (status === "in" && lastActionTimestamp > 0) {
-        return totalWorkingSeconds + Math.floor((Date.now() - lastActionTimestamp) / 1000);
+        const delta = Math.max(0, Math.floor((Date.now() - lastActionTimestamp) / 1000));
+        return Math.max(0, totalWorkingSeconds) + delta;
       }
-      return totalWorkingSeconds;
+      return Math.max(0, totalWorkingSeconds);
     };
 
     // Initialize ticker
@@ -255,15 +256,17 @@ export default function AttendancePage() {
 
   // Format elapsed time (HH:MM:SS)
   const formatElapsed = (totalSeconds: number) => {
-    const h = Math.floor(totalSeconds / 3600);
-    const m = Math.floor((totalSeconds % 3600) / 60);
-    const s = totalSeconds % 60;
+    const safeSecs = Math.max(0, Math.floor(totalSeconds || 0));
+    const h = Math.floor(safeSecs / 3600);
+    const m = Math.floor((safeSecs % 3600) / 60);
+    const s = safeSecs % 60;
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   const formatTickingHours = (totalSecs: number) => {
-    const h = Math.floor(totalSecs / 3600);
-    const m = Math.floor((totalSecs % 3600) / 60);
+    const safeSecs = Math.max(0, Math.floor(totalSecs || 0));
+    const h = Math.floor(safeSecs / 3600);
+    const m = Math.floor((safeSecs % 3600) / 60);
     return `${h}h ${m}m`;
   };
 
