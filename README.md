@@ -106,6 +106,38 @@ Welcome to the **Mints Global ERP**, a state-of-the-art enterprise resource plan
   <em>Audit Trails & Webhook Automation (top) and Client Portal & BI Reporting (bottom)</em>
 </p>
 
+<br/>
+
+### ☀️ 9. Complete High-Contrast Light Theme Suite
+The entire platform is fully optimized for daytime productivity with an elegant, WCAG 2.1 AA compliant light theme palette:
+
+<div align="center">
+  <img src="public/light_theme/dashboard_light.png" alt="Light Mode Dashboard" width="49%" />
+  &nbsp;
+  <img src="public/light_theme/attendance_light.png" alt="Light Mode Attendance" width="49%" />
+</div>
+<br/>
+<div align="center">
+  <img src="public/light_theme/crm_pipeline_light.png" alt="Light Mode CRM" width="49%" />
+  &nbsp;
+  <img src="public/light_theme/projects_gantt_light.png" alt="Light Mode Projects & Gantt" width="49%" />
+</div>
+<br/>
+<div align="center">
+  <img src="public/light_theme/workflow_builder_light.png" alt="Light Mode Workflows" width="49%" />
+  &nbsp;
+  <img src="public/light_theme/finance_treasury_light.png" alt="Light Mode Finance" width="49%" />
+</div>
+<br/>
+<div align="center">
+  <img src="public/light_theme/mail_room_light.png" alt="Light Mode Mail Room" width="49%" />
+  &nbsp;
+  <img src="public/light_theme/tickets_kanban_light.png" alt="Light Mode Tickets Kanban" width="49%" />
+</div>
+<p align="center">
+  <em>High-Contrast Light Theme: Command Center, Attendance, CRM, Gantt, Workflows, Finance, Mail, and Tickets</em>
+</p>
+
 ---
 
 ## ✨ Recent Feature Updates
