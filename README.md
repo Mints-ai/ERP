@@ -7,18 +7,26 @@ Welcome to the **Mints Global ERP**, a state-of-the-art enterprise resource plan
 ## 📸 Interface Preview
 
 <div align="center">
-  <img src="public/Screenshot1.png" alt="Mints Global ERP Dashboard Preview 1" width="49%" />
+  <img src="public/Screenshot1.png" alt="Mints Global ERP Dashboard Preview - Dark Mode" width="49%" />
   &nbsp;
-  <img src="public/Screenshot2.png" alt="Mints Global ERP Dashboard Preview 2" width="49%" />
+  <img src="public/Screenshot2.png" alt="Mints Global ERP Dashboard Preview - Light Mode" width="49%" />
 </div>
+
+<p align="center">
+  <em>Sleek Dual-Theme Interface: Bespoke Dark Mode (left) and High-Contrast Light Mode (right)</em>
+</p>
 
 <br/>
 
 <div align="center">
-  <img src="public/live_presence_map.png" alt="Mints Global ERP Live Presence Map" width="49%" />
+  <img src="public/live_presence_map.png" alt="Mints Global ERP Live Attendance Tracker" width="49%" />
   &nbsp;
   <img src="public/timesheet_matrix.png" alt="Mints Global ERP Weekly Timesheet Matrix" width="49%" />
 </div>
+
+<p align="center">
+  <em>Live Real-Time Attendance Engine & Timesheet Matrix</em>
+</p>
 
 <br/>
 
@@ -46,29 +54,32 @@ Welcome to the **Mints Global ERP**, a state-of-the-art enterprise resource plan
 
 ## ✨ Recent Feature Updates
 
-The ERP has been recently upgraded with the following powerful modules and enhancements:
+The ERP has been continuously refined with powerful modules and enhancements:
 
-- **Automated Workflow Builder**: Create powerful, multi-stage approval chains conditionally triggered by rules (e.g. expenses > $500 route to Founder). Features a gorgeous visual builder.
-- **External Client Portal**: A secure, stripped-down view restricted explicitly to external clients. Automatically scopes invoices and project tracking to the logged-in client using secure server-side verification.
-- **Approvals Dashboard Widget**: Internal dashboard widget that notifies employees of pending tasks requiring their specific approval.
-- **Unified Global Search (Command Palette)**: Press `Cmd/Ctrl + K` to instantly search and navigate across Employees, Projects, Clients, and Chat Channels from anywhere in the app.
-- **Interactive Organization Chart (HR)**: Added a visual, multi-level hierarchical tree-view in the HR Directory showing Founder -> Core Team -> Departments.
-- **Internal IT & Helpdesk Ticketing**: Created a full Kanban-style module for submitting, assigning, and tracking internal IT and HR support tickets.
-- **Admin Audit Trail**: Implemented secure background activity logs to track sensitive user actions for absolute administrative oversight.
-- **Time Tracking & Attendance**: Integrated a live Clock-In/Clock-Out widget on the main dashboard, syncing directly to Firebase attendance logs and HR reporting.
-- **Interactive Gantt Charts (Timeline View)**: Upgraded project task lists with a toggle to view tasks on a visual timeline (Gantt Chart), mapped across a 7-day calendar view for flawless dependency tracking.
+- **🌗 Dual-Theme System (Dark & Light Mode)**: Complete adaptive visual architecture powered by `next-themes` and bespoke olive-green aesthetic tokens. Includes WCAG AA compliant contrast overrides for badges, status pills, shimmer skeletons, and modals.
+- **⏱️ Hardened Attendance & Time Tracking**: Secure serverless state machine validating actions via Firebase Admin SDK. Features client-server clock skew protection, real-time ticking counters, lunch break timers, and instant Discord alerts.
+- **⚡ Automated Workflow Builder**: Create multi-stage approval chains conditionally triggered by rules (e.g. expenses > $500 route to Founder). Features a visual interactive builder.
+- **🌐 External Client Portal**: A secure, isolated portal explicitly restricted to external clients, scoping invoices and project milestones to verified accounts.
+- **📋 Approvals Dashboard Widget**: Real-time dashboard widget that notifies employees and managers of pending tasks requiring their sign-off.
+- **🔍 Unified Global Search (Command Palette)**: Press `Cmd/Ctrl + K` to instantly search and navigate across Employees, Projects, Clients, and Chat Channels from anywhere in the app.
+- **🌳 Interactive Organization Chart (HR)**: Multi-level hierarchical tree-view in the HR Directory visualizing corporate reporting structures.
+- **🎫 Internal IT & Helpdesk Ticketing**: Kanban-style module for submitting, assigning, and tracking internal IT and HR operational tickets.
+- **📊 Interactive Gantt Charts**: Timeline view for project tasks with multi-day calendar spans and dependency tracking.
+- **🔒 Admin Audit Trail**: Immutable background activity logs tracking sensitive authentication and administrative actions.
 
 ---
 
 ## 🏛️ Architecture & Flow Diagram
 
-Mints Global ERP utilizes a secure, serverless architecture powered by Next.js and Firebase. The client communicates directly with Firestore for real-time data sync using a customized React Context provider for Authentication and state management. Server-side API routes handle secure third-party integrations, such as Discord Webhooks.
+Mints Global ERP utilizes a secure, serverless architecture powered by Next.js and Firebase. The client communicates directly with Firestore for real-time data sync using a customized React Context provider for Authentication and state management. Server-side API routes handle secure verification via the Firebase Admin SDK and external webhook integrations.
 
 ```mermaid
 graph TD;
-    Client[Next.js Client] -->|Real-time Sync| Firestore[(Firebase Firestore)];
+    Client[Next.js Client App] -->|Real-time Sync| Firestore[(Firebase Firestore)];
     Client -->|Auth State| FirebaseAuth[Firebase Auth];
-    Client -->|Server Actions| NextAPI[Next.js API Routes];
+    Client -->|Bearer Token| NextAPI[Next.js Serverless API];
+    NextAPI -->|Verify ID Token| AdminAuth[Firebase Admin SDK];
+    NextAPI -->|Admin Reads/Writes| AdminDb[(Firestore Admin DB)];
     NextAPI -->|Webhooks| Discord[Discord Automations];
     NextAPI -->|Third Party APIs| External[External Integrations];
 ```
@@ -77,25 +88,27 @@ graph TD;
 
 ## 💻 Tech Stack
 
-The Mints Global ERP is built on a modern, robust foundation to ensure performance and scalability:
+The Mints Global ERP is built on a modern, robust foundation:
 
-- **Frontend**: Next.js 14 (App Router) + React 19 + TypeScript
-- **Backend/DB**: Firebase (Cloud Firestore + Authentication)
-- **Styling**: Tailwind CSS v4, Framer Motion, shadcn/ui (Radix UI)
-- **Hosting**: Vercel
-- **Other integrations**: Discord Webhooks API, Google Workspace (for SSO), jsPDF (for document generation)
+- **Frontend Framework**: Next.js 16.2.6 (App Router + Turbopack) + React 19 + TypeScript
+- **State & Theme**: Zustand + `next-themes` (Class-based dual mode)
+- **Backend / Database**: Google Firebase (Client SDK v12 + Firebase Admin SDK v14)
+- **Styling**: Tailwind CSS v4, Framer Motion, shadcn/ui (Radix UI primitives)
+- **Document Engines**: jsPDF & ExcelJS (payslips, invoices, reports)
+- **Hosting & CI/CD**: Vercel Serverless Platform
+- **Automations**: Discord Webhooks API, Google Workspace SSO
 
 ---
 
 ## 🚀 Getting Started
 
-This section is critical for setting up the local development environment for onboarding developers.
+Follow these steps to set up the local development environment:
 
 ### Prerequisites
 
-- **Node.js** (v18.x or higher)
-- **npm** or **yarn**
-- **Firebase Project** setup (Firestore, Authentication enabled)
+- **Node.js** (v20.x or higher recommended)
+- **npm** (v10.x or higher)
+- **Firebase Project** with Firestore, Authentication, and Service Accounts enabled
 - **Discord Server** (with Webhook integrations enabled)
 
 ### Clone the repo
@@ -113,17 +126,34 @@ npm install
 
 ### Environment variables
 
-Create a `.env.local` file in the root directory. You must include the following keys (do not reveal actual values in source control):
+Create a `.env.local` file in the root directory with the following keys:
 
 ```env
+# Client-side Firebase SDK
 NEXT_PUBLIC_FIREBASE_API_KEY=""
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=""
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=""
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=""
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="mintserp.firebaseapp.com"
+NEXT_PUBLIC_FIREBASE_PROJECT_ID="mintserp"
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="mintserp.firebasestorage.app"
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=""
 NEXT_PUBLIC_FIREBASE_APP_ID=""
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=""
+
+# Discord Webhook Automations
 DISCORD_WEBHOOK_URL=""
+
+# Administrative Access List
+NEXT_PUBLIC_ADMIN_EMAILS="admin@mintsglobal.ae,..."
+
+# Firebase Admin SDK (Server-side Authentication & Attendance Verification)
+FIREBASE_CLIENT_EMAIL="firebase-adminsdk-xxxxx@mintserp.iam.gserviceaccount.com"
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
 ```
+
+> [!TIP]
+> To obtain `FIREBASE_CLIENT_EMAIL` and `FIREBASE_PRIVATE_KEY`:
+> 1. In Firebase Console, go to **Project Settings** ➔ **Service accounts**.
+> 2. Click **Generate new private key** and open the downloaded JSON.
+> 3. Paste `client_email` and `private_key` (keep literal `\n` characters intact).
 
 ### Discord Webhook Configuration
 
@@ -242,16 +272,17 @@ We use semantic commit messages:
 
 ## 🗺️ Roadmap
 
-We follow a phased development approach:
+We follow a continuous deployment approach across four foundational phases:
 
 - **Phase 1: Foundation & HR (Done)**
   - User Authentication, RBAC, HR Hub, Attendance Tracking, Basic Discord Integrations.
 - **Phase 2: Operations & CRM (Done)**
   - CRM Pipelines, Projects Module, Leave Management, Team Calendar, Global Base Migration.
-- **Phase 3: Advanced Integrations & Automations (In Progress)**
-  - Financial tracking, Invoicing, OCR features, Advanced Analytics & Reporting.
-- **Phase 4: Client Portal (Upcoming)**
-  - Dedicated access for external clients to view project progress and invoices.
+- **Phase 3: Advanced Integrations & Automations (Done)**
+  - Financial tracking, Invoicing, OCR receipts, Automated Workflow Builder, Audit Logging.
+- **Phase 4: Client Portal & Dual Theme System (Done)**
+  - Dedicated external client portal for scoped invoice/project access.
+  - Complete Dark/Light dual-theme visual design system with high-contrast accessibility.
 
 ---
 

@@ -49,9 +49,10 @@ As a **UI/UX Intern**, you are responsible for maintaining the ERP's premium, hi
 - **Transitions**: Implement micro-interactions using `framer-motion`.
 
 ### What You Need to Do (Key Tasks)
+- [ ] **Dual-Theme Design System**: Ensure all new components support both **Dark Mode** and **Light Mode** seamlessly using semantic CSS variables (`var(--background)`, `var(--card)`, `var(--foreground)`, `var(--muted-foreground)`) rather than hardcoded colors.
+- [ ] **Accessibility Compliance**: Verify contrast levels meet WCAG 2.1 AA in both dark mode (deep olive tones) and light mode (sage/cream surfaces).
 - [ ] **Responsiveness Check**: Verify all dashboards render correctly on viewports ranging from 375px mobile screens up to 4K displays.
-- [ ] **Typography & Palette Harmony**: Standardize visual hierarchies (e.g., Outfit/Inter font weights, glass border colors, and consistent hover gradients).
-- [ ] **Accessibility Compliance**: Conduct WCAG 2.1 AA audits to ensure appropriate contrast levels, focus indicators, and screen reader labels are configured.
+- [ ] **Typography & Palette Harmony**: Standardize visual hierarchies across cards, forms, and dialogs.
 - [ ] **Performance Polish**: Reduce Cumulative Layout Shift (CLS) on dynamic load screens (such as charts).
 - [ ] **Animation Optimizations**: Refactor animation triggers to use CSS hardware acceleration where possible.
 

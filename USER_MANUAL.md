@@ -24,8 +24,10 @@ The ERP features dynamic, automated role enforcement to maintain absolute operat
 
 ## 🆕 Recent Feature Additions & Enhancements
 
-As part of our continuous ERP upgrades, several new integrated modules have been released:
+As part of our continuous ERP upgrades, several new integrated modules and platform-wide capabilities have been released:
 
+- **🌗 Dual-Theme System (Dark & Light Mode)**: Full theme toggle located in the Top Navigation bar. Dark mode features our signature deep olive/forest aesthetic (`#0a0e0b`), while Light mode provides an ultra-clean, high-contrast sage/cream workspace (`#f5f7f4`) fully compliant with WCAG AA readability standards.
+- **⏱️ Hardened Attendance Engine**: Serverless state machine powered by Firebase Admin token verification. Features client-server clock skew protection, live ticking work counters, lunch break timers, and automated Discord channel logging.
 - **Command Palette (`Cmd/Ctrl + K`)**: Instantly jump across modules, employees, projects, or chats from any screen.
 - **HR Interactive Organization Chart**: The HR directory now features a tree-view visualizing the corporate hierarchy (Founder ➔ Core Team ➔ Departments).
 - **Internal Ticketing System**: A centralized Kanban board for logging and tracking internal IT/HR/Operations support tickets.
@@ -292,12 +294,25 @@ Founder dashboard tracking company security events, real-time active users, and 
 
 ---
 
-## 📅 16. Version History
+## 🎨 Module 16: Appearance & Dual-Theme Engine (Dark & Light Modes)
+
+Mints Global ERP provides a high-performance, accessible dual-theme system designed to provide optimal comfort in any work environment:
+
+* **Instant Theme Toggle:** Click the **Sun / Moon** icon in the Top Navigation bar at any time to seamlessly toggle between **Dark Mode** and **Light Mode**. Your preference is automatically stored in `localStorage` and persists across sessions.
+* **Bespoke Color Profiles:**
+  - **🌙 Dark Mode (Default):** Built around a signature deep olive/forest base (`#0a0e0b`), dark card surfaces (`#121813`), and high-contrast pale sage typography (`#f0f4ee`).
+  - **☀️ Light Mode:** Built around an ultra-clean, soothing sage/cream background (`#f5f7f4`), pure white elevated cards (`#ffffff`), and dark forest typography (`#1a241b`).
+* **Accessibility & Contrast:** All status badges (Active, Pending, Critical, Overdue), table headers, and form inputs dynamically swap opacity levels and background tints to maintain WCAG 2.1 AA compliant contrast ratios in both lighting modes.
+* **Shimmer Skeletons:** Animated loading skeletons use responsive CSS variables that adapt their gradient illumination whether viewing on dark or light backgrounds.
+
+---
+
+## 📅 17. Version History
 
 | Version | Date | Status | Changes |
 | :--- | :--- | :--- | :--- |
 | **v1.0** | May 2026 | Released | Initial release (Core HR Directory, Attendance Location Logs, Lead CRM Hub) |
 | **v1.1** | May 2026 | Released | Leave Planner workflow, Multi-department employee database structures, Static Webhooks |
 | **v1.2** | May 2026 | Released | Complete Client Billing Suite, Secure File Explorer Drive (RBAC), Gantt Capacity Heatmap, dynamic Weekly Timesheet matrix spreadsheet, Live Presence Map, and custom Discord settings telemetry center. |
-| **v1.3** | May 2026 | Released | Implemented dynamic department-based specialization subroles, multi-card badge limits (with dynamic overflow +N counts), self-healing deduplicated department chat rooms (Marketing, IT, Operations), and admin add-member action routing controls. |
-| **v1.4** | July 2026 | **Active Production** | Introduced the Automated Workflow Builder, External Client Portal, Global Command Palette, IT/HR Ticketing Kanban, HR Tree View, Admin Audit Trails, Live Time Tracking, Project Gantt view, and a complete visual restyling of the Attendance and Leave trackers. |
+| **v1.4** | July 2026 | Released | Introduced Automated Workflow Builder, External Client Portal, Global Command Palette (`Cmd+K`), IT/HR Ticketing Kanban, HR Tree View, Admin Audit Trails, Live Time Tracking, Project Gantt view, and Attendance/Leave redesign. |
+| **v1.5** | Sep 2026 | **Active Production** | Full Dark & Light Mode theme engine, Firebase Admin attendance token verification hardening, client-server clock skew protection, and app-wide WCAG readability optimization. |
