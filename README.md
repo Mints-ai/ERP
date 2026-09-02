@@ -144,6 +144,8 @@ The entire platform is fully optimized for daytime productivity with an elegant,
 
 The ERP has been continuously refined with powerful modules and enhancements:
 
+- **🛡️ Enterprise Task Governance & Security Architecture**: Role-gated Kanban workflow with drag-and-drop restricted to C-Suite and System Administrators. Standard assignees advance work through audited lifecycle triggers (`Start Task` ➔ `Submit for Review` ➔ `Approve` or `Recheck`). Features mandatory recheck review feedback loops, cascading task deletion requiring formal written justification, delegated team tasks with designated Team Leader accountability, subtask due date boundary checks (`subtask.dueDate <= parent.dueDate`), and secure attachment whitelisting.
+- **🎫 Audited Helpdesk & Support Ticketing**: Comprehensive 4-stage service desk Kanban (`Open`, `In Progress`, `Waiting on Requester`, `Resolved`). Features role-gated transitions, mandatory resolution notes audits, audited ticket cancellations notifying requesters, real-time activity threads with private staff-only notes, and secure document attachments.
 - **🌗 Dual-Theme System (Dark & Light Mode)**: Complete adaptive visual architecture powered by `next-themes` and bespoke olive-green aesthetic tokens. Includes WCAG AA compliant contrast overrides for badges, status pills, shimmer skeletons, and modals.
 - **⏱️ Hardened Attendance & Time Tracking**: Secure serverless state machine validating actions via Firebase Admin SDK. Features client-server clock skew protection, real-time ticking counters, lunch break timers, and instant Discord alerts.
 - **⚡ Automated Workflow Builder**: Create multi-stage approval chains conditionally triggered by rules (e.g. expenses > $500 route to Founder). Features a visual interactive builder.
@@ -151,7 +153,6 @@ The ERP has been continuously refined with powerful modules and enhancements:
 - **📋 Approvals Dashboard Widget**: Real-time dashboard widget that notifies employees and managers of pending tasks requiring their sign-off.
 - **🔍 Unified Global Search (Command Palette)**: Press `Cmd/Ctrl + K` to instantly search and navigate across Employees, Projects, Clients, and Chat Channels from anywhere in the app.
 - **🌳 Interactive Organization Chart (HR)**: Multi-level hierarchical tree-view in the HR Directory visualizing corporate reporting structures.
-- **🎫 Internal IT & Helpdesk Ticketing**: Kanban-style module for submitting, assigning, and tracking internal IT and HR operational tickets.
 - **📊 Interactive Gantt Charts**: Timeline view for project tasks with multi-day calendar spans and dependency tracking.
 - **🔒 Admin Audit Trail**: Immutable background activity logs tracking sensitive authentication and administrative actions.
 

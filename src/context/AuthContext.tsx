@@ -492,21 +492,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                 // Request FCM Token
                 try {
-                  const { messaging } = await import("@/lib/firebase");
-                  if (messaging) {
-                    const { getToken } = await import("firebase/messaging");
-                    const currentToken = await getToken(messaging, { 
-                      vapidKey: "REPLACE_WITH_VAPID_KEY" // User needs to replace this
-                    });
-                    
-                    if (currentToken) {
-                      await updateDoc(userDocRef, {
-                        fcmToken: currentToken
-                      });
+                  const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+                  if (vapidKey && vapidKey !== "REPLACE_WITH_VAPID_KEY") {
+                    const { messaging } = await import("@/lib/firebase");
+                    if (messaging) {
+                      const { getToken } = await import("firebase/messaging");
+                      const currentToken = await getToken(messaging, { vapidKey });
+                      
+                      if (currentToken) {
+                        await updateDoc(userDocRef, {
+                          fcmToken: currentToken
+                        });
+                      }
                     }
                   }
                 } catch (fcmErr) {
-                  console.warn("FCM Token generation failed (ensure VAPID key is set):", fcmErr);
+                  console.warn("FCM Token generation failed:", fcmErr);
                 }
               } catch (ipErr) {
                 console.error("Error logging sign-in IP address:", ipErr);

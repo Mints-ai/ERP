@@ -182,3 +182,178 @@ export const saveFocusSession = async (
     throw error;
   }
 };
+
+// --- ENTERPRISE WORKFLOW & SECURITY OPERATIONS (from testerp) ---
+
+export const submitTaskForReview = async (
+  taskId: string,
+  skipsReview: boolean = false
+): Promise<void> => {
+  const newStatus: TaskStatus = skipsReview ? "done" : "review";
+  const submittedAt = new Date().toISOString();
+  
+  const taskRef = doc(db, TASKS_COLLECTION, taskId);
+  await updateDoc(taskRef, {
+    status: newStatus,
+    submittedAt,
+    ...(skipsReview ? { feedback: null, isRecheck: false } : {}),
+    updatedAt: submittedAt
+  });
+
+  fetch("/api/tasks/notify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "status_changed", taskId, newStatus, isRecheck: false }),
+  }).catch(console.error);
+};
+
+export const approveTask = async (taskId: string): Promise<void> => {
+  const taskRef = doc(db, TASKS_COLLECTION, taskId);
+  await updateDoc(taskRef, {
+    status: "done",
+    feedback: null,
+    isRecheck: false,
+    updatedAt: new Date().toISOString()
+  });
+
+  fetch("/api/tasks/notify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "status_changed", taskId, newStatus: "done", isRecheck: false }),
+  }).catch(console.error);
+};
+
+export const recheckTask = async (
+  taskId: string,
+  feedback: string,
+  user: any
+): Promise<void> => {
+  if (!feedback.trim()) {
+    throw new Error("Recheck feedback is mandatory.");
+  }
+
+  const now = new Date().toISOString();
+  const taskRef = doc(db, TASKS_COLLECTION, taskId);
+  
+  // Log into remarks subcollection for permanent audit trail
+  await addRemark(
+    taskId,
+    `⚠️ Recheck requested: ${feedback.trim()}`,
+    user?.uid || "admin",
+    user?.fullName || user?.displayName || "Reviewer"
+  );
+
+  await updateDoc(taskRef, {
+    status: "in_progress",
+    feedback: feedback.trim(),
+    isRecheck: true,
+    updatedAt: now
+  });
+
+  fetch("/api/tasks/notify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "status_changed", taskId, newStatus: "in_progress", isRecheck: true }),
+  }).catch(console.error);
+};
+
+export const deleteTaskWithCascade = async (
+  task: Task,
+  deleteReason: string,
+  user: any,
+  employeesList: any[] = []
+): Promise<void> => {
+  if (!deleteReason.trim()) {
+    throw new Error("A reason is mandatory to delete or cancel a task.");
+  }
+
+  const recipientIds = new Set<string>();
+  let subtaskDocs: { id: string; assignedTo: string; title: string }[] = [];
+
+  if (task.isTeamTask) {
+    (task.teamMembers || []).forEach(id => recipientIds.add(id));
+    (task.teamHeads || []).forEach(id => recipientIds.add(id));
+    if (task.teamLeaderId) recipientIds.add(task.teamLeaderId);
+
+    // Pull every subtask under this team task so they can be deleted too
+    const subtaskSnapshot = await getDocs(
+      query(collection(db, TASKS_COLLECTION), where("parentTaskId", "==", task.id))
+    );
+    subtaskDocs = subtaskSnapshot.docs.map(d => ({
+      id: d.id,
+      assignedTo: (d.data() as any).assignedTo,
+      title: (d.data() as any).title,
+    }));
+    subtaskDocs.forEach(st => { if (st.assignedTo) recipientIds.add(st.assignedTo); });
+  } else if (task.parentTaskId) {
+    recipientIds.add(task.assignedTo);
+    (task.teamHeads || []).forEach(id => recipientIds.add(id));
+    if (task.teamLeaderId) recipientIds.add(task.teamLeaderId);
+  } else {
+    recipientIds.add(task.assignedTo);
+  }
+  
+  if (user?.uid) {
+    recipientIds.delete(user.uid);
+  }
+
+  // Notify all affected assignees & team members with the reason
+  for (const recipientId of recipientIds) {
+    const recipientEmp = employeesList.find(emp => emp.id === recipientId);
+    const mySubtask = subtaskDocs.find(st => st.assignedTo === recipientId);
+    const subtaskLine = mySubtask ? `\nYour Subtask: ${mySubtask.title} (also removed)\n` : "";
+
+    try {
+      await addDoc(collection(db, "internal_mails"), {
+        senderId: user?.uid,
+        senderName: user?.fullName || user?.displayName || "Mints Task Manager",
+        senderEmail: user?.email || "system@mintsglobal.com",
+        receiverId: recipientId,
+        receiverName: recipientEmp?.fullName || "Employee",
+        receiverEmail: recipientEmp?.email || "",
+        subject: `❌ Task Cancelled: ${task.title}`,
+        body: `Hello ${recipientEmp?.fullName || "Team Member"},\n\nThe following task has been cancelled/deleted by ${user?.fullName || user?.displayName || "Admin"}:\n\nTask: ${task.title}\nReason: ${deleteReason.trim()}\n${subtaskLine}\nPlease reach out to management if you have any questions.\n\nBest regards,\n${user?.fullName || user?.displayName || "Mints Project Management"}`,
+        priority: task.priority === "Urgent" || task.priority === "High" ? "Urgent" : "Normal",
+        isRead: false,
+        createdAt: serverTimestamp()
+      });
+
+      await addDoc(collection(db, "notifications"), {
+        userId: recipientId,
+        title: "Task Cancelled",
+        message: `${task.title} was cancelled by ${user?.fullName || user?.displayName || "Admin"}: ${deleteReason.trim()}`,
+        type: "task_cancelled",
+        read: false,
+        createdAt: serverTimestamp(),
+        link: `/dashboard/tasks`
+      });
+    } catch (notifErr) {
+      console.warn("Notification dispatch warning during task delete:", notifErr);
+    }
+  }
+
+  // Delete all child subtasks first
+  for (const st of subtaskDocs) {
+    await deleteDoc(doc(db, TASKS_COLLECTION, st.id));
+  }
+
+  // Delete main task
+  await deleteDoc(doc(db, TASKS_COLLECTION, task.id));
+};
+
+export const validateAttachmentFile = (file: File): { valid: boolean; error?: string; safeName: string } => {
+  const allowedExtensions = [".pdf", ".docx", ".xlsx"];
+  const extension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+  
+  if (!allowedExtensions.includes(extension)) {
+    return { valid: false, error: "Only PDF, DOCX, and XLSX files can be attached.", safeName: "" };
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    return { valid: false, error: "Attachments must be 10 MB or smaller.", safeName: "" };
+  }
+
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  return { valid: true, safeName };
+};
+

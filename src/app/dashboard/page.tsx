@@ -332,7 +332,7 @@ export default function DashboardHome() {
             </CardContent>
             <div className="absolute bottom-0 left-0 right-0 h-14 opacity-20 group-hover:opacity-40 transition-opacity">
               {mounted ? (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <AreaChart data={taskData}>
                     <defs>
                       <linearGradient id="colorTasks" x1="0" y1="0" x2="0" y2="1">
@@ -364,7 +364,7 @@ export default function DashboardHome() {
                 </CardContent>
                 <div className="absolute bottom-0 left-0 right-0 h-14 opacity-20 group-hover:opacity-40 transition-opacity">
                   {mounted ? (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                       <LineChart data={projData}>
                         <Line type="monotone" dataKey="v" stroke="#8fa87b" strokeWidth={2} dot={false} />
                       </LineChart>
@@ -396,7 +396,7 @@ export default function DashboardHome() {
                 </CardContent>
                 <div className="absolute bottom-0 left-0 right-0 h-14 opacity-20 group-hover:opacity-40 transition-opacity">
                   {mounted ? (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                       <AreaChart data={teamData}>
                         <defs>
                           <linearGradient id="colorTeam" x1="0" y1="0" x2="0" y2="1">
@@ -424,7 +424,7 @@ export default function DashboardHome() {
             </CardContent>
             <div className="absolute bottom-0 left-0 right-0 h-14 opacity-20 group-hover:opacity-40 transition-opacity">
               {mounted ? (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <LineChart data={hoursData}>
                     <Line type="monotone" dataKey="v" stroke="#8fa87b" strokeWidth={2} dot={{ r: 2, fill: "#8fa87b" }} />
                   </LineChart>
@@ -645,7 +645,15 @@ export default function DashboardHome() {
                         {approval.leaveType || "Leave Request"}
                       </span>
                       <span className="text-xs font-mono text-foreground/40">
-                        {approval.createdAt ? new Date(approval.createdAt).toLocaleDateString() : "Pending"}
+                        {approval.createdAt 
+                          ? (typeof approval.createdAt.toDate === 'function' 
+                              ? approval.createdAt.toDate().toLocaleDateString() 
+                              : approval.createdAt.seconds 
+                                ? new Date(approval.createdAt.seconds * 1000).toLocaleDateString() 
+                                : new Date(approval.createdAt).toLocaleDateString() === "Invalid Date"
+                                  ? "Pending"
+                                  : new Date(approval.createdAt).toLocaleDateString()) 
+                          : "Pending"}
                       </span>
                     </div>
                     <p className="text-sm font-bold text-foreground leading-tight">{approval.employeeName || "Mints Team Member"}</p>

@@ -88,7 +88,8 @@ function SidebarContent({ isExpanded, onNavigate }: { isExpanded: boolean; onNav
           alt="Mints Emblem" 
           width={36} 
           height={36} 
-          className="w-9 h-9 rounded-xl object-contain shrink-0 shadow-sm" 
+          className="rounded-xl object-contain shrink-0 shadow-sm" 
+          style={{ width: "auto", height: "auto" }}
         />
         {isExpanded && (
           <motion.div

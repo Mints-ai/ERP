@@ -35,24 +35,36 @@ export interface Task {
   title: string;
   description: string;
   projectId?: string;
+  projectName?: string;
   priority: TaskPriority;
   status: TaskStatus;
   
   assignedTo: string;
   assignedToName?: string;
-  assignedBy: string;
-  assignedByName: string;
+  assignedBy?: string;
+  assignedByName?: string;
   
-  attachments: TaskAttachment[];
-  focusSession: FocusSession;
+  attachments?: TaskAttachment[];
+  focusSession?: FocusSession | null;
   
-  isTeamTask: boolean;
-  parentTaskId?: string | null;
+  // Team hierarchy and governance (from testerp)
+  isTeamTask?: boolean;
+  teamMembers?: string[];
   teamHeads?: string[];
+  teamLeaderId?: string;
+  monitorManagerIds?: string[];
+  parentTaskId?: string | null;
+  parentTaskTitle?: string;
+  
+  // Review & audit feedback
+  feedback?: string | null;
+  submittedAt?: string;
+  timeSpent?: string;
+  remarks?: TaskRemark[];
   
   dueDate: string | null;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: any;
+  updatedAt?: string;
   
   isRecheck?: boolean;
   blocked?: boolean;

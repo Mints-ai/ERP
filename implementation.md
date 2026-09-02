@@ -235,3 +235,28 @@ Route (app)
 ```
 
 The application compiles with **100% absolute success**, guaranteeing that the production build is highly optimized, stable, and ready to deploy!
+
+---
+
+## 🛡️ 8. Enterprise Task & Helpdesk Ticket Security Governance Upgrade
+
+In September 2026, we completed a major enterprise security upgrade adapted from [`Mints-ai/testerp`](https://github.com/Mints-ai/testerp) across the **Tasks** and **Helpdesk Tickets** modules, ensuring 100% backward compatibility and zero data loss for all existing Firestore records.
+
+### 8.1 Enterprise Task Security & Workflow Controls
+1. **Role-Gated Drag-and-Drop**: Freeform dragging across Kanban columns is restricted exclusively to C-Suite Executives (`founder`, `system_admin`, `c_suite`, `admin`). Standard assignees advance tasks sequentially using audited action buttons (`Start Task` ➔ `Submit for Review` ➔ `Approve` / `Recheck`).
+2. **Mandatory Recheck Audit Loop**: Reviewers cannot send work back to `In Progress` without providing mandatory written feedback in the Recheck Dialog. The feedback is stamped in `task.feedback`, logged in the remarks subcollection, and displayed in amber directly on the task card.
+3. **Cascading Deletion with Mandatory Justification**: Tasks cannot be silently removed. Deletions strictly mandate a written cancellation reason. Any child subtasks (`parentTaskId == taskId`) are automatically located and deleted in a cascading batch, and audit notifications and internal mail alerts are dispatched to affected assignees.
+4. **Delegated Team Tasks**: Supports creating Team Tasks with an accountable Team Leader, Co-Leaders, and Member assignment pool.
+5. **Subtask Deadline Constraints**: Subtask deadlines are strictly bounded: they cannot be in the past and cannot exceed the parent task's completion deadline (`subtask.dueDate <= parent.dueDate`).
+6. **Attachment Whitelisting & Sanitization**: Restricted to `.pdf`, `.docx`, and `.xlsx` files up to 10MB, with filename sanitization before Firebase Storage upload.
+7. **Zero Data Loss Guarantee**: All 107 existing Firestore tasks were preserved without schema destruction. Historical tasks default gracefully to standard individual tasks.
+
+### 8.2 Audited 4-Stage Helpdesk Support Ticketing
+1. **Four-Stage Service Desk Kanban**: Replaced prototype prompts (`window.prompt` / `window.confirm`) with an enterprise Kanban board featuring `Open`, `In Progress`, `Waiting on Requester`, and `Resolved` stages.
+2. **Action-Gated Transitions**: Non-privileged users cannot arbitrarily drag tickets into `Resolved` without authorized support agent or managerial clearance.
+3. **Mandatory Resolution Audit Loop**: Moving any ticket to `Resolved` strictly mandates a resolution note explaining the fix or root-cause remedy applied, recorded permanently in `resolutionDetails` and delivered to the ticket activity thread.
+4. **Audited Ticket Cancellations**: Deleting or cancelling a ticket requires a formal written reason, with automated email alerts and in-app notifications dispatched to the ticket requester.
+5. **Dual-Layer Activity Thread**: Real-time conversation thread supporting both Public Replies (visible to the requester) and Private Staff Notes (marked with a lock badge and hidden from regular employees).
+6. **Attachment Whitelisting**: Supported file types: `.pdf`, `.docx`, `.xlsx`, `.png`, `.jpg`, `.jpeg` (max 10MB).
+7. **Granular Firestore Rules**: Updated `firestore.rules` to enforce role-based access for tickets and comment subcollections.
+

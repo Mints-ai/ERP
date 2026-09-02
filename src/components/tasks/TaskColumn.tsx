@@ -12,7 +12,11 @@ interface TaskColumnProps {
   employeesList: any[];
   onAddClick: () => void;
   onTaskClick: (task: Task) => void;
-  onDeleteTask: (taskId: string) => void;
+  onDeleteTask: (task: Task) => void;
+  isDragDisabled?: boolean;
+  currentUserId?: string;
+  onQuickAction?: (action: "start" | "submit" | "approve" | "recheck", task: Task, e: React.MouseEvent) => void;
+  canApprove?: boolean;
 }
 
 export default function TaskColumn({ 
@@ -22,7 +26,11 @@ export default function TaskColumn({
   employeesList, 
   onAddClick, 
   onTaskClick,
-  onDeleteTask 
+  onDeleteTask,
+  isDragDisabled = false,
+  currentUserId,
+  onQuickAction,
+  canApprove = false
 }: TaskColumnProps) {
   return (
     <div className="flex flex-col w-[300px] max-h-full rounded-2xl border border-border shadow-sm shrink-0">
@@ -51,8 +59,12 @@ export default function TaskColumn({
                 onClick={() => onTaskClick(task)}
                 onDelete={(e) => {
                   e.stopPropagation();
-                  onDeleteTask(task.id);
+                  onDeleteTask(task);
                 }}
+                isDragDisabled={isDragDisabled}
+                currentUserId={currentUserId}
+                onQuickAction={onQuickAction}
+                canApprove={canApprove}
               />
             ))}
             {provided.placeholder}

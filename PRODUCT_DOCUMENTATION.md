@@ -97,10 +97,14 @@ Every UI component utilizes CSS custom properties declared in `src/app/globals.c
 * **Interactive Gantt Timeline**: Multi-day task duration bars with dependency tracking and milestone flags.
 * **Budget vs. Actual Hours**: Tracks logged employee timesheet hours against allocated project budgets.
 
-### 4.6 Automated Workflows & Tasks (`/dashboard/tasks`)
-* **Conditional Workflow Builder**: Visual engine to create if-then approval chains (e.g., "If invoice > $1,000 ➔ Require Founder Sign-Off").
-* **Sequential Sign-Off Routing**: Tasks progress sequentially through assigned approvers with audit timestamps.
-* **Approvals Widget**: Dashboard widget alerting managers to pending approvals awaiting their action.
+### 4.6 Enterprise Task Governance & Workflow Architecture (`/dashboard/tasks`)
+* **Role-Gated Drag-and-Drop**: Freeform drag-and-drop between Kanban columns is restricted exclusively to C-Suite Executives and System Administrators. Standard assignees advance tasks through audited sequential lifecycle buttons (`Start Task` ➔ `Submit for Review` ➔ `Approve` / `Recheck`).
+* **Mandatory Recheck Audit Loop**: Supervisors cannot reject work without submitting mandatory actionable feedback, which is permanently logged in the audit trail and highlighted directly on the task card.
+* **Cascading Deletion with Justification**: Deleting or cancelling a task requires a non-empty cancellation reason. All child subtasks are cascaded automatically, and notifications/internal emails are dispatched to affected team members.
+* **Delegated Team Task Hierarchy**: Supports Team Tasks with designated Team Leader accountability, Co-Leaders, and Member assignment pools.
+* **Subtask Deadline Constraints**: Subtask deadlines are strictly bounded: they cannot be in the past and cannot exceed the parent task's completion deadline.
+* **Secure Attachment Whitelisting**: Permitted file extensions are limited to `.pdf`, `.docx`, and `.xlsx` (max 10MB) with filename sanitization.
+* **Focus Mode**: Single-session concurrency-guarded distraction-free timer with autosaved work notes.
 
 ### 4.7 Financial Treasury & Invoicing (`/dashboard/finance`)
 * **Invoice Generator**: Multi-item invoice builder calculating taxes, discounts, and payment terms.
@@ -122,10 +126,13 @@ Every UI component utilizes CSS custom properties declared in `src/app/globals.c
 * **Role-Based Storage**: Confidential folders restricted to leadership roles.
 * **Version Tracking**: Download and replace files with audit logs.
 
-### 4.11 IT & HR Helpdesk (`/dashboard/tickets`)
-* **Ticket Kanban**: Operational support tickets categorized by status (`Open`, `In Progress`, `Under Review`, `Resolved`).
-* **Priority Triage**: Color-coded urgency levels (`Low`, `Medium`, `High`, `Critical`).
-* **Assignment & Resolution**: Direct staff assignment and resolution notes.
+### 4.11 Enterprise IT & HR Helpdesk (`/dashboard/tickets`)
+* **Audited 4-Stage Kanban**: Multi-column service desk managing tickets across `Open`, `In Progress`, `Waiting on Requester`, and `Resolved` stages.
+* **Role-Gated Transitions**: Non-privileged users cannot arbitrarily drag tickets into `Resolved` without authorized support agent or managerial clearance.
+* **Mandatory Resolution Notes**: Moving any ticket to `Resolved` strictly mandates a resolution note explaining the fix or root-cause remedy applied, recorded in `resolutionDetails`.
+* **Audited Ticket Cancellations**: Deleting or cancelling a ticket requires a formal reason, with automatic notification and internal email dispatch to the requester.
+* **Dual-Layer Activity Thread**: Support agents can post both Public Replies (visible to the requester) and Private Staff Notes (marked with a lock badge and hidden from regular employees).
+* **Attachment Whitelisting**: Supported file types: `.pdf`, `.docx`, `.xlsx`, `.png`, `.jpg` (max 10MB).
 
 ### 4.12 Corporate Mail Room (`/dashboard/mail`)
 * **3-Pane Email Suite**: Inbox, Sent, Drafts, and Archive folders.

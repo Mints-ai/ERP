@@ -20,9 +20,23 @@ interface TaskCardProps {
   employeesList: any[];
   onClick: () => void;
   onDelete: (e: React.MouseEvent) => void;
+  isDragDisabled?: boolean;
+  currentUserId?: string;
+  onQuickAction?: (action: "start" | "submit" | "approve" | "recheck", task: Task, e: React.MouseEvent) => void;
+  canApprove?: boolean;
 }
 
-export default function TaskCard({ task, index, employeesList, onClick, onDelete }: TaskCardProps) {
+export default function TaskCard({ 
+  task, 
+  index, 
+  employeesList, 
+  onClick, 
+  onDelete,
+  isDragDisabled = false,
+  currentUserId,
+  onQuickAction,
+  canApprove = false
+}: TaskCardProps) {
   const isOverdue = (dateString?: string | null) => {
     if (!dateString) return false;
     return new Date(dateString) < new Date(new Date().setHours(0,0,0,0));
@@ -37,8 +51,10 @@ export default function TaskCard({ task, index, employeesList, onClick, onDelete
            date.getFullYear() === today.getFullYear();
   };
 
+  const isAssignee = currentUserId && task.assignedTo === currentUserId;
+
   return (
-    <Draggable draggableId={task.id} index={index}>
+    <Draggable draggableId={task.id} index={index} isDragDisabled={isDragDisabled}>
       {(provided, snapshot) => (
         <Card 
           ref={provided.innerRef}
@@ -55,35 +71,93 @@ export default function TaskCard({ task, index, employeesList, onClick, onDelete
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500 animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.5)]" />
           )}
           {task.isRecheck && (
-             <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" title="Sent back for recheck" />
+             <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" title={`Sent back for recheck: ${task.feedback || ""}`} />
           )}
           <CardContent className="p-3 pl-4">
             <div className="flex justify-between items-start mb-2 gap-2">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <div className={`w-1.5 h-1.5 rounded-full ${PRIORITY_COLORS[task.priority]}`} title={`${task.priority} priority`} />
                 <Badge variant="outline" className="text-xs uppercase font-bold py-0 px-1.5 h-4 text-foreground/50 border-border">
                   {task.projectId || "General"}
                 </Badge>
-                {task.isTeamTask && <span title="Team Task"><Badge variant="outline" className="text-[10px] py-0 px-1 border-primary/30 text-primary">Team</Badge></span>}
+                {task.isTeamTask && (
+                  <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 border-primary/30 text-primary font-bold">
+                    Team
+                  </Badge>
+                )}
+                {task.parentTaskId && (
+                  <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 border-accent/30 text-accent font-bold">
+                    Subtask
+                  </Badge>
+                )}
+                {task.isRecheck && (
+                  <Badge className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] py-0 px-1.5 h-4 uppercase font-bold">
+                    Recheck
+                  </Badge>
+                )}
               </div>
               <button 
                 onClick={onDelete} 
                 className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-rose-500/20 text-rose-400 rounded cursor-pointer shrink-0"
+                title="Cancel / Delete Task"
               >
                 <Trash2 className="w-3 h-3" />
               </button>
             </div>
             
-            <p className="text-xs font-bold text-foreground mb-3 leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+            <p className="text-xs font-bold text-foreground mb-1 leading-snug line-clamp-2 group-hover:text-primary transition-colors">
               {task.title}
             </p>
+
+            {task.isRecheck && task.feedback && (
+              <p className="text-[11px] text-amber-400/90 italic line-clamp-1 mb-2 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                "{task.feedback}"
+              </p>
+            )}
+
+            {/* Workflow Quick Action Buttons */}
+            {onQuickAction && (
+              <div className="flex items-center gap-1 mb-2 mt-2" onClick={(e) => e.stopPropagation()}>
+                {task.status === "backlog" && isAssignee && (
+                  <button
+                    onClick={(e) => onQuickAction("start", task, e)}
+                    className="text-[10px] bg-primary/10 hover:bg-primary/20 text-primary font-bold py-0.5 px-2 rounded border border-primary/20 transition-all"
+                  >
+                    Start Task
+                  </button>
+                )}
+                {task.status === "in_progress" && isAssignee && (
+                  <button
+                    onClick={(e) => onQuickAction("submit", task, e)}
+                    className="text-[10px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-bold py-0.5 px-2 rounded border border-amber-500/20 transition-all"
+                  >
+                    Submit for Review
+                  </button>
+                )}
+                {task.status === "review" && canApprove && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => onQuickAction("approve", task, e)}
+                      className="text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold py-0.5 px-2 rounded border border-emerald-500/20 transition-all"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={(e) => onQuickAction("recheck", task, e)}
+                      className="text-[10px] bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold py-0.5 px-2 rounded border border-rose-500/20 transition-all"
+                    >
+                      Recheck
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
             
-            <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
+            <div className="flex items-center justify-between mt-auto pt-2 border-t border-border">
               <div className="flex gap-2 text-foreground/40 text-xs font-bold">
                 <div className="flex items-center gap-1 hover:text-foreground/70 transition-colors">
                   <CheckSquare className="w-3 h-3 text-primary" /> {task.status === "done" ? "1/1" : "0/1"}
                 </div>
-                {/* Remarks count would require fetching remarks, but we omit it or just show an icon to signify comments can be added */}
                 <div className="flex items-center gap-1 hover:text-foreground/70 transition-colors" title="Remarks">
                   <MessageSquare className="w-3 h-3 text-primary" />
                 </div>

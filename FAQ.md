@@ -85,6 +85,15 @@ Find quick answers to common questions about using the Mints Global ERP platform
 ### Q5.3: Where do I find tasks waiting for my sign-off?
 **A:** Look at the **Approvals Widget** on your main `/dashboard` page. Any workflow or leave request requiring your sign-off will appear there with direct **Approve** and **Reject** buttons.
 
+### Q5.4: Why can't I drag tasks freely between columns on the Kanban board?
+**A:** To guarantee compliance and prevent unreviewed work from silently slipping into `Done`, direct drag-and-drop between columns is restricted to C-Suite Executives and System Administrators. Standard assignees advance work using audited lifecycle action buttons (`Start Task` ➔ `Submit for Review` ➔ `Approve` or `Recheck`).
+
+### Q5.5: What happens when a task is sent back for "Recheck"?
+**A:** When a manager or reviewer requests adjustments, they are required to enter mandatory written feedback in the Recheck Dialog. The task reverts to `In Progress`, and the feedback is permanently logged in the audit trail and highlighted in amber directly on the task card.
+
+### Q5.6: Can a subtask have a due date later than its parent task?
+**A:** No. Our subtask constraint engine strictly validates deadlines: a subtask's due date cannot be in the past, nor can it exceed the parent task's completion deadline.
+
 ---
 
 ## 6. Finance, Invoices & Client Portal
@@ -104,7 +113,13 @@ Find quick answers to common questions about using the Mints Global ERP platform
 * **Mail Room (`/dashboard/mail`)**: Formal, encrypted internal memos, official policy distribution, and documentation that requires an archived audit trail.
 
 ### Q7.2: How do I submit an internal support ticket?
-**A:** Navigate to `/dashboard/tickets` and click **New Ticket**. Select the relevant department (IT, HR, DevOps, Finance), choose an urgency level, and submit. The support team will triage it on their Kanban board.
+**A:** Navigate to `/dashboard/tickets` and click **New Ticket**. Fill out the subject, select the department category (IT Support, HR & Workplace, Finance, Access & Security, General Operations), pick a priority, describe the issue, and attach any relevant files.
+
+### Q7.3: Why is a resolution note mandatory before marking a ticket as Resolved?
+**A:** To eliminate "closed without explanation" ambiguity, support agents must document the fix, remedy, or root-cause explanation before a ticket can be moved to `Resolved`. This note is stamped in `resolutionDetails` and delivered to the ticket activity thread.
+
+### Q7.4: Who can see "Private Staff Notes" on a ticket?
+**A:** Only internal support agents and managers can see comments flagged as Private Staff Notes (distinguished by an amber background and lock icon). Standard employees requesting support only see Public Replies.
 
 ---
 

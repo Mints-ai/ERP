@@ -98,18 +98,26 @@ If you forget to clock in/out or experience connectivity issues:
 
 ---
 
-## 7. IT & HR Helpdesk Protocol
+## 7. Task Progression & Helpdesk Support Protocols
 
-### 7.1 Submitting Support Tickets (`/dashboard/tickets`)
-If you encounter software bugs, require software licenses, hardware equipment, or HR documentation:
+### 7.1 Task Governance & Lifecycle Protocol (`/dashboard/tasks`)
+All project and operational tasks are governed by strict accountability workflows:
+1. **Starting Tasks**: When starting work on a task in your backlog, click **Start Task** to move it to `In Progress`.
+2. **Review Submissions**: Once deliverables are ready, click **Submit for Review**. Do not attempt to bypass review by dragging cards to `Done`.
+3. **Supervisor Reviews**: Supervisors must either **Approve** the task or send it back for **Recheck** with explicit written feedback explaining the required adjustments.
+4. **Cancellations**: Tasks cannot be silently deleted. Deletions mandate a written cancellation reason, which cascades to any child subtasks and alerts assigned team members.
+
+### 7.2 Submitting & Resolving Support Tickets (`/dashboard/tickets`)
+If you encounter software bugs, require hardware equipment, or need HR/administrative assistance:
 1. Navigate to `/dashboard/tickets` and click **New Ticket**.
-2. Select the Department (`IT Support`, `HR Operations`, `DevOps`, `Finance`).
+2. Select the Category (`IT Support`, `HR & Workplace`, `Finance & Invoicing`, `Access & Security`, `General Operations`).
 3. Set the priority appropriately:
    * **Low**: General inquiries or non-blocking enhancements.
-   * **Medium**: Minor workflow impediment with a viable workaround.
-   * **High**: Blocked on a primary client deliverable.
-   * **Critical**: Security issue, server outage, or data access failure.
-4. Track status updates and resolutions directly on the Kanban board.
+   * **Normal**: Standard assistance request.
+   * **High**: Blocked on a primary client deliverable or office connectivity issue.
+   * **Urgent**: Security vulnerability, server outage, or critical data failure.
+4. **Mandatory Resolution Notes**: Support agents resolving tickets must document the solution or root-cause remedy applied.
+5. **Private Staff Notes**: Support agents can record diagnostic internal notes that are strictly hidden from standard ticket requesters.
 
 ---
 

@@ -18,6 +18,8 @@ The ERP features dynamic, automated role enforcement to maintain absolute operat
 | **HR Directory** | View Contacts | View Directory | Edit Profile / Roles | Edit Profile / Roles |
 | **Leaves & Time Off** | Submit Requests | Approve Department | Approve Global | Approve Global |
 | **Attendance Punch** | Check In & Out | View Reports | Edit Logs | Edit Logs |
+| **Tasks Governance** | Action-Gated Progress | Manage / Review | Drag & Drop / Recheck | Drag & Drop / Recheck |
+| **Helpdesk Tickets** | Submit / View Own | Assign / Resolve | Full Manage / Cancel | Full Manage / Cancel |
 | **System Settings** | View Settings | Read Settings | Change Currency | Change Currency |
 
 ---
@@ -26,11 +28,12 @@ The ERP features dynamic, automated role enforcement to maintain absolute operat
 
 As part of our continuous ERP upgrades, several new integrated modules and platform-wide capabilities have been released:
 
+- **🛡️ Enterprise Task Security & Review Architecture**: Drag-and-drop gated strictly to C-Suite/Admins. Assignees advance tasks via sequential action buttons (`Start Task` ➔ `Submit for Review` ➔ `Approve` / `Recheck`). Features mandatory recheck review feedback loops, cascading cancellation with required justifications, delegated team tasks, subtask deadline boundary enforcement, and secure attachment validation.
+- **🎫 Audited Helpdesk & Support Ticketing**: 4-stage service desk Kanban (`Open`, `In Progress`, `Waiting on Requester`, `Resolved`) with role-gated transitions, mandatory resolution notes audits, audited ticket cancellations notifying requesters, real-time activity threads with private staff notes, and whitelisted file attachments.
 - **🌗 Dual-Theme System (Dark & Light Mode)**: Full theme toggle located in the Top Navigation bar. Dark mode features our signature deep olive/forest aesthetic (`#0a0e0b`), while Light mode provides an ultra-clean, high-contrast sage/cream workspace (`#f5f7f4`) fully compliant with WCAG AA readability standards.
 - **⏱️ Hardened Attendance Engine**: Serverless state machine powered by Firebase Admin token verification. Features client-server clock skew protection, live ticking work counters, lunch break timers, and automated Discord channel logging.
 - **Command Palette (`Cmd/Ctrl + K`)**: Instantly jump across modules, employees, projects, or chats from any screen.
 - **HR Interactive Organization Chart**: The HR directory now features a tree-view visualizing the corporate hierarchy (Founder ➔ Core Team ➔ Departments).
-- **Internal Ticketing System**: A centralized Kanban board for logging and tracking internal IT/HR/Operations support tickets.
 - **Admin Audit Trail Logs**: Automated background activity tracking giving administrators complete visibility over sensitive system events.
 - **Live Attendance Widget**: A robust dashboard Clock-In/Out tracker that logs daily operational hours directly into the HR attendance module.
 - **Project Gantt Charts**: A visual Timeline mode added to the Project Tasks view, allowing managers to effortlessly track multi-day task dependencies.
@@ -307,7 +310,37 @@ Mints Global ERP provides a high-performance, accessible dual-theme system desig
 
 ---
 
-## 📅 17. Version History
+## 🛡️ Module 17: Enterprise Task Governance & Review Architecture
+
+The Task module (`/dashboard/tasks`) provides enterprise role-gated Kanban workflows, milestone controls, and accountability loops:
+
+* **Role-Gated Drag-and-Drop:** Dragging tasks between status columns is strictly restricted to C-Suite Executives (`founder`, `system_admin`, `c_suite`, `admin`). Standard assignees advance work sequentially through audited action triggers:
+  - `Backlog` ➔ `Start Task` ➔ `In Progress`
+  - `In Progress` ➔ `Submit for Review` ➔ `Review`
+  - `Review` ➔ `Approve` (*Done*) OR `Recheck` (*reverts to In Progress with required feedback*)
+* **Mandatory Recheck Audit Loop:** Reviewers cannot reject or send work back without submitting explicit, actionable feedback in the Recheck Dialog. This feedback is permanently logged and highlighted on the task card.
+* **Cascading Cancellation with Audit Reason:** Deleting or cancelling any task requires documenting a formal cancellation reason. Child subtasks are automatically cascaded, and notifications/internal emails are dispatched to affected assignees.
+* **Delegated Team Tasks:** Supports creating Team Tasks with an accountable Team Leader, Co-Leaders, and Member pool.
+* **Subtask Deadline Constraints:** Subtasks created under a team task are bounded by the parent deadline (`subtask.dueDate <= parent.dueDate`) and cannot be in the past.
+* **Secure Attachment Whitelisting:** Permitted file types are restricted to `.pdf`, `.docx`, and `.xlsx` (max 10MB) with automatic filename sanitization.
+* **Focus Mode:** Dedicated distraction-free work timer with active task notes and concurrency guards.
+
+---
+
+## 🎫 Module 18: Audited Helpdesk & Support Ticketing
+
+The Helpdesk module (`/dashboard/tickets`) centralizes IT, HR, Finance, and Facilities support requests:
+
+* **Four-Stage Audited Kanban:** Columns for `Open`, `In Progress`, `Waiting on Requester`, and `Resolved`.
+* **Action-Gated Transitions:** Support agents claim tickets (`Claim Ticket`), advance to `In Progress`, or resolve work via audited buttons.
+* **Mandatory Resolution Notes:** Resolving any ticket strictly mandates a resolution note explaining the fix or root cause. This note is stamped with the resolver's identity and timestamp.
+* **Audited Ticket Cancellation:** Cancelling a ticket requires a formal reason, which is automatically delivered to the requester via internal mail and in-app alert.
+* **Private Staff Notes:** Support agents can post internal diagnostics notes visible only to staff, keeping internal discussions private while collaborating on requester issues.
+* **Document & Screenshot Attachments:** Attachments support `.pdf`, `.docx`, `.xlsx`, and images (`.png`, `.jpg`) up to 10MB.
+
+---
+
+## 📅 19. Version History
 
 | Version | Date | Status | Changes |
 | :--- | :--- | :--- | :--- |
@@ -315,4 +348,6 @@ Mints Global ERP provides a high-performance, accessible dual-theme system desig
 | **v1.1** | May 2026 | Released | Leave Planner workflow, Multi-department employee database structures, Static Webhooks |
 | **v1.2** | May 2026 | Released | Complete Client Billing Suite, Secure File Explorer Drive (RBAC), Gantt Capacity Heatmap, dynamic Weekly Timesheet matrix spreadsheet, Live Presence Map, and custom Discord settings telemetry center. |
 | **v1.4** | July 2026 | Released | Introduced Automated Workflow Builder, External Client Portal, Global Command Palette (`Cmd+K`), IT/HR Ticketing Kanban, HR Tree View, Admin Audit Trails, Live Time Tracking, Project Gantt view, and Attendance/Leave redesign. |
-| **v1.5** | Sep 2026 | **Active Production** | Full Dark & Light Mode theme engine, Firebase Admin attendance token verification hardening, client-server clock skew protection, and app-wide WCAG readability optimization. |
+| **v1.5** | Sep 2026 | Released | Full Dark & Light Mode theme engine, Firebase Admin attendance token verification hardening, client-server clock skew protection, and app-wide WCAG readability optimization. |
+| **v1.6** | Sep 2026 | **Active Production** | Enterprise Task & Ticket Security Governance: C-Suite drag-drop gating, action-gated sequential transitions, mandatory recheck feedback loops, cascading cancellation with audit reasons, subtask deadline boundary checks, 4-stage helpdesk Kanban, private staff notes, and granular Firestore rules with 100% data preservation. |
+
