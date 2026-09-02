@@ -513,4 +513,21 @@ Mints Global ERP enforces strict Role-Based Access Control (RBAC). Here is a det
 | **v1.1** | May 2026 | Released | Leave Planner workflow, Multi-department employee database structures, Static Webhooks |
 | **v1.2** | May 2026 | Released | Complete Client Billing Suite, Secure File Explorer Drive (RBAC), Gantt Capacity Heatmap, dynamic Weekly Timesheet matrix spreadsheet, Live Presence Map, and custom Discord settings telemetry center. |
 | **v1.3** | May 2026 | Released | Implemented dynamic department-based specialization subroles, multi-card badge limits (with dynamic overflow +N counts), self-healing deduplicated department chat rooms (Marketing, IT, Operations), and admin add-member action routing controls. |
-| **v1.4** | July 2026 | **Active Production** | Introduced the Automated Workflow Builder, External Client Portal, Global Command Palette, IT/HR Ticketing Kanban, HR Tree View, Admin Audit Trails, Live Time Tracking, and Project Gantt view. |
+| **v1.4** | July 2026 | Released | Introduced the Automated Workflow Builder, External Client Portal, Global Command Palette, IT/HR Ticketing Kanban, HR Tree View, Admin Audit Trails, Live Time Tracking, and Project Gantt view. |
+| **v1.5** | September 2026 | **Active Production** | Complete Dual-Theme System (Olive Dark & Sage Light), Firebase Admin SDK server-side token hardening, non-negative clock skew protection, full light-theme screenshot suite, and enterprise documentation guides. |
+
+---
+
+## 📚 Documentation & Knowledge Base
+
+Comprehensive guides are available across the repository for team members, managers, and system administrators:
+
+| Document | Purpose & Scope | Target Audience |
+|---|---|---|
+| **[PRODUCT_DOCUMENTATION.md](file:///D:/Ddeveloped_things/mintsglobal-erp/PRODUCT_DOCUMENTATION.md)** | Full architectural overview, technical specifications, module directories, security & RBAC matrix | Engineers, Architects, System Admins |
+| **[USER_MANUAL.md](file:///D:/Ddeveloped_things/mintsglobal-erp/USER_MANUAL.md)** | Step-by-step operational instructions for daily usage of all 18 modules | All Employees, Managers, Clients |
+| **[HANDBOOK.md](file:///D:/Ddeveloped_things/mintsglobal-erp/HANDBOOK.md)** | Company policies, onboarding, shift rules, leave policies, communication standards & ethics | New Hires & Active Team Members |
+| **[FAQ.md](file:///D:/Ddeveloped_things/mintsglobal-erp/FAQ.md)** | Frequently asked questions regarding themes, attendance, leaves, invoices & troubleshooting | All Users |
+| **[INTERNS.md](file:///D:/Ddeveloped_things/mintsglobal-erp/INTERNS.md)** | Developer tracks, setup guide, testing checklists, and engineering standards | Interns & Junior Developers |
+| **[implementation.md](file:///D:/Ddeveloped_things/mintsglobal-erp/implementation.md)** | Detailed changelog, system health scorecard, and recent system upgrade audits | Technical Leads & Stakeholders |
+
