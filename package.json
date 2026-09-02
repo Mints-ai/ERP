@@ -62,6 +62,7 @@
     "eslint-config-next": "16.2.6",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
+    "puppeteer-core": "^25.9.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

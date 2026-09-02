@@ -4,51 +4,107 @@ Welcome to the **Mints Global ERP**, a state-of-the-art enterprise resource plan
 
 ![Mints Global ERP](public/brandlogo/logo.png)
 
-## 📸 Interface Preview
+## 📸 Interface Preview & Feature Gallery
 
+### 1. Command Center & Dual-Theme Engine
 <div align="center">
-  <img src="public/Screenshot1.png" alt="Mints Global ERP Dashboard Preview - Dark Mode" width="49%" />
+  <img src="public/Screenshot1.png" alt="Mints Global ERP Command Center - Dark Mode" width="49%" />
   &nbsp;
-  <img src="public/Screenshot2.png" alt="Mints Global ERP Dashboard Preview - Light Mode" width="49%" />
+  <img src="public/Screenshot2.png" alt="Mints Global ERP Command Center - Light Mode" width="49%" />
 </div>
-
 <p align="center">
-  <em>Sleek Dual-Theme Interface: Bespoke Dark Mode (left) and High-Contrast Light Mode (right)</em>
+  <em>Command Center: Signature Dark Olive Theme (left) and High-Contrast Sage Light Theme (right)</em>
 </p>
 
 <br/>
 
+### 2. Live Attendance & Timesheet Matrix
 <div align="center">
   <img src="public/live_presence_map.png" alt="Mints Global ERP Live Attendance Tracker" width="49%" />
   &nbsp;
   <img src="public/timesheet_matrix.png" alt="Mints Global ERP Weekly Timesheet Matrix" width="49%" />
 </div>
-
 <p align="center">
-  <em>Live Real-Time Attendance Engine & Timesheet Matrix</em>
+  <em>Real-Time Clock In/Out Engine (left) and Department Weekly Timesheet Grid (right)</em>
 </p>
 
 <br/>
 
+### 3. Human Resources & Organizational Hierarchy
 <div align="center">
-  <img src="public/cloud_drive.png" alt="Mints Global ERP Secure Folder Explorer" width="49%" />
+  <img src="public/products_services_badge.png" alt="HR Directory with Department Badges" width="49%" />
   &nbsp;
-  <img src="public/discord_settings.png" alt="Mints Global ERP Discord Webhook Settings" width="49%" />
+  <img src="public/hr_directory.png" alt="HR Directory Clean Light View" width="49%" />
 </div>
+<p align="center">
+  <em>Employee Specialization Badging (left) and Directory Listing (right)</em>
+</p>
 
 <br/>
 
+### 4. CRM Pipeline & Project Gantt Timelines
 <div align="center">
-  <img src="public/products_services_badge.png" alt="Mints Global ERP Specialization Subroles" width="49%" />
+  <img src="public/crm_pipeline.png" alt="CRM Sales Pipeline Kanban" width="49%" />
   &nbsp;
-  <img src="public/chat_channels.png" alt="Mints Global ERP Deduplicated Corporate Chat" width="49%" />
+  <img src="public/projects_gantt.png" alt="Projects & Gantt Timeline View" width="49%" />
 </div>
+<p align="center">
+  <em>Visual Deal Pipeline Kanban (left) and Multi-Day Project Gantt Chart (right)</em>
+</p>
 
+<br/>
+
+### 5. Automated Workflows & Financial Treasury
 <div align="center">
-  <img src="public/workflow_builder.png" alt="Mints Global ERP Automated Workflow Builder" width="49%" />
+  <img src="public/workflow_builder.png" alt="Automated Workflow Builder" width="49%" />
   &nbsp;
-  <img src="public/client_portal.png" alt="Mints Global ERP External Client Portal" width="49%" />
+  <img src="public/finance_treasury.png" alt="Finance Treasury & Invoicing" width="49%" />
 </div>
+<p align="center">
+  <em>Conditional Rules Approval Builder (left) and Corporate Treasury & Invoice Ledger (right)</em>
+</p>
+
+<br/>
+
+### 6. IT/HR Helpdesk & Secure Mail Room
+<div align="center">
+  <img src="public/tickets_kanban.png" alt="IT & HR Helpdesk Kanban" width="49%" />
+  &nbsp;
+  <img src="public/mail_room.png" alt="Secure Corporate Mail Room" width="49%" />
+</div>
+<p align="center">
+  <em>Support Ticketing Kanban (left) and 3-Pane Encrypted Internal Memo Client (right)</em>
+</p>
+
+<br/>
+
+### 7. Corporate Chat & Cloud Drive Vault
+<div align="center">
+  <img src="public/chat_channels.png" alt="Corporate Team Chat" width="49%" />
+  &nbsp;
+  <img src="public/cloud_drive.png" alt="Secure File Cloud Drive" width="49%" />
+</div>
+<p align="center">
+  <em>Real-Time Channel Messaging (left) and RBAC Protected Document Explorer (right)</em>
+</p>
+
+<br/>
+
+### 8. Executive Telemetry, Security Logs & Client Portal
+<div align="center">
+  <img src="public/security_audit.png" alt="Admin Security & Audit Trail" width="49%" />
+  &nbsp;
+  <img src="public/discord_settings.png" alt="Discord Webhook Integrations" width="49%" />
+</div>
+<br/>
+<div align="center">
+  <img src="public/client_portal.png" alt="External Client Portal" width="49%" />
+  &nbsp;
+  <img src="public/reports_analytics.png" alt="Reports & Intelligence Analytics" width="49%" />
+</div>
+<p align="center">
+  <em>Audit Trails & Webhook Automation (top) and Client Portal & BI Reporting (bottom)</em>
+</p>
 
 ---
 
