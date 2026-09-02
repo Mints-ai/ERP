@@ -64,5 +64,10 @@
     "jest-environment-jsdom": "^30.4.1",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "jwks-rsa": {
+      "jose": "4.15.9"
+    }
   }
 }

@@ -14,7 +14,7 @@ interface ExpensesTabProps {
   expenses: any[];
   compCurrency: string;
   user: any;
-  role: string;
+  role: string | null;
 }
 
 export function ExpensesTab({ expenses, compCurrency, user, role }: ExpensesTabProps) {
@@ -114,10 +114,8 @@ export function ExpensesTab({ expenses, compCurrency, user, role }: ExpensesTabP
         <RoleGuard permission="SUBMIT_EXPENSE">
           <div className="flex gap-2">
             <Dialog open={isOcrModalOpen} onOpenChange={setIsOcrModalOpen}>
-              <DialogTrigger asChild>
-                <button className="px-4 h-9 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-1.5 cursor-pointer bg-primary/10 border border-primary/20 text-primary/80 hover:bg-primary/20">
-                  <Sparkles className="h-4 w-4 text-primary animate-pulse" /> Smart Scan
-                </button>
+              <DialogTrigger className="px-4 h-9 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-1.5 cursor-pointer bg-primary/10 border border-primary/20 text-primary/80 hover:bg-primary/20">
+                <Sparkles className="h-4 w-4 text-primary animate-pulse" /> Smart Scan
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px] bg-background border border-border text-foreground p-6 rounded-2xl shadow-xl">
                 <DialogHeader>
@@ -191,10 +189,8 @@ export function ExpensesTab({ expenses, compCurrency, user, role }: ExpensesTabP
             </Dialog>
 
             <Dialog open={isManualOpen} onOpenChange={setIsManualOpen}>
-              <DialogTrigger asChild>
-                <button className="btn-primary h-9 py-0 px-4 text-xs font-bold flex items-center justify-center cursor-pointer">
-                  <Plus className="mr-1.5 h-4 w-4" /> Log Expense
-                </button>
+              <DialogTrigger className="btn-primary h-9 py-0 px-4 text-xs font-bold flex items-center justify-center cursor-pointer">
+                <Plus className="mr-1.5 h-4 w-4" /> Log Expense
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px] bg-background border border-border text-foreground p-6 rounded-2xl shadow-xl">
                 <DialogHeader>

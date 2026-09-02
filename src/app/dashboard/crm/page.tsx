@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CRMDashboard() {
   const { user, role, simulatedRole } = useAuth();
-  const currentRole = simulatedRole || role;
+  const currentRole = simulatedRole || role || "";
   
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

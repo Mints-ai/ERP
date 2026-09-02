@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     const remarksRef = adminDb.collection(`tasks/${taskId}/remarks`);
     const snapshot = await remarksRef.orderBy("createdAt", "asc").get();
 
-    const remarks = snapshot.docs.map(doc => ({
+    const remarks = snapshot.docs.map((doc: any) => ({
       id: doc.id,
       ...doc.data()
     }));

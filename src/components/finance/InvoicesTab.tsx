@@ -24,7 +24,7 @@ interface InvoicesTabProps {
   clientsList: any[];
   compCurrency: string;
   user: any;
-  role: string;
+  role: string | null;
 }
 
 export function InvoicesTab({ invoices, clientsList, compCurrency, user, role }: InvoicesTabProps) {
@@ -99,10 +99,8 @@ export function InvoicesTab({ invoices, clientsList, compCurrency, user, role }:
           </button>
           <RoleGuard permission="CREATE_INVOICE">
             <Dialog open={isInvoiceModalOpen} onOpenChange={setIsInvoiceModalOpen}>
-              <DialogTrigger asChild>
-                <button onClick={initInvoiceForm} className="btn-primary h-9 py-0 px-4 text-xs font-bold flex items-center justify-center cursor-pointer">
-                  <Plus className="mr-1.5 h-4 w-4" /> Create Invoice
-                </button>
+              <DialogTrigger onClick={initInvoiceForm} className="btn-primary h-9 py-0 px-4 text-xs font-bold flex items-center justify-center cursor-pointer">
+                <Plus className="mr-1.5 h-4 w-4" /> Create Invoice
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px] bg-background border border-border text-foreground p-6 rounded-2xl shadow-xl max-h-[85vh] overflow-y-auto">
                 <DialogHeader>

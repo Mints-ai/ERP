@@ -37,10 +37,8 @@ export function NewLeadModal({ user }: NewLeadModalProps) {
 
   return (
     <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md rounded-xl font-semibold h-10 px-5 flex-1 sm:flex-none cursor-pointer">
-          <Plus className="mr-2 h-4 w-4 shrink-0" /> New Lead
-        </Button>
+      <DialogTrigger className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md rounded-xl font-semibold h-10 px-5 flex-1 sm:flex-none cursor-pointer inline-flex items-center justify-center">
+        <Plus className="mr-2 h-4 w-4 shrink-0" /> New Lead
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] bg-background border border-border text-foreground p-6 rounded-2xl shadow-xl">
         <DialogHeader>

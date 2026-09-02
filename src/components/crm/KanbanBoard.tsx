@@ -11,7 +11,7 @@ const STAGES = ["Lead", "Meeting", "Negotiation", "Won", "Lost"];
 interface KanbanBoardProps {
   leads: any[];
   user: any;
-  currentRole: string;
+  currentRole: string | null;
   setSelectedLead: (lead: any) => void;
 }
 
