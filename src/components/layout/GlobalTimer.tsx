@@ -173,7 +173,7 @@ export function GlobalTimer() {
             transition={{ duration: 0.2 }}
             className="mb-4 bg-background/95 rounded-2xl shadow-xl border border-border overflow-hidden w-[320px]"
           >
-            <div className="border-b border-border text-white p-3 flex justify-between items-center">
+            <div className="border-b border-border text-foreground p-3 flex justify-between items-center">
               <div className="flex items-center gap-2 font-bold text-sm">
                 <Clock className="w-4 h-4 text-primary" />
                 Time Tracker
@@ -199,7 +199,7 @@ export function GlobalTimer() {
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-muted-foreground uppercase">Project</label>
                   <Select value={selectedProjectId} onValueChange={(val) => setSelectedProjectId(val || "")}>
-                    <SelectTrigger className="h-8 text-sm text-white border-border rounded-xl">
+                    <SelectTrigger className="h-8 text-sm text-foreground border-border rounded-xl">
                       <SelectValue placeholder="Select a project..." />
                     </SelectTrigger>
                     <SelectContent className="bg-card text-foreground border-border rounded-xl">
@@ -257,7 +257,7 @@ export function GlobalTimer() {
         {isRunning ? (
           <>
             <Square className="w-4 h-4 fill-current text-muted-foreground" />
-            <span className="font-mono text-white">{formatTime(elapsedSeconds)}</span>
+            <span className="font-mono text-primary-foreground">{formatTime(elapsedSeconds)}</span>
           </>
         ) : (
           <>

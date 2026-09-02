@@ -158,7 +158,7 @@ export default function LoginPage() {
 
   if (loading || user) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-[#030712] relative overflow-hidden">
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-background relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-primary/10 blur-3xl animate-pulse" />
         <Zap className="h-8 w-8 text-primary animate-spin mb-4" />
         <p className="text-sm font-semibold text-muted-foreground tracking-wider uppercase font-mono">Verifying Credentials...</p>
@@ -167,13 +167,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full relative justify-center items-center p-4 bg-[#030712]">
+    <div className="flex min-h-screen w-full relative justify-center items-center p-4 bg-background">
       {/* Decorative Orbs */}
       <div className="absolute top-[10%] left-[20%] w-[320px] h-[320px] rounded-full bg-primary/15 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[10%] right-[20%] w-[350px] h-[350px] rounded-full bg-cyan-500/10 blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-[10%] right-[20%] w-[350px] h-[350px] rounded-full bg-primary/8 blur-[130px] pointer-events-none" />
 
       {/* Grid overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] bg-[size:48px_48px] opacity-30 pointer-events-none" />
 
       <Card className="w-full max-w-md bg-card shadow-sm border border-border shadow-xl rounded-2xl overflow-hidden p-6 relative group animate-scale-in">
         {/* Border blue glow on hover */}
@@ -193,7 +193,7 @@ export default function LoginPage() {
               />
             </div>
           </div>
-          <CardTitle className="text-xl font-bold text-white tracking-tight">Welcome Back</CardTitle>
+          <CardTitle className="text-xl font-bold text-foreground tracking-tight">Welcome Back</CardTitle>
           <CardDescription className="text-muted-foreground text-xs">
             Sign in to access your Mints Global workspace
           </CardDescription>
@@ -202,7 +202,7 @@ export default function LoginPage() {
         <CardContent className="space-y-5">
           {error && (
             <div className="space-y-2">
-              <div className="p-3 text-xs text-red-300 bg-red-950/40 border border-red-500/20 rounded-xl text-center font-medium">
+              <div className="p-3 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-xl text-center font-medium">
                 {error}
               </div>
               {error.toLowerCase().includes("deactivated") && (
@@ -289,9 +289,9 @@ export default function LoginPage() {
 
       {/* Reactivation Request Modal */}
       {isReactivateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#030712]/80">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
           <div className="w-full max-w-md bg-card border border-border shadow-2xl rounded-2xl overflow-hidden p-6 relative text-foreground">
-            <h3 className="text-lg font-bold text-white tracking-tight mb-2">Request Account Reactivation</h3>
+            <h3 className="text-lg font-bold text-foreground tracking-tight mb-2">Request Account Reactivation</h3>
             <p className="text-muted-foreground text-xs mb-4">
               If your account was deactivated, submit a request with a brief explanation to request access recovery.
             </p>
@@ -305,7 +305,7 @@ export default function LoginPage() {
                   value={reactivateName}
                   onChange={(e) => setReactivateName(e.target.value)}
                   placeholder="e.g. John Doe"
-                  className="bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary shadow-sm h-10 text-xs border-border px-3 text-white placeholder:text-muted-foreground focus:border-primary/60 focus:ring-0"
+                  className="bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary shadow-sm h-10 text-xs border-border px-3 text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-0"
                 />
               </div>
               <div className="space-y-1.5">
@@ -317,7 +317,7 @@ export default function LoginPage() {
                   value={reactivateEmail}
                   onChange={(e) => setReactivateEmail(e.target.value)}
                   placeholder="e.g. john.doe@mintsglobal.ae"
-                  className="bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary shadow-sm h-10 text-xs border-border px-3 text-white placeholder:text-muted-foreground focus:border-primary/60 focus:ring-0"
+                  className="bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary shadow-sm h-10 text-xs border-border px-3 text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-0"
                 />
               </div>
               <div className="space-y-1.5">
@@ -329,7 +329,7 @@ export default function LoginPage() {
                   value={reactivateReason}
                   onChange={(e) => setReactivateReason(e.target.value)}
                   placeholder="Please state why you require access restored..."
-                  className="bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary shadow-sm w-full text-xs border border-border rounded-xl p-3 text-white placeholder:text-muted-foreground bg-card focus:border-primary/60 focus:ring-0"
+                  className="bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary shadow-sm w-full text-xs border border-border rounded-xl p-3 text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-0"
                 />
               </div>
               <div className="flex gap-3 pt-2">
@@ -345,7 +345,7 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   disabled={isSubmittingRequest}
-                  className="w-full text-xs h-10 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.25)] border-0 cursor-pointer"
+                  className="w-full text-xs h-10 btn-primary rounded-xl cursor-pointer border-0"
                 >
                   {isSubmittingRequest ? "Submitting..." : "Submit Request"}
                 </Button>

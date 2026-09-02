@@ -605,7 +605,7 @@ export default function LeaveManagement() {
                           </Button>
                           {canAccess(role, "EDIT_LEAVE") && (
                             <Button
-                              className="flex-1 h-10 text-xs bg-gray-600 hover:bg-gray-700 text-foreground font-bold rounded-xl shadow-glow-gray border-0 cursor-pointer" 
+                              className="flex-1 h-10 text-xs btn-ghost font-bold rounded-xl border-0 cursor-pointer" 
                               onClick={() => handleEditOpen({ ...leave })}>
                               Edit
                             </Button>

@@ -57,7 +57,7 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
                   ? "bg-amber-950/70 border-amber-500/25 text-amber-100 shadow-[0_8px_32px_0_rgba(245,158,11,0.12)]" 
                   : isError 
                   ? "bg-red-950/70 border-red-500/25 text-red-100 shadow-[0_8px_32px_0_rgba(239,68,68,0.12)]" 
-                  : "bg-slate-950/70 border-white/[0.08] text-slate-100 shadow-[0_8px_32px_0_rgba(99,102,241,0.12)]"
+                  : "bg-card/95 border-border text-foreground shadow-[0_8px_32px_0_rgba(0,0,0,0.12)] backdrop-blur-md"
               )}
             >
               {/* Icon */}
@@ -65,7 +65,7 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
                 {isSuccess && <CheckCircle2 className="h-5 w-5 text-emerald-400" />}
                 {isWarning && <AlertTriangle className="h-5 w-5 text-amber-400" />}
                 {isError && <XCircle className="h-5 w-5 text-red-400" />}
-                {!isSuccess && !isWarning && !isError && <Info className="h-5 w-5 text-blue-400" />}
+                {!isSuccess && !isWarning && !isError && <Info className="h-5 w-5 text-primary" />}
               </div>
 
               {/* Message */}

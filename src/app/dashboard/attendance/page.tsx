@@ -272,7 +272,7 @@ export default function AttendancePage() {
     if (!user) return null;
     try {
       const { auth } = await import("@/lib/firebase");
-      const token = await auth.currentUser?.getIdToken();
+      const token = await auth.currentUser?.getIdToken(true);
       if (!token) throw new Error("Authentication token not found.");
       
       const res = await fetch("/api/attendance", {

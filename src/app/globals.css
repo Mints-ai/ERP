@@ -230,8 +230,8 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 
-/* ─── Selection ─────────────────────────────────────── */
-::selection { background: rgba(112,130,56,0.3); color: #fff; }
+/* ─── Selection ────────────────────────────────── */
+::selection { background: rgba(112,130,56,0.3); color: var(--foreground); }
 
 /* ─── Focus rings ───────────────────────────────────── */
 :focus-visible {
@@ -239,9 +239,9 @@ body {
   outline-offset: 2px;
 }
 
-/* ─── Typography helpers ────────────────────────────── */
+/* ─── Typography helpers ───────────────────────────── */
 .text-gradient {
-  background: linear-gradient(135deg, #f0f4ee 0%, #96a899 100%);
+  background: linear-gradient(135deg, var(--foreground) 0%, var(--muted-foreground) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -250,6 +250,11 @@ body {
   background: linear-gradient(135deg, #708238 0%, #8fa87b 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+html.light .text-gradient-blue {
+  background: linear-gradient(135deg, #55663b 0%, #708238 100%);
+  -webkit-background-clip: text;
   background-clip: text;
 }
 
@@ -282,7 +287,7 @@ body {
 
 /* Shimmer loading skeleton */
 .skeleton {
-  background: linear-gradient(90deg, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 75%);
+  background: linear-gradient(90deg, var(--muted) 25%, var(--secondary) 50%, var(--muted) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 8px;
@@ -313,8 +318,8 @@ body {
 
 /* ─── Kanban column ─────────────────────────────────── */
 .kanban-col {
-  background: rgba(255,255,255,0.01);
-  border: 1px solid rgba(255,255,255,0.03);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 16px;
   min-height: 400px;
 }
@@ -470,6 +475,16 @@ html.light .stat-number {
   color: #1a241b;
 }
 
+/* Light mode status pill adjustments — improve contrast on light background */
+html.light .status-active    { background: rgba(112,130,56,0.12); color: #55663b; border-color: rgba(112,130,56,0.3); }
+html.light .status-pending   { background: rgba(217,119,6,0.12);  color: #b45309; border-color: rgba(217,119,6,0.3);  }
+html.light .status-inactive  { background: rgba(89,108,92,0.12);  color: #596c5c; border-color: rgba(89,108,92,0.3);  }
+html.light .status-critical  { background: rgba(220,38,38,0.12);  color: #b91c1c; border-color: rgba(220,38,38,0.3);  }
+html.light .status-draft     { background: rgba(89,108,92,0.10);  color: #596c5c; border-color: rgba(89,108,92,0.2);   }
+html.light .status-paid      { background: rgba(112,130,56,0.12); color: #55663b; border-color: rgba(112,130,56,0.3); }
+html.light .status-overdue   { background: rgba(220,38,38,0.12);  color: #b91c1c; border-color: rgba(220,38,38,0.3);  }
+html.light .status-intern    { background: rgba(85,102,59,0.12);  color: #3b4729; border-color: rgba(85,102,59,0.3);  }
+
 html.light .glass-table th {
   color: #55663b;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
@@ -610,4 +625,73 @@ html.light .placeholder\:text-white\/20::placeholder {
 html.light .placeholder\:text-white\/40::placeholder {
   color: var(--muted-foreground) !important;
   opacity: 0.65 !important;
+}
+
+/* ─── Light Mode: Avatar fallback backgrounds ─── */
+html.light .bg-blue-950 {
+  background-color: var(--secondary) !important;
+}
+html.light .bg-blue-900 {
+  background-color: var(--secondary) !important;
+}
+
+/* ─── Light Mode: Info & status banners ─── */
+html.light .bg-blue-950\/40 {
+  background-color: rgba(112,130,56,0.08) !important;
+}
+html.light .bg-blue-950\/20 {
+  background-color: rgba(112,130,56,0.06) !important;
+}
+html.light .bg-blue-950\/90 {
+  background-color: rgba(245,247,244,0.97) !important;
+}
+
+/* ─── Light Mode: Chat inactive state buttons (slate-300 → muted-foreground) ─── */
+html.light .text-slate-300 {
+  color: var(--muted-foreground) !important;
+}
+html.light .bg-slate-500\/20 {
+  background-color: rgba(89,108,92,0.12) !important;
+}
+html.light .text-slate-300 {
+  color: var(--muted-foreground) !important;
+}
+html.light .text-slate-100 {
+  color: var(--foreground) !important;
+}
+html.light .text-blue-100 {
+  color: var(--primary-foreground) !important;
+}
+
+/* ─── Light Mode: Blue accent badges to olive ─── */
+html.light .bg-blue-100 {
+  background-color: rgba(112,130,56,0.12) !important;
+}
+html.light .text-blue-700 {
+  color: #55663b !important;
+}
+html.light .border-blue-200 {
+  border-color: rgba(112,130,56,0.25) !important;
+}
+
+/* ─── Light Mode: Success toasts adjust ─── */
+html.light .bg-emerald-950\/70 {
+  background-color: rgba(16,185,129,0.1) !important;
+  color: #065f46 !important;
+}
+html.light .bg-amber-950\/70 {
+  background-color: rgba(245,158,11,0.1) !important;
+  color: #78350f !important;
+}
+html.light .bg-red-950\/70 {
+  background-color: rgba(239,68,68,0.1) !important;
+  color: #7f1d1d !important;
+}
+html.light .text-emerald-100 { color: #065f46 !important; }
+html.light .text-amber-100   { color: #78350f !important; }
+html.light .text-red-100     { color: #7f1d1d !important; }
+
+/* ─── Light Mode: Files page empty state ─── */
+html.light .text-slate-300 {
+  color: var(--muted-foreground) !important;
 }

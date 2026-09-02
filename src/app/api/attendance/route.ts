@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebaseAdmin";
-import { getAuth } from "firebase-admin/auth";
+import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 
 export async function POST(req: Request) {
   try {
@@ -12,9 +11,10 @@ export async function POST(req: Request) {
     const token = authHeader.split("Bearer ")[1];
     let decodedToken;
     try {
-      decodedToken = await getAuth().verifyIdToken(token);
-    } catch (e) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+      decodedToken = await adminAuth.verifyIdToken(token);
+    } catch (e: any) {
+      console.error("Attendance verifyIdToken error:", e?.message || e);
+      return NextResponse.json({ error: e?.message || "Invalid token" }, { status: 401 });
     }
 
     const { action, employeeName } = await req.json();

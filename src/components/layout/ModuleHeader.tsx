@@ -26,7 +26,7 @@ export function ModuleHeader({
           {title}
         </h1>
         {description && (
-          <p className="text-xs text-foreground/40 mt-1">{description}</p>
+          <p className="text-xs text-muted-foreground mt-1">{description}</p>
         )}
       </div>
       {(action || children) && (

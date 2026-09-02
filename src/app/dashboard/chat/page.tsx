@@ -835,7 +835,7 @@ export default function Chat() {
 
         {/* Live Call Window */}
         {inCall && (
-          <div className="bg-slate-950 p-6 border-b border-border/80 animate-in slide-in-from-top duration-300 relative shrink-0">
+          <div className="bg-card border-b border-border/80 animate-in slide-in-from-top duration-300 relative shrink-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
               
               {/* Local Stream (Me) */}
@@ -867,7 +867,7 @@ export default function Chat() {
 
               {/* Remote Stream (Simulated connection) */}
               <div className="aspect-video bg-secondary/80 rounded-xl overflow-hidden relative border border-border/80 group shadow-md flex items-center justify-center">
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-slate-900 to-indigo-950/20 text-foreground/50">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-secondary to-muted/60 text-foreground/50">
                   <div className="flex items-center gap-1 mb-4 h-8">
                     <span className="w-1 bg-primary rounded-full h-6 animate-pulse" />
                     <span className="w-1 bg-primary/80 rounded-full h-8 animate-pulse delay-75" />
