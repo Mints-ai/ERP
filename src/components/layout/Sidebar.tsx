@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { canAccess } from "@/lib/permissions";
@@ -82,9 +83,13 @@ function SidebarContent({ isExpanded, onNavigate }: { isExpanded: boolean; onNav
     <div className="flex flex-col h-full overflow-hidden">
       {/* Logo */}
       <div className="h-16 flex items-center px-4 gap-3 shrink-0 border-b border-sidebar-border">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white shadow-sm shrink-0">
-          <Zap className="h-4.5 w-4.5 text-white fill-white/20 animate-pulse" />
-        </div>
+        <Image 
+          src="/icon.png" 
+          alt="Mints Emblem" 
+          width={36} 
+          height={36} 
+          className="w-9 h-9 rounded-xl object-contain shrink-0 shadow-sm" 
+        />
         {isExpanded && (
           <motion.div
             initial={{ opacity: 0, x: -10 }}

@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -180,13 +181,16 @@ export default function LoginPage() {
 
         <CardHeader className="space-y-3 text-center pb-6">
           {/* Logo container */}
-          <div className="flex justify-center items-center gap-2 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shadow-sm">
-              <Zap className="h-5 w-5 text-white fill-white/20 animate-pulse" />
-            </div>
-            <div className="text-left">
-              <h2 className="text-base font-extrabold text-white tracking-tight leading-tight">Mints Global</h2>
-              <p className="text-xs font-bold text-primary uppercase tracking-widest leading-none">Internal ERP Platform</p>
+          <div className="flex justify-center items-center mb-3">
+            <div className="bg-white/95 py-2.5 px-6 rounded-2xl shadow-md border border-white/20 backdrop-blur-sm">
+              <Image 
+                src="/logo.png" 
+                alt="Mints Global ERP" 
+                width={200} 
+                height={66} 
+                className="h-10 w-auto object-contain" 
+                priority 
+              />
             </div>
           </div>
           <CardTitle className="text-xl font-bold text-white tracking-tight">Welcome Back</CardTitle>
