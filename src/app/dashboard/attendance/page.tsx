@@ -286,14 +286,16 @@ export default function AttendancePage() {
         },
         body: JSON.stringify({ action, employeeName: user.fullName || user.email || "Employee" })
       });
+      const data = await res.json();
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to update attendance");
+        console.warn(`Attendance action '${action}' returned ${res.status}:`, data.error);
+        alert(`Attendance Notice:\n${data.error || "Failed to update attendance session."}`);
+        return null;
       }
-      return await res.json();
+      return data;
     } catch (err: any) {
       console.error(`Error performing attendance action '${action}':`, err);
-      alert(`Attendance Action Failed: ${err.message}`);
+      alert(`Attendance Notice:\n${err.message || "Failed to connect to attendance service."}`);
       return null;
     }
   };
@@ -302,18 +304,22 @@ export default function AttendancePage() {
     if (!user) return;
     const res = await callAttendanceAPI("in");
     if (res) {
-      const { addDoc, collection } = await import("firebase/firestore");
-      const dateString = new Date().toISOString().split('T')[0];
-      await addDoc(collection(db, "auditLog"), {
-        actorId: user.uid,
-        actorName: user.fullName || user.email || "Employee",
-        action: "ATTENDANCE_CLOCK_IN",
-        targetCollection: "attendance",
-        targetId: `${user.uid}_${dateString}`,
-        details: `Clocked in for the day (Secure Server Time)`,
-        createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
-      });
-      await sendDiscordNotification(`⏱️ **${user.fullName || user.email}** clocked **IN** for the day.`, undefined, 'hr');
+      try {
+        const { addDoc, collection } = await import("firebase/firestore");
+        const dateString = new Date().toISOString().split('T')[0];
+        await addDoc(collection(db, "auditLog"), {
+          actorId: user.uid,
+          actorName: user.fullName || user.email || "Employee",
+          action: "ATTENDANCE_CLOCK_IN",
+          targetCollection: "attendance",
+          targetId: `${user.uid}_${dateString}`,
+          details: `Clocked in for the day (Secure Server Time)`,
+          createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
+        });
+        await sendDiscordNotification(`⏱️ **${user.fullName || user.email}** clocked **IN** for the day.`, undefined, 'hr');
+      } catch (e) {
+        console.warn("Audit log or Discord notification skipped:", e);
+      }
     }
   };
 
@@ -321,18 +327,22 @@ export default function AttendancePage() {
     if (!user) return;
     const res = await callAttendanceAPI("break");
     if (res) {
-      const { addDoc, collection } = await import("firebase/firestore");
-      const dateString = new Date().toISOString().split('T')[0];
-      await addDoc(collection(db, "auditLog"), {
-        actorId: user.uid,
-        actorName: user.fullName || user.email || "Employee",
-        action: "ATTENDANCE_BREAK_START",
-        targetCollection: "attendance",
-        targetId: `${user.uid}_${dateString}`,
-        details: `Started a lunch break (Secure Server Time)`,
-        createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
-      });
-      await sendDiscordNotification(`☕ **${user.fullName || user.email}** started a **Lunch Break**.`, undefined, 'hr');
+      try {
+        const { addDoc, collection } = await import("firebase/firestore");
+        const dateString = new Date().toISOString().split('T')[0];
+        await addDoc(collection(db, "auditLog"), {
+          actorId: user.uid,
+          actorName: user.fullName || user.email || "Employee",
+          action: "ATTENDANCE_BREAK_START",
+          targetCollection: "attendance",
+          targetId: `${user.uid}_${dateString}`,
+          details: `Started a lunch break (Secure Server Time)`,
+          createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
+        });
+        await sendDiscordNotification(`☕ **${user.fullName || user.email}** started a **Lunch Break**.`, undefined, 'hr');
+      } catch (e) {
+        console.warn("Audit log or Discord notification skipped:", e);
+      }
     }
   };
 
@@ -340,18 +350,22 @@ export default function AttendancePage() {
     if (!user) return;
     const res = await callAttendanceAPI("resume");
     if (res) {
-      const { addDoc, collection } = await import("firebase/firestore");
-      const dateString = new Date().toISOString().split('T')[0];
-      await addDoc(collection(db, "auditLog"), {
-        actorId: user.uid,
-        actorName: user.fullName || user.email || "Employee",
-        action: "ATTENDANCE_BREAK_END",
-        targetCollection: "attendance",
-        targetId: `${user.uid}_${dateString}`,
-        details: `Ended break and resumed work (Secure Server Time)`,
-        createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
-      });
-      await sendDiscordNotification(`💼 **${user.fullName || user.email}** ended break and **Resumed Work**.`, undefined, 'hr');
+      try {
+        const { addDoc, collection } = await import("firebase/firestore");
+        const dateString = new Date().toISOString().split('T')[0];
+        await addDoc(collection(db, "auditLog"), {
+          actorId: user.uid,
+          actorName: user.fullName || user.email || "Employee",
+          action: "ATTENDANCE_BREAK_END",
+          targetCollection: "attendance",
+          targetId: `${user.uid}_${dateString}`,
+          details: `Ended break and resumed work (Secure Server Time)`,
+          createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
+        });
+        await sendDiscordNotification(`💼 **${user.fullName || user.email}** ended break and **Resumed Work**.`, undefined, 'hr');
+      } catch (e) {
+        console.warn("Audit log or Discord notification skipped:", e);
+      }
     }
   };
 
@@ -359,18 +373,22 @@ export default function AttendancePage() {
     if (!user) return;
     const res = await callAttendanceAPI("out");
     if (res) {
-      const { addDoc, collection } = await import("firebase/firestore");
-      const dateString = new Date().toISOString().split('T')[0];
-      await addDoc(collection(db, "auditLog"), {
-        actorId: user.uid,
-        actorName: user.fullName || user.email || "Employee",
-        action: "ATTENDANCE_CLOCK_OUT",
-        targetCollection: "attendance",
-        targetId: `${user.uid}_${dateString}`,
-        details: `Clocked out for the day (Secure Server Time)`,
-        createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
-      });
-      await sendDiscordNotification(`🏁 **${user.fullName || user.email}** clocked **OUT** for the day.`, undefined, 'hr');
+      try {
+        const { addDoc, collection } = await import("firebase/firestore");
+        const dateString = new Date().toISOString().split('T')[0];
+        await addDoc(collection(db, "auditLog"), {
+          actorId: user.uid,
+          actorName: user.fullName || user.email || "Employee",
+          action: "ATTENDANCE_CLOCK_OUT",
+          targetCollection: "attendance",
+          targetId: `${user.uid}_${dateString}`,
+          details: `Clocked out for the day (Secure Server Time)`,
+          createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
+        });
+        await sendDiscordNotification(`🏁 **${user.fullName || user.email}** clocked **OUT** for the day.`, undefined, 'hr');
+      } catch (e) {
+        console.warn("Audit log or Discord notification skipped:", e);
+      }
     }
   };
 

@@ -103,6 +103,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, payload });
   } catch (error: any) {
     console.error("Attendance API Error:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    const isQuotaExceeded = error?.code === 8 || error?.message?.includes("RESOURCE_EXHAUSTED") || error?.message?.includes("Quota exceeded");
+    const message = isQuotaExceeded
+      ? "Firebase Firestore daily operations limit (free Spark tier) has been reached for project 'mintserp'. Please upgrade to the Firebase Blaze plan in Google Cloud / Firebase Console or wait for the quota to reset."
+      : (error.message || "Internal Server Error");
+    return NextResponse.json({ error: message, isQuotaExceeded }, { status: isQuotaExceeded ? 429 : 500 });
   }
 }
