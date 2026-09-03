@@ -1,21 +1,27 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, where, doc, getDoc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
+import { 
+  collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, 
+  where, doc, updateDoc, deleteDoc, setDoc 
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { canAccess } from "@/lib/permissions";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   Hash, Send, Image as ImageIcon, Smile, MoreVertical, MessageSquare, 
-  Video, VideoOff, Mic, MicOff, Monitor, PhoneOff, Plus, Users, User, Building2, Search 
+  Video, VideoOff, Mic, MicOff, Monitor, PhoneOff, Plus, Users, Building2, Search,
+  Copy, Check, Trash2, X, SmilePlus
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+
+const QUICK_EMOJIS = ["😀", "😂", "😍", "👍", "❤️", "🔥", "🚀", "🎉", "👏", "🙌", "💡", "⚡", "🤝", "✨", "💯", "🎯", "✅", "💬"];
+const REACTION_EMOJIS = ["👍", "❤️", "🔥", "🚀", "🎉"];
 
 export default function Chat() {
   const { user, role } = useAuth();
@@ -32,11 +38,22 @@ export default function Chat() {
   const lastTypingTimeRef = useRef<number>(0);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Search & Filter state
+  const [searchMessageQuery, setSearchMessageQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
+  const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
+
+  // Image / Attachment upload simulation state
+  const [attachmentPreview, setAttachmentPreview] = useState<{ name: string; url: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Employees & Profile State
   const [employees, setEmployees] = useState<any[]>([]);
   const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
 
-  // Search and Modal States
+  // Modals State
   const [isDMModalOpen, setIsDMModalOpen] = useState(false);
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState("");
@@ -74,7 +91,6 @@ export default function Chat() {
     return () => unsub();
   }, [user]);
 
-  // 3. Fetch channels & seed default channels if missing
   // 3. Fetch channels, perform self-healing duplicate cleanup, and seed required channels
   useEffect(() => {
     if (!user) return;
@@ -97,7 +113,7 @@ export default function Chat() {
       setChannels(deduplicated);
       setLoadingChannels(false);
 
-      // Self-healing database cleanup: Delete existing duplicate or obsolete department channel documents from Firestore
+      // Cleanup obsolete department channels
       const validDepts = ["OPERATIONS", "IT & CYBER SECURITY", "MARKETING"];
       const seenDeptKeys = new Set<string>();
       for (const channel of deduplicated) {
@@ -165,7 +181,7 @@ export default function Chat() {
     };
   }, [user]);
 
-  // 5. Default to 'General' channel on load
+  // 4. Default to 'General' channel on load
   useEffect(() => {
     if (channels.length > 0 && !activeChannel) {
       const general = channels.find(c => c.type === 'global' && c.name.toLowerCase() === 'general');
@@ -177,7 +193,7 @@ export default function Chat() {
     }
   }, [channels, activeChannel]);
 
-  // 6. Fetch messages in active channel
+  // 5. Fetch messages in active channel
   useEffect(() => {
     if (!user || !activeChannel) return;
     
@@ -271,10 +287,14 @@ export default function Chat() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !user || !activeChannel) return;
+    if ((!newMessage.trim() && !attachmentPreview) || !user || !activeChannel) return;
 
     const messageText = newMessage;
+    const currentAttachment = attachmentPreview;
+
     setNewMessage(""); 
+    setAttachmentPreview(null);
+    setShowEmojiPicker(false);
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     const docRef = doc(db, "chatTyping", activeChannel);
@@ -284,24 +304,93 @@ export default function Chat() {
         isTyping: false,
         updatedAt: Date.now()
       }
-    }).catch(err => {});
+    }).catch(() => {});
 
     try {
-      await addDoc(collection(db, "messages"), {
+      const messagePayload: any = {
         text: messageText,
         channelId: activeChannel,
         userId: user.uid,
         userName: user.fullName || user.displayName || "Unknown User",
         userAvatar: user.photoURL || "",
         createdAt: serverTimestamp()
-      });
+      };
+
+      if (currentAttachment) {
+        messagePayload.attachment = currentAttachment;
+      }
+
+      await addDoc(collection(db, "messages"), messagePayload);
       setTimeout(() => {
         scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
       }, 100);
     } catch (error) {
       console.error("Error sending message:", error);
       setNewMessage(messageText); 
+      if (currentAttachment) setAttachmentPreview(currentAttachment);
     }
+  };
+
+  const handleAddEmoji = (emoji: string) => {
+    setNewMessage(prev => prev + emoji);
+  };
+
+  const handleToggleReaction = async (msgId: string, emoji: string) => {
+    if (!user) return;
+    const targetMsg = messages.find(m => m.id === msgId);
+    if (!targetMsg) return;
+
+    const reactions = targetMsg.reactions || {};
+    const usersForEmoji: string[] = reactions[emoji] || [];
+    const hasReacted = usersForEmoji.includes(user.uid);
+
+    const updatedUsers = hasReacted
+      ? usersForEmoji.filter(uid => uid !== user.uid)
+      : [...usersForEmoji, user.uid];
+
+    const updatedReactions = { ...reactions };
+    if (updatedUsers.length === 0) {
+      delete updatedReactions[emoji];
+    } else {
+      updatedReactions[emoji] = updatedUsers;
+    }
+
+    try {
+      await updateDoc(doc(db, "messages", msgId), {
+        reactions: updatedReactions
+      });
+      setActiveReactionMenu(null);
+    } catch (e) {
+      console.error("Error toggling reaction:", e);
+    }
+  };
+
+  const handleDeleteMessage = async (msgId: string) => {
+    try {
+      await deleteDoc(doc(db, "messages", msgId));
+    } catch (e) {
+      console.error("Error deleting message:", e);
+    }
+  };
+
+  const handleCopyMessage = (msgId: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedMsgId(msgId);
+    setTimeout(() => setCopiedMsgId(null), 2000);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAttachmentPreview({
+        name: file.name,
+        url: reader.result as string
+      });
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleStartDM = async (peer: any) => {
@@ -324,7 +413,6 @@ export default function Chat() {
         createdAt: serverTimestamp()
       });
 
-      // Write system audit log
       await addDoc(collection(db, "auditLog"), {
         actorId: user?.uid,
         action: "START_DM",
@@ -353,7 +441,6 @@ export default function Chat() {
         createdAt: serverTimestamp()
       });
 
-      // Write system audit log
       await addDoc(collection(db, "auditLog"), {
         actorId: user?.uid,
         action: "CREATE_GROUP",
@@ -485,7 +572,6 @@ export default function Chat() {
 
       await updateDoc(channelRef, { members: updatedMembers });
 
-      // Write system audit log
       await addDoc(collection(db, "auditLog"), {
         actorId: user?.uid,
         action: isCurrentlyMember ? "REMOVE_CHANNEL_MEMBER" : "ADD_CHANNEL_MEMBER",
@@ -501,6 +587,12 @@ export default function Chat() {
 
   const activeChannelObj = channels.find(c => c.id === activeChannel);
   const activeInfo = resolveChannelInfo(activeChannelObj);
+
+  // Filter messages based on search query
+  const displayedMessages = searchMessageQuery.trim()
+    ? messages.filter(m => m.text?.toLowerCase().includes(searchMessageQuery.toLowerCase()) || m.userName?.toLowerCase().includes(searchMessageQuery.toLowerCase()))
+    : messages;
+
   return (
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-120px)] lg:h-[calc(100vh-120px)] bg-card border border-border rounded-xl overflow-hidden shadow-sm text-foreground">
       
@@ -520,7 +612,7 @@ export default function Chat() {
                 <button
                   key={channel.id}
                   onClick={() => setActiveChannel(channel.id)}
-                  className={cn("w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left",
+                  className={cn("w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left cursor-pointer",
                     activeChannel === channel.id 
                       ? 'bg-muted text-primary font-semibold' 
                       : 'text-foreground/80 hover:bg-muted/50'
@@ -556,7 +648,7 @@ export default function Chat() {
                     <button
                       key={channel.id}
                       onClick={() => setActiveChannel(channel.id)}
-                      className={cn("w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left",
+                      className={cn("w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left cursor-pointer",
                         activeChannel === channel.id 
                           ? 'bg-muted text-primary font-semibold' 
                           : 'text-foreground/80 hover:bg-muted/50'
@@ -575,13 +667,13 @@ export default function Chat() {
             <div className="flex items-center justify-between mb-2 px-2">
               <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Custom Groups</span>
               <Dialog open={isGroupModalOpen} onOpenChange={setIsGroupModalOpen}>
-                <DialogTrigger render={<Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0 text-muted-foreground hover:text-foreground" title="Create Custom Group" />}>
+                <DialogTrigger render={<Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0 text-muted-foreground hover:text-foreground cursor-pointer" title="Create Custom Group" />}>
                   <Plus className="h-3.5 w-3.5" />
                 </DialogTrigger>
                 <DialogContent className="bg-card border-border text-foreground max-w-md">
                   <DialogHeader>
                     <DialogTitle>Create Group Chat</DialogTitle>
-                    <DialogDescription className="text-foreground/40">Gather your team members into a private custom group chat.</DialogDescription>
+                    <DialogDescription className="text-foreground/60">Gather your team members into a private custom group chat.</DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleCreateGroup} className="space-y-4 pt-4">
                     <div className="space-y-2">
@@ -595,7 +687,7 @@ export default function Chat() {
                         {employees.map(emp => {
                           const name = emp.fullName || emp.name || "Team Member";
                           return (
-                            <label key={emp.id} className="flex items-center gap-2.5 p-1.5 hover: rounded cursor-pointer">
+                            <label key={emp.id} className="flex items-center gap-2.5 p-1.5 hover:bg-muted/50 rounded cursor-pointer transition-colors">
                               <input 
                                 type="checkbox" 
                                 checked={selectedMembers.includes(emp.id)} 
@@ -613,7 +705,7 @@ export default function Chat() {
                       </div>
                     </div>
                     
-                    <Button type="submit" className="w-full bg-primary hover:bg-primary/80 text-foreground" disabled={!groupName.trim() || selectedMembers.length === 0}>Create Group</Button>
+                    <Button type="submit" className="w-full bg-primary hover:bg-primary/80 text-foreground font-bold cursor-pointer" disabled={!groupName.trim() || selectedMembers.length === 0}>Create Group</Button>
                   </form>
                 </DialogContent>
               </Dialog>
@@ -623,7 +715,7 @@ export default function Chat() {
                 <button
                   key={channel.id}
                   onClick={() => setActiveChannel(channel.id)}
-                  className={cn("w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left",
+                  className={cn("w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left cursor-pointer",
                     activeChannel === channel.id 
                       ? 'bg-muted text-primary font-semibold' 
                       : 'text-foreground/80 hover:bg-muted/50'
@@ -641,16 +733,16 @@ export default function Chat() {
             <div className="flex items-center justify-between mb-2 px-2">
               <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Direct Messages</span>
               <Dialog open={isDMModalOpen} onOpenChange={setIsDMModalOpen}>
-                <DialogTrigger render={<Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0 text-muted-foreground hover:text-foreground" title="New Direct Message" />}>
+                <DialogTrigger render={<Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0 text-muted-foreground hover:text-foreground cursor-pointer" title="New Direct Message" />}>
                   <Plus className="h-3.5 w-3.5" />
                 </DialogTrigger>
                 <DialogContent className="bg-card border-border text-foreground max-w-sm">
                   <DialogHeader>
                     <DialogTitle>Direct Message</DialogTitle>
-                    <DialogDescription className="text-foreground/40">Select a team member to start a private chat.</DialogDescription>
+                    <DialogDescription className="text-foreground/60">Select a team member to start a private chat.</DialogDescription>
                   </DialogHeader>
                   <div className="relative my-2">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-foreground/30" />
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-foreground/40" />
                     <Input 
                       placeholder="Search colleagues..." 
                       value={userSearchQuery}
@@ -665,7 +757,7 @@ export default function Chat() {
                         <button 
                           key={emp.id} 
                           onClick={() => handleStartDM(emp)}
-                          className="w-full flex items-center gap-3 p-2 hover: rounded-lg text-left"
+                          className="w-full flex items-center gap-3 p-2 hover:bg-muted/50 rounded-lg text-left transition-colors cursor-pointer"
                         >
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={emp.profilePhotoURL} />
@@ -691,7 +783,7 @@ export default function Chat() {
                   <button
                     key={channel.id}
                     onClick={() => setActiveChannel(channel.id)}
-                    className={cn("w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left",
+                    className={cn("w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left cursor-pointer",
                       activeChannel === channel.id 
                         ? 'bg-muted text-primary font-semibold' 
                         : 'text-foreground/80 hover:bg-muted/50'
@@ -732,9 +824,46 @@ export default function Chat() {
             ) : (
               <Hash className="h-5 w-5 text-muted-foreground shrink-0" />
             )}
-            <h2 className="font-bold text-foreground text-lg truncate">{activeInfo.name}</h2>
+            <div>
+              <h2 className="font-bold text-foreground text-base sm:text-lg truncate">{activeInfo.name}</h2>
+              {activeChannelObj?.type === 'department' && (
+                <p className="text-[11px] text-muted-foreground hidden sm:block">Department Official Channel</p>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* In-Chat Message Search Toggle */}
+            {isSearchOpen ? (
+              <div className="flex items-center gap-1 bg-muted/60 rounded-lg px-2 py-1 border border-border animate-in fade-in duration-200">
+                <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                <input 
+                  type="text" 
+                  value={searchMessageQuery} 
+                  onChange={e => setSearchMessageQuery(e.target.value)} 
+                  placeholder="Search in chat..." 
+                  className="bg-transparent text-xs text-foreground focus:outline-none w-28 sm:w-44"
+                  autoFocus
+                />
+                <button 
+                  onClick={() => { setIsSearchOpen(false); setSearchMessageQuery(""); }} 
+                  className="text-muted-foreground hover:text-foreground cursor-pointer p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <Button 
+                onClick={() => setIsSearchOpen(true)} 
+                variant="ghost" 
+                size="icon" 
+                className="text-muted-foreground hover:text-foreground h-8 w-8 rounded-md transition-colors cursor-pointer"
+                title="Search Messages"
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            )}
+
             {/* Admin Privilege to Add/Manage Members in department/custom_group chat */}
             {canAccess(role, "MANAGE_USERS") && (activeChannelObj?.type === 'department' || activeChannelObj?.type === 'custom_group') && (
               <Dialog open={isManageMembersOpen} onOpenChange={setIsManageMembersOpen}>
@@ -744,13 +873,13 @@ export default function Chat() {
                     className="border-primary/30 text-primary hover:bg-primary/10 font-bold flex items-center gap-1.5 shadow-sm rounded-lg text-xs h-8 cursor-pointer"
                   >
                     <Users className="h-3.5 w-3.5" />
-                    Manage Members
+                    <span className="hidden sm:inline">Manage Members</span>
                   </Button>
                 } />
                 <DialogContent className="bg-card border-border text-foreground max-w-md">
                   <DialogHeader>
                     <DialogTitle>Manage Channel Members</DialogTitle>
-                    <DialogDescription className="text-foreground/40">
+                    <DialogDescription className="text-foreground/60">
                       Add or remove colleagues from <strong>{activeInfo.name}</strong>.
                     </DialogDescription>
                   </DialogHeader>
@@ -776,7 +905,7 @@ export default function Chat() {
                         return (
                           <div 
                             key={emp.id} 
-                            className="w-full flex items-center justify-between p-2 hover: rounded-lg text-left"
+                            className="w-full flex items-center justify-between p-2 hover:bg-muted/50 rounded-lg text-left transition-colors"
                           >
                             <div className="flex items-center gap-3">
                               <Avatar className="h-8 w-8">
@@ -795,7 +924,7 @@ export default function Chat() {
 
                             <div className="flex items-center gap-2">
                               {isDeptMember ? (
-                                <span className="text-xs bg-emerald-500/10 text-accent border border-emerald-500/20 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                                <span className="text-xs bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
                                   Dept Member
                                 </span>
                               ) : (
@@ -822,20 +951,18 @@ export default function Chat() {
                 onClick={startCall} 
                 variant="ghost" 
                 size="icon"
-                className="text-muted-foreground hover:text-foreground h-9 w-9 rounded-md transition-colors"
+                className="text-muted-foreground hover:text-foreground h-8 w-8 rounded-md transition-colors cursor-pointer"
+                title="Start Video Call"
               >
-                <Video className="h-5 w-5" />
+                <Video className="h-4 w-4" />
               </Button>
             )}
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-muted h-9 w-9 rounded-md transition-colors">
-              <MoreVertical className="h-5 w-5" />
-            </Button>
           </div>
         </div>
 
         {/* Live Call Window */}
         {inCall && (
-          <div className="bg-card border-b border-border/80 animate-in slide-in-from-top duration-300 relative shrink-0">
+          <div className="bg-card border-b border-border/80 p-4 animate-in slide-in-from-top duration-300 relative shrink-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
               
               {/* Local Stream (Me) */}
@@ -896,7 +1023,7 @@ export default function Chat() {
               <Button 
                 onClick={toggleMute} 
                 variant="outline" 
-                className={cn("h-11 w-11 rounded-full p-0 border border-slate-850", 
+                className={cn("h-11 w-11 rounded-full p-0 border border-slate-800 cursor-pointer", 
                   isMuted 
                     ? "bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30 hover:text-red-300" 
                     : "bg-secondary/80 text-slate-300 hover:bg-secondary hover:text-foreground"
@@ -908,7 +1035,7 @@ export default function Chat() {
               <Button 
                 onClick={toggleVideo} 
                 variant="outline" 
-                className={cn("h-11 w-11 rounded-full p-0 border border-slate-850", 
+                className={cn("h-11 w-11 rounded-full p-0 border border-slate-800 cursor-pointer", 
                   isVideoOff 
                     ? "bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30 hover:text-red-300" 
                     : "bg-secondary/80 text-slate-300 hover:bg-secondary hover:text-foreground"
@@ -920,7 +1047,7 @@ export default function Chat() {
               <Button 
                 onClick={toggleScreenShare} 
                 variant="outline" 
-                className={cn("h-11 w-11 rounded-full p-0 border border-slate-850", 
+                className={cn("h-11 w-11 rounded-full p-0 border border-slate-800 cursor-pointer", 
                   isScreenSharing 
                     ? "bg-primary border-primary/80 text-foreground hover:bg-primary/90" 
                     : "bg-secondary/80 text-slate-300 hover:bg-secondary hover:text-foreground"
@@ -931,7 +1058,7 @@ export default function Chat() {
 
               <Button 
                 onClick={endCall} 
-                className="bg-red-600 hover:bg-red-700 text-foreground h-11 px-5 rounded-full font-bold flex items-center gap-1.5 shadow-md shadow-red-900/35 transition-transform active:scale-95 border-none"
+                className="bg-red-600 hover:bg-red-700 text-foreground h-11 px-5 rounded-full font-bold flex items-center gap-1.5 shadow-md shadow-red-900/35 transition-transform active:scale-95 border-none cursor-pointer"
               >
                 <PhoneOff className="h-5 w-5" />
                 Leave Room
@@ -955,26 +1082,33 @@ export default function Chat() {
                 </div>
               ))}
             </div>
-          ) : messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-3">
+          ) : displayedMessages.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-3 py-12">
               <MessageSquare className="h-12 w-12 opacity-20" />
-              <p className="font-bold text-sm">No messages in {activeInfo.name} yet.</p>
-              <p className="text-xs">Be the first to say hello!</p>
+              <p className="font-bold text-sm">
+                {searchMessageQuery ? `No messages found matching "${searchMessageQuery}"` : `No messages in ${activeInfo.name} yet.`}
+              </p>
+              <p className="text-xs">
+                {searchMessageQuery ? "Try clearing your search query." : "Be the first to say hello!"}
+              </p>
             </div>
           ) : (
-            messages.map((msg, idx) => {
+            displayedMessages.map((msg, idx) => {
               const msgDateObj = msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date();
-              const prevMsgDateObj = idx > 0 && messages[idx - 1].createdAt?.seconds ? new Date(messages[idx - 1].createdAt.seconds * 1000) : null;
+              const prevMsgDateObj = idx > 0 && displayedMessages[idx - 1].createdAt?.seconds ? new Date(displayedMessages[idx - 1].createdAt.seconds * 1000) : null;
               
               const msgDateStr = format(msgDateObj, 'MMMM d, yyyy');
               const prevMsgDateStr = prevMsgDateObj ? format(prevMsgDateObj, 'MMMM d, yyyy') : null;
               const isNewDate = msgDateStr !== prevMsgDateStr;
               
-              const showAvatar = isNewDate || idx === 0 || messages[idx - 1].userId !== msg.userId;
+              const showAvatar = isNewDate || idx === 0 || displayedMessages[idx - 1].userId !== msg.userId;
               const msgTime = format(msgDateObj, 'h:mm a');
-              
+              const isMyMessage = msg.userId === user?.uid;
+              const canDelete = isMyMessage || canAccess(role, "MANAGE_USERS");
+              const hasReactions = msg.reactions && Object.keys(msg.reactions).length > 0;
+
               return (
-                <div key={msg.id}>
+                <div key={msg.id} className="group/message relative">
                   {isNewDate && (
                     <div className="flex items-center justify-center my-6">
                       <div className="h-px bg-border flex-1"></div>
@@ -982,9 +1116,13 @@ export default function Chat() {
                       <div className="h-px bg-border flex-1"></div>
                     </div>
                   )}
-                  <div className={cn("flex gap-3 hover:bg-muted/30 p-2 px-4 -mx-4 rounded-md transition-colors", !showAvatar ? 'mt-0' : 'mt-4')}>
+
+                  <div className={cn(
+                    "flex gap-3 hover:bg-muted/30 p-2 px-4 -mx-4 rounded-md transition-colors relative", 
+                    !showAvatar ? 'mt-0' : 'mt-3'
+                  )}>
                     {showAvatar ? (
-                      <Avatar className="h-9 w-9 shrink-0">
+                      <Avatar className="h-9 w-9 shrink-0 mt-0.5">
                         <AvatarImage src={msg.userAvatar} />
                         <AvatarFallback className="bg-primary/20 text-primary font-bold text-xs">
                           {msg.userName ? msg.userName.split(" ").map((n: any) => n[0]).join("") : "U"}
@@ -1001,10 +1139,87 @@ export default function Chat() {
                           <span className="text-xs font-medium text-muted-foreground">{msgTime}</span>
                         </div>
                       )}
+
+                      {/* Message Body & Attachment */}
                       <div className="text-sm text-foreground/90 font-medium whitespace-pre-wrap leading-relaxed">
                         {msg.text}
                       </div>
+
+                      {msg.attachment?.url && (
+                        <div className="mt-2 max-w-sm rounded-lg overflow-hidden border border-border bg-card/60 p-1">
+                          {msg.attachment.url.startsWith("data:image") ? (
+                            <img src={msg.attachment.url} alt={msg.attachment.name} className="rounded max-h-64 object-cover w-full" />
+                          ) : (
+                            <div className="p-2 text-xs font-medium text-foreground flex items-center gap-2">
+                              <ImageIcon className="h-4 w-4 text-primary" />
+                              <span className="truncate">{msg.attachment.name}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Reactions Badges */}
+                      {hasReactions && (
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {Object.entries(msg.reactions).map(([emoji, uids]: [string, any]) => {
+                            const isMine = uids.includes(user?.uid);
+                            return (
+                              <button
+                                key={emoji}
+                                onClick={() => handleToggleReaction(msg.id, emoji)}
+                                className={cn(
+                                  "inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border transition-colors cursor-pointer",
+                                  isMine 
+                                    ? "bg-primary/15 border-primary/40 text-primary font-bold" 
+                                    : "bg-muted/40 border-border text-foreground/80 hover:bg-muted font-medium"
+                                )}
+                              >
+                                <span>{emoji}</span>
+                                <span>{uids.length}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
+
+                    {/* Floating Action Toolbar on Hover */}
+                    <div className="absolute right-4 -top-3 hidden group-hover/message:flex items-center gap-0.5 bg-card border border-border shadow-md rounded-lg p-0.5 z-20 animate-in fade-in duration-150">
+                      {/* Quick Reactions Bar */}
+                      <div className="flex items-center gap-0.5 px-1 border-r border-border">
+                        {REACTION_EMOJIS.map(emoji => (
+                          <button
+                            key={emoji}
+                            onClick={() => handleToggleReaction(msg.id, emoji)}
+                            className="h-6 w-6 flex items-center justify-center text-xs hover:scale-125 transition-transform cursor-pointer rounded hover:bg-muted"
+                            title={`React with ${emoji}`}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Copy Text */}
+                      <button
+                        onClick={() => handleCopyMessage(msg.id, msg.text || "")}
+                        className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors cursor-pointer"
+                        title="Copy message"
+                      >
+                        {copiedMsgId === msg.id ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                      </button>
+
+                      {/* Delete Message */}
+                      {canDelete && (
+                        <button
+                          onClick={() => handleDeleteMessage(msg.id)}
+                          className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer"
+                          title="Delete message"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+
                   </div>
                 </div>
               );
@@ -1024,17 +1239,49 @@ export default function Chat() {
           </div>
         )}
 
-        {/* Message Input */}
-        <div className="p-4 bg-card pr-[17rem]">
-          <form onSubmit={handleSendMessage} className="flex flex-col border border-border rounded-md focus-within:border-primary/50 focus-within:shadow-sm overflow-hidden transition-colors">
+        {/* Attachment Preview (if staged) */}
+        {attachmentPreview && (
+          <div className="px-4 py-2 bg-card border-t border-border flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ImageIcon className="h-4 w-4 text-primary" />
+              <span className="text-xs font-bold text-foreground truncate max-w-xs">{attachmentPreview.name}</span>
+            </div>
+            <button 
+              onClick={() => setAttachmentPreview(null)}
+              className="text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Emoji Picker Popover */}
+        {showEmojiPicker && (
+          <div className="mx-4 mb-2 p-2 bg-card border border-border rounded-lg shadow-lg grid grid-cols-9 gap-1 max-w-sm animate-in fade-in slide-in-from-bottom-2 duration-150 z-30">
+            {QUICK_EMOJIS.map(emoji => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={() => handleAddEmoji(emoji)}
+                className="h-8 w-8 flex items-center justify-center text-base hover:bg-muted rounded transition-transform active:scale-125 cursor-pointer"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Message Input Form - Full Width & Clean Layout */}
+        <div className="p-4 bg-card border-t border-border">
+          <form onSubmit={handleSendMessage} className="flex flex-col border border-border rounded-lg focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden transition-all bg-card/60 shadow-xs">
             <textarea
               value={newMessage}
               onChange={(e) => {
                 setNewMessage(e.target.value);
                 handleTyping();
               }}
-              placeholder={`Type a new message in ${activeInfo.name}...`}
-              className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none resize-none min-h-[60px] p-3 text-sm text-foreground font-medium placeholder:text-muted-foreground/60 w-full"
+              placeholder={`Type a message in ${activeInfo.name}... (Press Enter to send, Shift+Enter for newline)`}
+              className="w-full bg-transparent border-none focus:ring-0 focus:outline-none resize-none min-h-[56px] p-3 text-sm text-foreground font-medium placeholder:text-muted-foreground/60"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -1042,22 +1289,53 @@ export default function Chat() {
                 }
               }}
             />
-            <div className="flex items-center justify-between p-2 bg-transparent">
+            
+            {/* Input Toolbar */}
+            <div className="flex items-center justify-between px-3 py-2 border-t border-border/40 bg-muted/20">
               <div className="flex items-center gap-1">
-                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                {/* Hidden File Input */}
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileUpload} 
+                  accept="image/*,.pdf,.doc,.docx" 
+                  className="hidden" 
+                />
+                <Button 
+                  type="button" 
+                  onClick={() => fileInputRef.current?.click()} 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded cursor-pointer"
+                  title="Attach file or image"
+                >
                   <ImageIcon className="h-4 w-4" />
                 </Button>
-                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                <Button 
+                  type="button" 
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)} 
+                  variant="ghost" 
+                  size="icon" 
+                  className={cn("h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded cursor-pointer", showEmojiPicker && "bg-muted text-primary")}
+                  title="Add emoji"
+                >
                   <Smile className="h-4 w-4" />
                 </Button>
               </div>
-              <Button type="submit" disabled={!newMessage.trim()} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground h-8 px-4 rounded text-xs font-bold shadow-sm transition-transform active:scale-95 border-none">
-                <Send className="h-3.5 w-3.5 mr-1.5" />
+
+              <Button 
+                type="submit" 
+                disabled={!newMessage.trim() && !attachmentPreview} 
+                size="sm" 
+                className="bg-primary hover:bg-primary/90 text-primary-foreground h-7 px-3 rounded-md text-xs font-bold shadow-xs transition-transform active:scale-95 border-none cursor-pointer flex items-center gap-1.5 disabled:opacity-40"
+              >
+                <Send className="h-3 w-3" />
                 Send
               </Button>
             </div>
           </form>
         </div>
+
       </div>
     </div>
   );
