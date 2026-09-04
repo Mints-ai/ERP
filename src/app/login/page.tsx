@@ -12,6 +12,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Zap } from "lucide-react";
 import { sendDiscordNotification } from "@/lib/utils";
+import { LoadingScreen } from "@/components/layout/LoadingScreen";
 
 export default function LoginPage() {
   const { user, role, loginWithGoogle, loading, authError, setAuthError } = useAuth();
@@ -157,13 +158,7 @@ export default function LoginPage() {
   };
 
   if (loading || user) {
-    return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-background relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-primary/10 blur-3xl animate-pulse" />
-        <Zap className="h-8 w-8 text-primary animate-spin mb-4" />
-        <p className="text-sm font-semibold text-muted-foreground tracking-wider uppercase font-mono">Verifying Credentials...</p>
-      </div>
-    );
+    return <LoadingScreen message="Verifying credentials..." subtext="Secure Authentication" />;
   }
 
   return (

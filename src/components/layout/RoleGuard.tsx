@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { PERMISSIONS, canAccess } from "@/lib/permissions";
+import { LoadingScreen } from "./LoadingScreen";
 
 export function RoleGuard({ 
   permission, 
@@ -42,12 +43,12 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
   }, [user, role, loading, router]);
 
   if (loading || !user) {
-    return <div className="h-screen w-full flex items-center justify-center bg-background">Loading...</div>;
+    return <LoadingScreen message="Verifying session..." subtext="Mints Global ERP" />;
   }
 
   // Double check during render
   if (role === "client" && typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")) {
-    return <div className="h-screen w-full flex items-center justify-center bg-background">Redirecting to Secure Portal...</div>;
+    return <LoadingScreen message="Redirecting to Client Portal..." subtext="Access Control" />;
   }
 
   return <>{children}</>;

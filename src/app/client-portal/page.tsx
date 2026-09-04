@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { generateInvoice } from "@/lib/pdfGenerator";
 import { Briefcase, FileDown, Clock, CheckCircle2, AlertCircle, Banknote, Calendar, CreditCard, Lock, Check, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { LoadingScreen } from "@/components/layout/LoadingScreen";
 
 export default function ClientDashboard() {
   const { user } = useAuth();
@@ -140,7 +141,7 @@ export default function ClientDashboard() {
   };
 
   if (loading) {
-    return <div className="h-64 flex items-center justify-center text-muted-foreground">Loading your portal...</div>;
+    return <LoadingScreen message="Loading your portal..." subtext="Client Access Hub" fullScreen={false} />;
   }
 
   const activeProjects = projects.filter(p => p.status !== "Completed");
