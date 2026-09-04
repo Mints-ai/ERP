@@ -45,21 +45,23 @@ export default function ClientDashboard() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     
     try {
-      const { updateDoc, doc, addDoc, collection, serverTimestamp } = await import("firebase/firestore");
-      await updateDoc(doc(db, "invoices", activePaymentInvoice.id), {
-        status: "paid",
-        paidAt: new Date().toISOString()
-      });
-      
-      await addDoc(collection(db, "auditLog"), {
-        actorId: user?.uid || "client-user",
-        actorName: user?.fullName || user?.displayName || "Client Representative",
-        action: "INVOICE_PAYMENT",
-        targetCollection: "invoices",
-        targetId: activePaymentInvoice.id,
-        details: `Client paid invoice ${activePaymentInvoice.invoiceNumber} of amount ${activePaymentInvoice.total} AED via credit card (Stripe simulator).`,
-        createdAt: serverTimestamp()
-      });
+      if (!activePaymentInvoice.id.startsWith("mock-")) {
+        const { updateDoc, doc, addDoc, collection, serverTimestamp } = await import("firebase/firestore");
+        await updateDoc(doc(db, "invoices", activePaymentInvoice.id), {
+          status: "paid",
+          paidAt: new Date().toISOString()
+        });
+        
+        await addDoc(collection(db, "auditLog"), {
+          actorId: user?.uid || "client-user",
+          actorName: user?.fullName || user?.displayName || "Client Representative",
+          action: "INVOICE_PAYMENT",
+          targetCollection: "invoices",
+          targetId: activePaymentInvoice.id,
+          details: `Client paid invoice ${activePaymentInvoice.invoiceNumber} of amount ${activePaymentInvoice.total} AED via credit card (Stripe simulator).`,
+          createdAt: serverTimestamp()
+        });
+      }
       
       setStripeSuccess(true);
       setTimeout(() => {
