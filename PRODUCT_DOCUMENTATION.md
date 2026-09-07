@@ -1,5 +1,14 @@
 # 📖 Mints Global ERP — Comprehensive Product Documentation
 
+<div align="center">
+
+[![SOC 2 Type II Compliant](https://img.shields.io/badge/SOC%202-Type%20II%20Compliant-4a6326?style=for-the-badge&logo=shield&logoColor=white)](docs/compliance/SOC2_ISO27001_CROSSWALK.md)
+[![ISO 27001 Aligned](https://img.shields.io/badge/ISO%2027001-Aligned-22c55e?style=for-the-badge&logo=security&logoColor=white)](docs/compliance/SOC2_ISO27001_CROSSWALK.md)
+[![Next.js 16](https://img.shields.io/badge/Next.js%2016-Turbopack-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![Mobile Responsive](https://img.shields.io/badge/Mobile-Responsive-708238?style=for-the-badge&logo=apple&logoColor=white)](#8-mobile--tablet-responsive-architecture)
+
+</div>
+
 ---
 
 ## 1. Executive Product Overview
@@ -206,3 +215,29 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFA
 DISCORD_WEBHOOK_ATTENDANCE=https://discord.com/api/webhooks/...
 DISCORD_WEBHOOK_ALERTS=https://discord.com/api/webhooks/...
 ```
+
+---
+
+## 7. Security, SOC 2 Type II Compliance & Governance
+
+Mints Global ERP is engineered around strict SOC 2 Common Criteria trust controls:
+- **CC6.1 (Logical Access)**: Role-Based Access Control enforced at Edge, API route handlers, and Firestore Security Rules. Quarterly access review console with CSV export and audit logging.
+- **CC6.2 (User Lifecycle)**: Automated onboarding, role changes, and offboarding audit trail.
+- **CC6.6 / CC6.7 (Boundary Protection & Integrity)**: HTTP security headers, sliding-window rate limiting, input sanitization, and subprocessor management.
+- **CC7.2 / CC7.3 / CC7.4 (Incident Monitoring)**: Real-time telemetry, failed login tracking, and Discord alerting.
+
+Reference compliance documents:
+- Access Review SOP: [`docs/compliance/ACCESS_REVIEW_PROCEDURE.md`](docs/compliance/ACCESS_REVIEW_PROCEDURE.md)
+- Subprocessor Registry: [`docs/compliance/SUBPROCESSORS.md`](docs/compliance/SUBPROCESSORS.md)
+- Incident Response Plan: [`docs/compliance/IRP_TABLETOP_EXERCISE.md`](docs/compliance/IRP_TABLETOP_EXERCISE.md)
+- SOC 2 / ISO 27001 Crosswalk: [`docs/compliance/SOC2_ISO27001_CROSSWALK.md`](docs/compliance/SOC2_ISO27001_CROSSWALK.md)
+
+---
+
+## 8. Mobile & Tablet Responsive Architecture
+
+The application provides a responsive experience across all screen sizes:
+- **Bottom Navigation Bar**: Provides quick thumb access to `Home`, `Attendance`, `Leaves`, and `More` on mobile and tablet devices (`< lg`).
+- **Unified Slide-In Drawer**: Tapping `More` opens the complete navigation drawer on small screens.
+- **Smart Floating Elements**: The Global Time Tracker floats safely at `bottom-20` on mobile viewports to prevent collision with the bottom navigation bar.
+

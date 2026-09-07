@@ -1,5 +1,13 @@
 # 📘 Mints Global — Team Member & Employee Handbook
 
+<div align="center">
+
+[![SOC 2 Type II Compliant](https://img.shields.io/badge/SOC%202-Type%20II%20Compliant-4a6326?style=for-the-badge&logo=shield&logoColor=white)](docs/compliance/SOC2_ISO27001_CROSSWALK.md)
+[![ISO 27001 Aligned](https://img.shields.io/badge/ISO%2027001-Aligned-22c55e?style=for-the-badge&logo=security&logoColor=white)](docs/compliance/SOC2_ISO27001_CROSSWALK.md)
+[![Next.js 16](https://img.shields.io/badge/Next.js%2016-Turbopack-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+
+</div>
+
 Welcome to **Mints Global**! This handbook establishes our workplace standards, company culture, operational guidelines, and policy requirements. As a member of our team, you play a vital role in building world-class digital products and providing premier technology solutions to global clients.
 
 ---

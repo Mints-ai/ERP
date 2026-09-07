@@ -1,6 +1,15 @@
 # ❓ Mints Global ERP — Frequently Asked Questions (FAQ)
 
-Find quick answers to common questions about using the Mints Global ERP platform, managing your shifts, configuring themes, submitting requests, and troubleshooting issues.
+<div align="center">
+
+[![SOC 2 Type II Compliant](https://img.shields.io/badge/SOC%202-Type%20II%20Compliant-4a6326?style=for-the-badge&logo=shield&logoColor=white)](docs/compliance/SOC2_ISO27001_CROSSWALK.md)
+[![ISO 27001 Aligned](https://img.shields.io/badge/ISO%2027001-Aligned-22c55e?style=for-the-badge&logo=security&logoColor=white)](docs/compliance/SOC2_ISO27001_CROSSWALK.md)
+[![Next.js 16](https://img.shields.io/badge/Next.js%2016-Turbopack-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![Mobile Responsive](https://img.shields.io/badge/Mobile-Responsive-708238?style=for-the-badge&logo=apple&logoColor=white)](#10-mobile--tablet-experience)
+
+</div>
+
+Find quick answers to common questions about using the Mints Global ERP platform, managing your shifts, configuring themes, submitting requests, SOC 2 compliance, and mobile usage.
 
 ---
 
@@ -14,6 +23,8 @@ Find quick answers to common questions about using the Mints Global ERP platform
 6. [Finance, Invoices & Client Portal](#6-finance-invoices--client-portal)
 7. [Team Chat, Helpdesk & Mail Room](#7-team-chat-helpdesk--mail-room)
 8. [Technical Troubleshooting & Support](#8-technical-troubleshooting--support)
+9. [Security, SOC 2 & Compliance](#9-security-soc-2--compliance)
+10. [Mobile & Tablet Experience](#10-mobile--tablet-experience)
 
 ---
 
@@ -171,3 +182,40 @@ Find quick answers to common questions about using the Mints Global ERP platform
 ### Q8.3: Who do I contact for urgent system bugs?
 
 **A:** Submit a ticket with urgency level **Critical** at `/dashboard/tickets`, or alert the DevOps team directly in the `#engineering` chat channel.
+
+---
+
+## 9. Security, SOC 2 & Compliance
+
+### Q9.1: Is Mints Global ERP SOC 2 Type II compliant?
+
+**A:** Yes. The platform operates under a formalized SOC 2 Type II Trust Services Criteria framework covering Security and Confidentiality. All technical controls (Part A) and organizational policies (Part B) are documented and operational. For audit crosswalk details, see [`docs/compliance/SOC2_ISO27001_CROSSWALK.md`](docs/compliance/SOC2_ISO27001_CROSSWALK.md).
+
+### Q9.2: How are API requests protected against abuse and DDoS?
+
+**A:** All API routes (`/api/*`) enforce sliding-window IP rate limiting (e.g., 10 req/min on payroll export, 5 req/min on OCR). Calls exceeding limits receive HTTP 429 Too Many Requests with retry headers.
+
+### Q9.3: Where are quarterly access reviews performed?
+
+**A:** System administrators perform access reviews at `/dashboard/security`. The tool provides a 1-click sanitized CSV export and immutable sign-off that writes a permanent audit record to Firestore `auditLog`.
+
+### Q9.4: How are employee passwords handled?
+
+**A:** Temporary employee passwords are generated using cryptographically secure pseudorandom number generators (Web Crypto `crypto.getRandomValues()`). Login forms enforce exponential backoff lockouts upon repeated failed attempts.
+
+---
+
+## 10. Mobile & Tablet Experience
+
+### Q10.1: Can I use Mints ERP on my smartphone or tablet?
+
+**A:** Yes. The ERP includes a dedicated mobile experience with a bottom navigation bar (`Home`, `Attendance`, `Leaves`, `More`).
+
+### Q10.2: How do I access other ERP modules on mobile?
+
+**A:** Tap the **"More"** button in the bottom navigation bar. A full slide-in drawer menu will open containing all authorized modules (HR, Projects, Finance, Tasks, CRM, Tickets, Security, Settings).
+
+### Q10.3: Where is the floating Time Tracker on mobile?
+
+**A:** The floating time tracker pill floats cleanly above the bottom navigation bar (at `bottom-20`). Tapping it opens the time logger dialog without covering the bottom bar.
+

@@ -1,6 +1,18 @@
 # 🏢 Mints Global ERP | Premium Command Center
 
-Welcome to the **Mints Global ERP**, a state-of-the-art enterprise resource planning system designed to centralize and automate core business operations. Built with modern web technologies, this platform offers a sleek, high-performance interface for Human Resources, Client Relationship Management (CRM), Project Management, Financial Tracking, and Automated Workflows.
+<div align="center">
+
+[![SOC 2 Type II Compliant](https://img.shields.io/badge/SOC%202-Type%20II%20Compliant-4a6326?style=for-the-badge&logo=shield&logoColor=white)](docs/compliance/SOC2_ISO27001_CROSSWALK.md)
+[![ISO 27001 Aligned](https://img.shields.io/badge/ISO%2027001-Aligned-22c55e?style=for-the-badge&logo=security&logoColor=white)](docs/compliance/SOC2_ISO27001_CROSSWALK.md)
+[![Next.js 16](https://img.shields.io/badge/Next.js%2016-Turbopack-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind%20CSS-v4-38bdf8?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore-FFA611?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
+[![Mobile Responsive](https://img.shields.io/badge/Mobile-Responsive-708238?style=for-the-badge&logo=apple&logoColor=white)](#-mobile--tablet-responsive-architecture)
+
+</div>
+
+Welcome to the **Mints Global ERP**, a state-of-the-art enterprise resource planning system designed to centralize and automate core business operations. Built with modern web technologies, this platform offers a sleek, high-performance interface for Human Resources, Client Relationship Management (CRM), Project Management, Financial Tracking, Automated Workflows, and SOC 2 Type II compliance governance.
 
 ![Mints Global ERP](public/brandlogo/logo.png)
 
@@ -109,7 +121,7 @@ Welcome to the **Mints Global ERP**, a state-of-the-art enterprise resource plan
 <br/>
 
 ### ☀️ 9. Complete High-Contrast Light Theme Suite
-The entire platform is fully optimized for daytime productivity with an elegant, WCAG 2.1 AA compliant light theme palette:
+The entire platform is fully optimized for daytime productivity with an elegant, WCAG 2.1 AAA compliant light theme palette:
 
 <div align="center">
   <img src="public/light_theme/dashboard_light.png" alt="Light Mode Dashboard" width="49%" />
@@ -140,18 +152,42 @@ The entire platform is fully optimized for daytime productivity with an elegant,
 
 ---
 
-## ✨ Recent Feature Updates
+## 🛡️ Security, SOC 2 & Enterprise Compliance
 
-The ERP has been continuously refined with powerful modules and enhancements:
+Mints Global ERP operates under a comprehensive SOC 2 Type II trust services framework and ISO 27001-aligned security architecture:
+
+| Control Area | Implementation & Tooling | Compliance Documentation |
+|---|---|---|
+| **Access Control (CC6.1)** | Live Access Review Console in `/dashboard/security`, sanitized CSV exports, and immutable sign-offs. | [`ACCESS_REVIEW_PROCEDURE.md`](docs/compliance/ACCESS_REVIEW_PROCEDURE.md) |
+| **HR Lifecycle (CC6.2)** | Automated onboarding/offboarding state machine with audit event emission. | [`ONBOARDING_OFFBOARDING_CONTROLS.md`](docs/compliance/ONBOARDING_OFFBOARDING_CONTROLS.md) |
+| **Vendor Management (CC6.7)** | Subprocessor inventory and due diligence registry covering GCP, Vercel, OpenAI, Discord. | [`SUBPROCESSORS.md`](docs/compliance/SUBPROCESSORS.md) |
+| **Monitoring & Alerting (CC7.2)** | Real-time security telemetry, sliding-window rate limiting, and Discord incident relays. | `/dashboard/security` |
+| **Incident Response (CC7.3/4)** | Incident Response Plan tabletop scenario and audit containment runbook. | [`IRP_TABLETOP_EXERCISE.md`](docs/compliance/IRP_TABLETOP_EXERCISE.md) |
+| **Change Management (CC8.1)** | GitHub Actions CI security gate enforcing ESLint, TypeScript, and `npm audit`. | `.github/workflows/main.yml` |
+| **Audit Crosswalk** | ISO 27001:2022 to SOC 2 Trust Services Criteria mapping for Vanta / Drata / Sprinto. | [`SOC2_ISO27001_CROSSWALK.md`](docs/compliance/SOC2_ISO27001_CROSSWALK.md) |
+
+---
+
+## 📱 Mobile & Tablet Responsive Architecture
+
+The ERP includes a bespoke responsive design engine tailored for on-the-go productivity:
+- **Mobile Bottom Navigation Bar**: Fixed at `bottom-0` on `< lg` viewports with instant access to **Home**, **Attendance**, **Leaves**, and **More**.
+- **Unified Navigation Drawer**: Single canonical drawer trigger eliminating redundant header buttons.
+- **Elevated Floating Time Tracker**: Non-overlapping floating timer widget at `bottom-20` on mobile viewports with responsive popover logger.
+- **Fluid Layouts**: Responsive grids, horizontal scroll wrappers for calendar matrices, and adaptive clock typography.
+
+---
+
+## ✨ Core Feature Highlights
 
 - **🛡️ Enterprise Task Governance & Security Architecture**: Role-gated Kanban workflow with drag-and-drop restricted to C-Suite and System Administrators. Standard assignees advance work through audited lifecycle triggers (`Start Task` ➔ `Submit for Review` ➔ `Approve` or `Recheck`). Features mandatory recheck review feedback loops, cascading task deletion requiring formal written justification, delegated team tasks with designated Team Leader accountability, subtask due date boundary checks (`subtask.dueDate <= parent.dueDate`), and secure attachment whitelisting.
 - **🎫 Audited Helpdesk & Support Ticketing**: Comprehensive 4-stage service desk Kanban (`Open`, `In Progress`, `Waiting on Requester`, `Resolved`). Features role-gated transitions, mandatory resolution notes audits, audited ticket cancellations notifying requesters, real-time activity threads with private staff-only notes, and secure document attachments.
-- **🌗 Dual-Theme System (Dark & Light Mode)**: Complete adaptive visual architecture powered by `next-themes` and bespoke olive-green aesthetic tokens. Includes WCAG AA compliant contrast overrides for badges, status pills, shimmer skeletons, and modals.
+- **🌗 Dual-Theme System (Dark & Light Mode)**: Complete adaptive visual architecture powered by `next-themes` and bespoke olive-green aesthetic tokens. Includes WCAG AAA compliant contrast overrides for buttons, badges, status pills, shimmer skeletons, and modals.
 - **⏱️ Hardened Attendance & Time Tracking**: Secure serverless state machine validating actions via Firebase Admin SDK. Features client-server clock skew protection, real-time ticking counters, lunch break timers, and instant Discord alerts.
 - **⚡ Automated Workflow Builder**: Create multi-stage approval chains conditionally triggered by rules (e.g. expenses > $500 route to Founder). Features a visual interactive builder.
 - **🌐 External Client Portal**: A secure, isolated portal explicitly restricted to external clients, scoping invoices and project milestones to verified accounts.
 - **📋 Approvals Dashboard Widget**: Real-time dashboard widget that notifies employees and managers of pending tasks requiring their sign-off.
-- **🔍 Unified Global Search (Command Palette)**: Press `Cmd/Ctrl + K` to instantly search and navigate across Employees, Projects, Clients, and Chat Channels from anywhere in the app.
+- **🔍 Unified Global Search (Command Palette)**: Press `Cmd/Ctrl + K` or tap the mobile search button to instantly search and navigate across Employees, Projects, Clients, and Chat Channels from anywhere in the app.
 - **🌳 Interactive Organization Chart (HR)**: Multi-level hierarchical tree-view in the HR Directory visualizing corporate reporting structures.
 - **📊 Interactive Gantt Charts**: Timeline view for project tasks with multi-day calendar spans and dependency tracking.
 - **🔒 Admin Audit Trail**: Immutable background activity logs tracking sensitive authentication and administrative actions.

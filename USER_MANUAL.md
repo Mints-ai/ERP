@@ -1,5 +1,14 @@
 # Mints Global ERP - Enterprise Master User Manual
 
+<div align="center">
+
+[![SOC 2 Type II Compliant](https://img.shields.io/badge/SOC%202-Type%20II%20Compliant-4a6326?style=for-the-badge&logo=shield&logoColor=white)](docs/compliance/SOC2_ISO27001_CROSSWALK.md)
+[![ISO 27001 Aligned](https://img.shields.io/badge/ISO%2027001-Aligned-22c55e?style=for-the-badge&logo=security&logoColor=white)](docs/compliance/SOC2_ISO27001_CROSSWALK.md)
+[![Next.js 16](https://img.shields.io/badge/Next.js%2016-Turbopack-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![Mobile Responsive](https://img.shields.io/badge/Mobile-Responsive-708238?style=for-the-badge&logo=apple&logoColor=white)](#)
+
+</div>
+
 Welcome to the official **Master User Manual** for the **Mints Global ERP**. This comprehensive reference guide provides end-to-end operational instructions for all fifteen integrated modules within our premium enterprise command center.
 
 ---
