@@ -102,6 +102,8 @@ export default function DashboardHome() {
         setTotalWorkingSeconds(0);
         setLastActionTimestamp(0);
       }
+    }, (err) => {
+      console.warn("Attendance snapshot listener error:", err);
     });
     return () => unsub();
   }, [user]);
@@ -189,20 +191,41 @@ export default function DashboardHome() {
         const { collection, query, where, getDocs } = await import("firebase/firestore");
         
         // 2. Open Tasks
-        const tasksSnap = await getDocs(collection(db, "tasks"));
-        const taskCount = tasksSnap.docs.filter(doc => doc.data().status !== "completed").length;
+        let taskCount = 0;
+        try {
+          const tasksSnap = await getDocs(collection(db, "tasks"));
+          taskCount = tasksSnap.docs.filter(doc => doc.data().status !== "completed").length;
+        } catch (e) {
+          console.warn("Could not load tasks count:", e);
+        }
         
         // 3. Active Projects Count
-        const projectsSnap = await getDocs(query(collection(db, "projects")));
-        const projectCount = projectsSnap.size;
+        let projectCount = 0;
+        try {
+          const projectsSnap = await getDocs(query(collection(db, "projects")));
+          projectCount = projectsSnap.size;
+        } catch (e) {
+          console.warn("Could not load projects count:", e);
+        }
         
         // 4. Pending Leaves List & Count
-        const leavesSnap = await getDocs(query(collection(db, "leaves"), where("status", "==", "pending")));
-        const leaveCount = leavesSnap.size;
-        const approvals = leavesSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+        let leaveCount = 0;
+        let approvals: any[] = [];
+        try {
+          if (isExecutive) {
+            const leavesSnap = await getDocs(query(collection(db, "leaves"), where("status", "==", "pending")));
+            leaveCount = leavesSnap.size;
+            approvals = leavesSnap.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }));
+          } else {
+            const leavesSnap = await getDocs(query(collection(db, "leaves"), where("employeeId", "==", user.uid)));
+            leaveCount = leavesSnap.docs.filter(d => d.data().status === "pending").length;
+          }
+        } catch (e) {
+          console.warn("Could not load leaves count:", e);
+        }
         
         setStats(prev => ({
           ...prev,
@@ -212,7 +235,7 @@ export default function DashboardHome() {
           pendingApprovals: approvals
         }));
       } catch (err) {
-        console.error("Error loading dashboard stats:", err);
+        console.warn("Error loading dashboard stats:", err);
       } finally {
         setLoadingStats(false);
       }
@@ -229,35 +252,46 @@ export default function DashboardHome() {
       unsubShoutouts = onSnapshot(q, (snapshot) => {
         setShoutouts(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
       }, (error) => {
-        console.error("Firestore onSnapshot error (shoutouts):", error);
+        console.warn("Firestore onSnapshot error (shoutouts):", error);
       });
     });
 
-    // Listen to Employees for dynamic presence updates
-    import("firebase/firestore").then(({ collection, query, onSnapshot }) => {
-      const q = query(collection(db, "employees"));
-      unsubEmployees = onSnapshot(q, (snapshot) => {
-        const emps = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        setEmployees(emps);
-        
-        const now = Date.now();
-        const activeCount = emps.filter((emp: any) => emp.isActive && emp.lastSeenAt && (now - new Date(emp.lastSeenAt).getTime() < 5 * 60 * 1000)).length;
-        
-        setStats(prev => ({
-          ...prev,
-          teamSize: emps.filter((e: any) => e.isActive).length,
-          onlineCount: activeCount
-        }));
-      }, (error) => {
-        console.error("Firestore onSnapshot error (presence employees):", error);
-      });
+    // Listen to Employees for dynamic presence updates (only if executive/manager, or listen to self)
+    import("firebase/firestore").then(({ collection, query, doc, onSnapshot }) => {
+      if (isExecutive) {
+        const q = query(collection(db, "employees"));
+        unsubEmployees = onSnapshot(q, (snapshot) => {
+          const emps = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          setEmployees(emps);
+          
+          const now = Date.now();
+          const activeCount = emps.filter((emp: any) => emp.isActive && emp.lastSeenAt && (now - new Date(emp.lastSeenAt).getTime() < 5 * 60 * 1000)).length;
+          
+          setStats(prev => ({
+            ...prev,
+            teamSize: emps.filter((e: any) => e.isActive).length,
+            onlineCount: activeCount
+          }));
+        }, (error) => {
+          console.warn("Firestore onSnapshot error (presence employees):", error);
+        });
+      } else {
+        const selfDocRef = doc(db, "employees", user.uid);
+        unsubEmployees = onSnapshot(selfDocRef, (snap) => {
+          if (snap.exists()) {
+            setEmployees([{ id: snap.id, ...snap.data() }]);
+          }
+        }, (error) => {
+          console.warn("Firestore onSnapshot error (self employee):", error);
+        });
+      }
     });
 
     return () => {
       unsubShoutouts();
       unsubEmployees();
     };
-  }, [user]);
+  }, [user, isExecutive]);
 
   const handleAction = async (id: string, newStatus: "approved" | "rejected") => {
     try {

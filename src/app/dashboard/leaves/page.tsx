@@ -26,7 +26,7 @@ const LEAVE_TYPES = [
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  approved: "bg-emerald-500/10 text-accent border-emerald-500/20",
+  approved: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/20 font-bold",
   rejected: "bg-rose-500/10 text-rose-400 border-rose-500/20",
 };
 
@@ -375,7 +375,7 @@ export default function LeaveManagement() {
                 <Button
                   onClick={handleSavePolicies}
                   disabled={isSavingPolicy}
-                  className="w-full h-11 text-xs font-semibold bg-primary hover:bg-blue-700 text-foreground shadow-sm border-0 cursor-pointer rounded-xl mt-4"
+                  className="w-full h-11 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm border-0 cursor-pointer rounded-xl mt-4"
                 >
                   {isSavingPolicy ? "Saving..." : "Save Leave Policies"}
                 </Button>
@@ -384,7 +384,7 @@ export default function LeaveManagement() {
           )}
 
           <Dialog open={isApplyOpen} onOpenChange={setIsApplyOpen}>
-          <DialogTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold h-10 px-4 py-2 bg-primary hover:bg-blue-700 text-foreground shadow-sm border-0 cursor-pointer transition-all">
+          <DialogTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold h-10 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm border-0 cursor-pointer transition-all">
             <CalendarIcon className="mr-2 h-4 w-4" /> Apply for Leave
           </DialogTrigger>
           <DialogContent className="max-w-md bg-card border border-border text-foreground rounded-2xl shadow-2xl">
@@ -439,7 +439,7 @@ export default function LeaveManagement() {
                           className="bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary shadow-sm min-h-[80px] text-xs border-border p-3 placeholder:text-foreground/20 focus:border-primary/60 focus:ring-0 text-foreground" />
               </div>
               
-              <Button type="submit" disabled={isSubmitting || daysRequested === 0} className="w-full h-11 text-xs font-semibold bg-primary hover:bg-blue-700 text-foreground shadow-sm border-0 cursor-pointer rounded-xl">
+              <Button type="submit" disabled={isSubmitting || daysRequested === 0} className="w-full h-11 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm border-0 cursor-pointer rounded-xl">
                 {isSubmitting ? "Submitting..." : "Submit Request"}
               </Button>
             </form>
@@ -474,7 +474,7 @@ export default function LeaveManagement() {
               </CardHeader>
               <CardContent className="flex flex-col justify-between h-[84px]">
                 <div className="flex justify-between items-end mb-2">
-                  <span className="text-3xl font-black text-accent">{balance.usedSick}</span>
+                  <span className="text-3xl font-black text-emerald-600 dark:text-emerald-300 font-mono">{balance.usedSick}</span>
                   <span className="text-xs text-foreground/40 mb-1 font-semibold">days used</span>
                 </div>
               </CardContent>
@@ -681,7 +681,7 @@ export default function LeaveManagement() {
             className="bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary shadow-sm min-h-[80px] text-xs border-border p-3 placeholder:text-foreground/20 focus:border-primary/60 focus:ring-0 text-foreground"
           />
         </div>
-        <Button type="submit" className="w-full h-11 text-xs font-semibold bg-primary hover:bg-blue-700 text-foreground shadow-sm border-0 cursor-pointer rounded-xl">
+        <Button type="submit" className="w-full h-11 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm border-0 cursor-pointer rounded-xl">
           Save Changes
         </Button>
       </form>
@@ -706,10 +706,11 @@ export default function LeaveManagement() {
                 </div>
               </CardHeader>
               <CardContent className="pt-6">
-                <div className="grid grid-cols-7 gap-2 text-center">
-                  {weekDays.map(day => (
-                    <div key={day} className="text-xs font-bold text-foreground/40 py-2">{day}</div>
-                  ))}
+                <div className="overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0">
+                  <div className="grid grid-cols-7 gap-2 text-center min-w-[620px] sm:min-w-0">
+                    {weekDays.map(day => (
+                      <div key={day} className="text-xs font-bold text-foreground/40 py-2">{day}</div>
+                    ))}
                   
                   {Array.from({ length: days[0].getDay() }).map((_, i) => (
                     <div key={`empty-${i}`} className="h-28 rounded-xl border border-border"></div>
@@ -737,7 +738,7 @@ export default function LeaveManagement() {
                             {dayLeaves.length > 0 ? `${dayLeaves.length} away` : ""}
                           </span>
                           <span className={cn("text-xs font-bold h-6 w-6 flex items-center justify-center rounded-full shrink-0",
-                            isToday ? "bg-primary text-foreground" : "text-foreground/60"
+                            isToday ? "bg-primary text-primary-foreground font-mono" : "text-foreground/75 font-mono"
                           )}>
                             {format(day, 'd')}
                           </span>
@@ -780,7 +781,8 @@ export default function LeaveManagement() {
                     );
                   })}
                 </div>
-              </CardContent>
+              </div>
+            </CardContent>
             </Card>
           </TabsContent>
 

@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req);
+    const limit = rateLimit(`attendance_${ip}`, { windowMs: 60 * 1000, max: 30 });
+    if (!limit.success) {
+      return NextResponse.json({ error: "Too many attendance requests. Please wait." }, { status: 429 });
+    }
+
     const authHeader = req.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

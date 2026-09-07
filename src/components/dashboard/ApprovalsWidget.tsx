@@ -19,6 +19,13 @@ export function ApprovalsWidget() {
   useEffect(() => {
     if (!user || !role) return;
 
+    const isManagerOrAbove = ["founder", "system_admin", "c_suite", "manager"].includes(role);
+    if (!isManagerOrAbove) {
+      setPendingApprovals([]);
+      setLoading(false);
+      return;
+    }
+
     const q = query(
       collection(db, "expenses"),
       where("status", "==", "pending_approval")
@@ -35,6 +42,10 @@ export function ApprovalsWidget() {
       });
 
       setPendingApprovals(myApprovals);
+      setLoading(false);
+    }, (error) => {
+      console.warn("ApprovalsWidget onSnapshot error:", error);
+      setPendingApprovals([]);
       setLoading(false);
     });
 

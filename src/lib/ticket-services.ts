@@ -231,6 +231,8 @@ export const subscribeToTicketComments = (
       ...d.data()
     })) as TicketComment[];
     callback(comments);
+  }, (err) => {
+    console.warn("Error subscribing to ticket comments:", err);
   });
 };
 

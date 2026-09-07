@@ -28,8 +28,9 @@ service cloud.firestore {
     }
 
     // Employees Collection Rules
+    // Restricts complete HR data reads to managers/admins or the employee themself
     match /employees/{employeeId} {
-      allow read: if isAuth();
+      allow read: if isAuth() && (request.auth.uid == employeeId || isManagerOrAbove());
       allow write: if isAuth() && (request.auth.uid == employeeId || isManagerOrAbove());
     }
 
@@ -141,9 +142,13 @@ service cloud.firestore {
     }
 
     // Settings Collection Rules
+    // Sensitive webhook secrets and credentials require apex permissions
+    match /settings/discordWebhook {
+      allow read, write: if isAuth() && isFounderOrAdmin();
+    }
     match /settings/{settingId} {
       allow read: if isAuth();
-      allow write: if isAuth() && isManagerOrAbove();
+      allow write: if isAuth() && isFounderOrAdmin();
     }
 
     // CRM Leads Collection Rules
@@ -263,7 +268,12 @@ service cloud.firestore {
     // Login Activity Collection Rules
     match /loginActivity/{activityId} {
       allow read: if isAuth() && isFounderOrAdmin();
-      allow create: if request.resource.data.status == "failed" || isAuth();
+      allow create: if isAuth() || (
+        request.resource.data.status == "failed" &&
+        request.resource.data.email is string &&
+        request.resource.data.email.size() <= 100 &&
+        request.resource.data.uid is string
+      );
       allow update, delete: if false;
     }
 
@@ -277,5 +287,26 @@ service cloud.firestore {
       allow read: if isAuth() && (resource.data.toUid == request.auth.uid || resource.data.fromUid == request.auth.uid || isManagerOrAbove());
       allow write: if isAuth() && isManagerOrAbove();
     }
+
+    // Client Errors & Telemetry Logging Rules
+    match /client_errors/{errorId} {
+      allow read: if isAuth() && isFounderOrAdmin();
+      allow create: if isAuth();
+      allow update, delete: if isAuth() && isFounderOrAdmin();
+    }
+
+    // Workflows Collection Rules
+    match /workflows/{workflowId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrAbove();
+    }
+
+    // Reactivation Requests Collection Rules
+    match /reactivation_requests/{requestId} {
+      allow read: if isAuth() && isManagerOrAbove();
+      allow create: if true;
+      allow update, delete: if isAuth() && isManagerOrAbove();
+    }
   }
 }
+

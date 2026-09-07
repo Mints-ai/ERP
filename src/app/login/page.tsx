@@ -21,6 +21,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutSecondsRemaining, setLockoutSecondsRemaining] = useState(0);
 
   const [isReactivateOpen, setIsReactivateOpen] = useState(false);
   const [reactivateName, setReactivateName] = useState("");
@@ -28,9 +30,30 @@ export default function LoginPage() {
   const [reactivateReason, setReactivateReason] = useState("");
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
 
+  // Initialize and check lockout from storage
+  useEffect(() => {
+    const checkLockout = () => {
+      const storedLockout = localStorage.getItem("login_lockout_until");
+      if (storedLockout) {
+        const lockoutTime = parseInt(storedLockout, 10);
+        const remaining = Math.ceil((lockoutTime - Date.now()) / 1000);
+        if (remaining > 0) {
+          setLockoutSecondsRemaining(remaining);
+        } else {
+          localStorage.removeItem("login_lockout_until");
+          setLockoutSecondsRemaining(0);
+        }
+      }
+    };
+    checkLockout();
+    const timer = setInterval(checkLockout, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!loading && user) {
+      localStorage.removeItem("login_failed_attempts");
+      localStorage.removeItem("login_lockout_until");
       if (role === "client") {
         router.push("/client-portal");
       } else {
@@ -48,6 +71,10 @@ export default function LoginPage() {
   }, [authError, setAuthError]);
 
   const handleGoogleLogin = async () => {
+    if (lockoutSecondsRemaining > 0) {
+      setError(`Too many failed login attempts. Please wait ${lockoutSecondsRemaining} seconds before trying again.`);
+      return;
+    }
     try {
       setIsLoggingIn(true);
       setError("");
@@ -60,6 +87,11 @@ export default function LoginPage() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (lockoutSecondsRemaining > 0) {
+      setError(`Login temporarily locked due to security policy. Try again in ${lockoutSecondsRemaining} seconds.`);
+      return;
+    }
+
     try {
       setIsLoggingIn(true);
       setError("");
@@ -67,9 +99,30 @@ export default function LoginPage() {
       const finalEmail = email.includes("@") ? email.trim() : `${email.trim()}@mintsglobal.ae`;
       
       const cred = await signInWithEmailAndPassword(auth, finalEmail, password);
+      // Reset failed attempts on success
+      localStorage.removeItem("login_failed_attempts");
+      localStorage.removeItem("login_lockout_until");
+      setFailedAttempts(0);
       await sendDiscordNotification(`🔓 **${cred.user.displayName || finalEmail}** logged in to the ERP.`, undefined, 'auth');
     } catch (err: any) {
-      setError("Invalid username or password.");
+      const currentAttempts = failedAttempts + 1;
+      setFailedAttempts(currentAttempts);
+
+      let lockoutDuration = 0;
+      if (currentAttempts >= 8) {
+        lockoutDuration = 300; // 5 minutes
+      } else if (currentAttempts >= 5) {
+        lockoutDuration = 30; // 30 seconds
+      }
+
+      if (lockoutDuration > 0) {
+        const lockoutUntil = Date.now() + lockoutDuration * 1000;
+        localStorage.setItem("login_lockout_until", lockoutUntil.toString());
+        setLockoutSecondsRemaining(lockoutDuration);
+        setError(`Too many failed login attempts (${currentAttempts}). Account access is locked for ${lockoutDuration} seconds.`);
+      } else {
+        setError(`Invalid username or password. (Attempt ${currentAttempts}/5 before temporary lockout)`);
+      }
       setIsLoggingIn(false);
 
       // Log failed credentials login attempt asynchronously
@@ -270,9 +323,9 @@ export default function LoginPage() {
               type="submit" 
               variant="outline" 
               className="w-full h-11 text-xs font-semibold btn-ghost cursor-pointer"
-              disabled={isLoggingIn}
+              disabled={isLoggingIn || lockoutSecondsRemaining > 0}
             >
-              Sign In to ERP
+              {lockoutSecondsRemaining > 0 ? `Locked (${lockoutSecondsRemaining}s)` : isLoggingIn ? "Signing In..." : "Sign In to ERP"}
             </Button>
           </form>
           

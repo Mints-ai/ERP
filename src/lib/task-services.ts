@@ -159,6 +159,8 @@ export const subscribeToRemarks = (taskId: string, callback: (remarks: TaskRemar
       ...doc.data()
     })) as TaskRemark[];
     callback(remarks);
+  }, (err) => {
+    console.warn("Error subscribing to task remarks:", err);
   });
 };
 

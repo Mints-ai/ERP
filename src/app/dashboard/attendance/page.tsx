@@ -461,7 +461,7 @@ export default function AttendancePage() {
                     </div>
 
                     {/* Huge Clock */}
-                    <div className="text-7xl md:text-8xl font-black text-foreground tracking-tighter mb-2 tabular-nums">
+                    <div className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-foreground tracking-tighter mb-2 tabular-nums">
                       {formatTime(currentTime)}
                     </div>
 
@@ -476,7 +476,7 @@ export default function AttendancePage() {
                       {status === "out" ? (
                         <Button 
                           size="lg" 
-                          className="w-full h-16 text-lg bg-primary hover:bg-blue-700 text-foreground shadow-sm transition-all rounded-xl font-bold border-0 cursor-pointer"
+                          className="w-full h-16 text-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all rounded-xl font-bold border-0 cursor-pointer"
                           onClick={handleClockIn}
                         >
                           <Play className="w-6 h-6 mr-3 fill-white/20 animate-pulse" /> Clock In
@@ -487,8 +487,8 @@ export default function AttendancePage() {
                             size="lg" 
                             className={cn("flex-1 h-16 text-lg transition-all rounded-xl font-bold border cursor-pointer", 
                               status === "break" 
-                                ? "bg-amber-500 hover:bg-amber-600 text-foreground shadow-glow-amber border-transparent" 
-                                : " text-amber-300 hover:bg-muted/80 border-border"
+                                ? "bg-amber-500 hover:bg-amber-600 text-white shadow-glow-amber border-transparent" 
+                                : " text-amber-500 dark:text-amber-300 hover:bg-muted/80 border-border"
                             )}
                             onClick={status === "break" ? handleResume : handleTakeBreak}
                           >
@@ -498,7 +498,7 @@ export default function AttendancePage() {
                           <Button 
                             size="lg" 
                             variant="destructive"
-                            className="flex-1 h-16 text-lg bg-rose-600 hover:bg-rose-700 text-foreground shadow-glow-rose transition-all rounded-xl font-bold border-0 cursor-pointer"
+                            className="flex-1 h-16 text-lg bg-rose-600 hover:bg-rose-700 text-white shadow-glow-rose transition-all rounded-xl font-bold border-0 cursor-pointer"
                             onClick={handleClockOut}
                           >
                             <Square className="w-5 h-5 mr-2 fill-white/20" /> Clock Out
@@ -522,8 +522,9 @@ export default function AttendancePage() {
                   </CardHeader>
                   <CardContent className="pt-6 px-0 pb-0 h-[220px] w-full relative">
                     {mounted ? (
-                      <ResponsiveContainer width="100%" height="100%">
+                      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                         <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+
                           <XAxis 
                             dataKey="day" 
                             stroke="rgba(255,255,255,0.3)" 

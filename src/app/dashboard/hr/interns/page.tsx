@@ -156,7 +156,7 @@ export default function InternManagement() {
                         View Profile
                       </Button>
                       <Button 
-                        className="w-full bg-primary hover:bg-blue-700 text-foreground shadow-sm border-0 rounded-xl font-bold gap-2 cursor-pointer" 
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm border-0 rounded-xl font-bold gap-2 cursor-pointer" 
                         onClick={() => generateInternCertificate(intern.fullName, intern.department || "General", new Date().toLocaleDateString())}
                       >
                         <FileText className="h-4 w-4" /> Certificate

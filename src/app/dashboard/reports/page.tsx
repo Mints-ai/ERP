@@ -422,22 +422,22 @@ export default function ReportsAndIntelligence() {
         <TabsList className="border border-border shadow-inner p-1 rounded-xl mb-6 flex overflow-x-auto scrollbar-hide flex-nowrap max-w-full justify-start w-full sm:w-fit gap-1 text-foreground">
           {isManager && (
             <>
-              <TabsTrigger value="financial" className="text-xs py-1.5 px-4 font-bold rounded-lg text-foreground/40 data-[state=active]:bg-primary data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all cursor-pointer shrink-0">
+              <TabsTrigger value="financial" className="text-xs py-1.5 px-4 font-bold rounded-lg text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all cursor-pointer shrink-0">
                 Financial Analytics
               </TabsTrigger>
-              <TabsTrigger value="operational" className="text-xs py-1.5 px-4 font-bold rounded-lg text-foreground/40 data-[state=active]:bg-primary data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all cursor-pointer shrink-0">
+              <TabsTrigger value="operational" className="text-xs py-1.5 px-4 font-bold rounded-lg text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all cursor-pointer shrink-0">
                 Operational Delivery
               </TabsTrigger>
-              <TabsTrigger value="team" className="text-xs py-1.5 px-4 font-bold rounded-lg text-foreground/40 data-[state=active]:bg-primary data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all cursor-pointer shrink-0">
+              <TabsTrigger value="team" className="text-xs py-1.5 px-4 font-bold rounded-lg text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all cursor-pointer shrink-0">
                 Team Intelligence
               </TabsTrigger>
             </>
           )}
-          <TabsTrigger value="my-reports" className="text-xs py-1.5 px-4 font-bold rounded-lg text-foreground/40 data-[state=active]:bg-primary data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all cursor-pointer shrink-0">
+          <TabsTrigger value="my-reports" className="text-xs py-1.5 px-4 font-bold rounded-lg text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all cursor-pointer shrink-0">
             My Status Reports
           </TabsTrigger>
           {isManager && (
-            <TabsTrigger value="team-reports" className="text-xs py-1.5 px-4 font-bold rounded-lg text-foreground/40 data-[state=active]:bg-primary data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all cursor-pointer shrink-0">
+            <TabsTrigger value="team-reports" className="text-xs py-1.5 px-4 font-bold rounded-lg text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all cursor-pointer shrink-0">
               Team Status Reports
             </TabsTrigger>
           )}

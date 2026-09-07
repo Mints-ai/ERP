@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -199,6 +199,13 @@ export function Sidebar() {
   const [isHovered, setIsHovered] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Listen to open-mobile-nav events from BottomNav
+  useEffect(() => {
+    const handleOpenNav = () => setMobileOpen(true);
+    window.addEventListener("mints:open-mobile-nav", handleOpenNav);
+    return () => window.removeEventListener("mints:open-mobile-nav", handleOpenNav);
+  }, []);
+
   return (
     <>
       {/* Desktop sidebar */}
@@ -216,15 +223,7 @@ export function Sidebar() {
         <SidebarContent isExpanded={isHovered} />
       </motion.aside>
 
-      {/* Mobile hamburger */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 w-10 h-10 flex items-center justify-center bg-card border border-border shadow-sm rounded-xl text-muted-foreground hover:text-foreground cursor-pointer"
-      >
-        <Menu className="h-5 w-5" />
-      </button>
-
-      {/* Mobile drawer */}
+      {/* Mobile drawer (triggered via BottomNav More button) */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-[280px] p-0 border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
           <SidebarContent isExpanded={true} onNavigate={() => setMobileOpen(false)} />

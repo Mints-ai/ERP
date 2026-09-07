@@ -112,7 +112,7 @@ export function FinanceOverview({ invoices, expenses, compCurrency }: FinanceOve
 
   return (
     <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 2xl:grid-cols-4 gap-4">
         <Card className="bg-card border border-border shadow-sm rounded-lg overflow-hidden border-border">
           <CardContent className="p-5">
             <div className="flex justify-between items-start mb-2">

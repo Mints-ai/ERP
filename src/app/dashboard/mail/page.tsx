@@ -427,8 +427,8 @@ export default function SecureMail() {
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2 space-y-1.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="sm:col-span-2 space-y-1.5">
                   <label className="text-xs font-bold text-foreground/50 uppercase tracking-wider">Subject</label>
                   <Input
                     required

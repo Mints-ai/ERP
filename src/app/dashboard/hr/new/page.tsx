@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { ROLE_META } from "@/lib/permissions";
 import { RoleGuard } from "@/components/layout/RoleGuard";
+import { generateSecureTemporaryPassword, sanitizeCsvCell } from "@/lib/securityUtils";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -253,7 +254,7 @@ export default function OnboardEmployees() {
       phone: "",
       isIntern: false,
       internEndDate: "",
-      temporaryPassword: Math.random().toString(36).slice(-8) + "Aa1!",
+      temporaryPassword: generateSecureTemporaryPassword(),
     },
   });
 
@@ -461,7 +462,7 @@ export default function OnboardEmployees() {
     const headers = ["FullName", "Email", "TemporaryPassword"];
     const csvContent = [
       headers.join(","),
-      ...onboardedCredentials.map(c => `"${c.fullName}","${c.email}","${c.tempPass}"`)
+      ...onboardedCredentials.map(c => `${sanitizeCsvCell(c.fullName)},${sanitizeCsvCell(c.email)},${sanitizeCsvCell(c.tempPass)}`)
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -528,7 +529,7 @@ export default function OnboardEmployees() {
       setBulkProgress(prev => ({ ...prev, current: i + 1 }));
 
       let tempApp: any = null;
-      const tempPass = emp.temporaryPassword || (Math.random().toString(36).slice(-8) + "Aa1!");
+      const tempPass = emp.temporaryPassword || generateSecureTemporaryPassword();
       maxSeq++;
       const paddedSeq = maxSeq.toString().padStart(3, "0");
       const generatedId = `MNTSGBL-${paddedSeq}-${currentYear}`;
@@ -1260,7 +1261,7 @@ export default function OnboardEmployees() {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-foreground/60 uppercase tracking-wider">Departments</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                   {DEPARTMENTS.map((dept) => (
                     <div 
                       key={dept}

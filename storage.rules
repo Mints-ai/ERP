@@ -5,22 +5,41 @@ service firebase.storage {
     function isAuth() {
       return request.auth != null;
     }
+
+    function isManagerOrAbove() {
+      return isAuth() && firestore.get(/databases/(default)/documents/employees/$(request.auth.uid)).data.role in ['founder', 'system_admin', 'c_suite', 'manager'];
+    }
+
+    function isValidImageType() {
+      return request.resource.contentType.matches('image/(jpeg|png|webp|gif)');
+    }
+
+    function isValidDocumentType() {
+      return request.resource.contentType.matches('application/(pdf|msword|vnd.openxmlformats-officedocument.wordprocessingml.document)');
+    }
     
-    // Profile Photos: Anyone logged in can read. Only the user can upload their own.
-    match /profile-photos/{userId}/{allPaths=**} {
+    // Profile Photos: Anyone logged in can read. Only the user can upload their own with image validation.
+    match /profile-photos/{userId}/{fileName} {
       allow read: if isAuth();
-      allow write: if isAuth() && request.auth.uid == userId;
+      allow write: if isAuth() && request.auth.uid == userId 
+                   && request.resource.size < 5 * 1024 * 1024
+                   && isValidImageType();
     }
 
-    // Resumes: Anyone logged in can read/write resumes for ATS
+    // Resumes: Only recruiters/managers/HR can read and write candidate resumes
     match /resumes/{allPaths=**} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && isManagerOrAbove();
+      allow write: if isAuth() && isManagerOrAbove()
+                   && request.resource.size < 10 * 1024 * 1024
+                   && isValidDocumentType();
     }
 
-    // Task Attachments: Max 10MB
+    // Task Attachments: Max 10MB, safe mime types
     match /task_attachments/{taskId}/{fileName} {
       allow read: if isAuth();
-      allow write: if isAuth() && request.resource.size < 10 * 1024 * 1024; 
+      allow write: if isAuth() 
+                   && request.resource.size < 10 * 1024 * 1024
+                   && !request.resource.contentType.matches('application/(x-msdownload|x-executable|x-sh|x-bat|javascript)'); 
     }
 
     // Default fallback: Deny everything else by default

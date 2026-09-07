@@ -9,6 +9,7 @@ import { canAccess, PERMISSIONS } from "@/lib/permissions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -24,6 +25,7 @@ import {
 } from "recharts";
 import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
+import { sanitizeCsvCell } from "@/lib/securityUtils";
 
 
 // ─── Event Taxonomy ────────────────────────────────────────────────────────────
@@ -102,7 +104,7 @@ function SummaryCard({ label, value, icon: Icon, color }: { label: string; value
           <Icon className="h-5 w-5" />
         </div>
         <div>
-          <p className="text-xs font-bold text-foreground/40 uppercase tracking-wider">{label}</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{label}</p>
           <h3 className="text-2xl font-black text-foreground font-mono">{value}</h3>
         </div>
       </CardContent>
@@ -116,7 +118,7 @@ export default function SecurityAuditDashboard() {
   const { role, user } = useAuth();
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"audit" | "telemetry" | "logins" | "sessions" | "reactivations" | "matrix" | "delegations">("audit");
+  const [activeTab, setActiveTab] = useState<"audit" | "telemetry" | "logins" | "sessions" | "reactivations" | "matrix" | "delegations" | "access-review">("audit");
   const [loginEvents, setLoginEvents] = useState<any[]>([]);
   const [loginSearch, setLoginSearch] = useState("");
   const [search, setSearch] = useState("");
@@ -131,7 +133,7 @@ export default function SecurityAuditDashboard() {
         return (
           <div>
             <div className="font-bold text-foreground">{ev.fullName || ev.email}</div>
-            <div className="text-xs text-foreground/40 font-mono">{ev.email}</div>
+            <div className="text-xs text-muted-foreground font-mono">{ev.email}</div>
           </div>
         );
       },
@@ -139,7 +141,7 @@ export default function SecurityAuditDashboard() {
     {
       accessorKey: "ip",
       header: "IP Address",
-      cell: ({ row }) => <span className="font-mono text-xs text-primary/80">{row.original.ip || '—'}</span>,
+      cell: ({ row }) => <span className="font-mono text-xs text-primary font-medium">{row.original.ip || '—'}</span>,
     },
     {
       accessorKey: "browser",
@@ -150,9 +152,9 @@ export default function SecurityAuditDashboard() {
           <div>
             <div className="flex items-center gap-1.5">
               {ev.device === 'Mobile' ? <Smartphone className="w-3.5 h-3.5 text-amber-400" /> : <Monitor className="w-3.5 h-3.5 text-primary" />}
-              <span className="font-semibold">{ev.browser || 'Unknown'}</span>
+              <span className="font-semibold text-foreground">{ev.browser || 'Unknown'}</span>
             </div>
-            <div className="text-xs text-foreground/30 mt-0.5">{ev.device}</div>
+            <div className="text-xs text-muted-foreground mt-0.5 font-medium">{ev.device}</div>
           </div>
         );
       },
@@ -502,7 +504,83 @@ export default function SecurityAuditDashboard() {
     }
   };
 
-  // 5. System Health counters
+  // 5. Access Reviews state & handlers (SOC 2 CC6.1)
+  const [privilegedUsers, setPrivilegedUsers] = useState<any[]>([]);
+  const [accessReviewSearch, setAccessReviewSearch] = useState("");
+  const [isRecordingSignoff, setIsRecordingSignoff] = useState(false);
+
+  useEffect(() => {
+    if (!canAccess(role, "VIEW_AUDIT_LOG")) return;
+    const q = query(
+      collection(db, "employees"),
+      where("role", "in", ["founder", "system_admin", "c_suite", "manager"])
+    );
+    return onSnapshot(q, (snap) => {
+      setPrivilegedUsers(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+  }, [role]);
+
+  const exportAccessReviewCsv = () => {
+    if (privilegedUsers.length === 0) {
+      alert("No privileged users found to export.");
+      return;
+    }
+    const headers = ["Employee ID", "Full Name", "Email", "Assigned Role", "Department", "Account Status", "Last Login IP", "Last Login Date"];
+    const rows = privilegedUsers.map(u => [
+      sanitizeCsvCell(u.id),
+      sanitizeCsvCell(u.fullName || "—"),
+      sanitizeCsvCell(u.email),
+      sanitizeCsvCell(u.role),
+      sanitizeCsvCell(u.department || "OPERATIONS"),
+      sanitizeCsvCell(u.isActive === false ? "Deactivated" : "Active"),
+      sanitizeCsvCell(u.lastLoginIP || "—"),
+      sanitizeCsvCell(u.lastLoginAt || "—"),
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", `SOC2_Access_Review_${dateStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleQuarterlySignoff = async () => {
+    const quarter = `Q${Math.floor(new Date().getMonth() / 3) + 1} ${new Date().getFullYear()}`;
+    if (!confirm(`Are you sure you want to sign off on the ${quarter} Quarterly User Access Review for ${privilegedUsers.length} privileged accounts? This action will write an immutable compliance record.`)) {
+      return;
+    }
+    setIsRecordingSignoff(true);
+    try {
+      await addDoc(collection(db, "auditLog"), {
+        actorId: user?.uid || "system",
+        actorName: user?.fullName || "Admin",
+        action: "QUARTERLY_ACCESS_REVIEW_COMPLETED",
+        targetCollection: "employees",
+        targetId: `access_review_${quarter.toLowerCase().replace(/\s+/g, "_")}`,
+        details: `Quarterly user access review for ${quarter} completed and signed off by ${user?.fullName || user?.email}. Verified ${privilegedUsers.length} privileged accounts against principle of least privilege (SOC 2 CC6.1).`,
+        metadata: {
+          quarter,
+          privilegedUserCount: privilegedUsers.length,
+          reviewerRole: role,
+          reviewedRoles: ["founder", "system_admin", "c_suite", "manager"]
+        },
+        createdAt: serverTimestamp()
+      });
+      alert(`Quarterly Access Review for ${quarter} successfully recorded to the immutable audit ledger!`);
+    } catch (err) {
+      console.error("Signoff error:", err);
+      alert("Failed to record access review signoff.");
+    } finally {
+      setIsRecordingSignoff(false);
+    }
+  };
+
+  // 6. System Health counters
   const [activeUsersCount, setActiveUsersCount] = useState(0);
   const [errorLogs, setErrorLogs] = useState<any[]>([]);
 
@@ -518,7 +596,10 @@ export default function SecurityAuditDashboard() {
 
     const unsubErrors = onSnapshot(qErrors, (snap) => {
       setErrorLogs(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    }, (err) => console.warn(err));
+    }, () => {
+      setErrorLogs([]);
+    });
+
 
     return () => {
       unsubActive();
@@ -622,16 +703,16 @@ export default function SecurityAuditDashboard() {
               <ShieldAlert className="h-5 w-5 text-red-400" />
               Security Audit Console
             </h1>
-            <p className="text-xs text-foreground/40 mt-1">
+            <p className="text-xs text-muted-foreground mt-1 font-medium">
               Real-time immutable audit log — all system events, access attempts, and data operations.
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 text-xs font-bold text-accent uppercase tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               Live
             </span>
-            <Badge variant="outline" className="text-xs font-bold border-border text-foreground/40">
+            <Badge variant="outline" className="text-xs font-bold border-border text-muted-foreground">
               Last 200 events
             </Badge>
           </div>
@@ -655,12 +736,13 @@ export default function SecurityAuditDashboard() {
             { key: "reactivations", label: "Reactivations", icon: RefreshCw },
             { key: "matrix", label: "RBAC Matrix", icon: ShieldAlert },
             { key: "delegations", label: "Delegations", icon: User },
+            { key: "access-review", label: "Access Review (SOC 2)", icon: CheckCircle },
           ] as const).map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as any)}
               className={cn("pb-3 text-xs font-bold transition-all relative cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0",
-                activeTab === tab.key ? "text-foreground" : "text-foreground/40 hover:text-foreground/60"
+                activeTab === tab.key ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
               {tab.icon && <tab.icon className="h-3.5 w-3.5 text-red-400" />}
@@ -676,6 +758,7 @@ export default function SecurityAuditDashboard() {
             </button>
           ))}
         </div>
+
 
         <AnimatePresence mode="wait">
           {activeTab === "audit" && (
@@ -774,15 +857,15 @@ export default function SecurityAuditDashboard() {
                 <Card className="bg-card border border-border shadow-sm rounded-lg border-border">
                   <CardContent className="p-5 flex items-center justify-between">
                     <div className="space-y-1">
-                      <p className="text-xs font-bold text-foreground/40 uppercase tracking-wider">Average API Latency</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Average API Latency</p>
                       <h4 className="text-2xl font-black text-foreground font-mono flex items-baseline gap-1">
-                        248<span className="text-xs text-red-400 font-semibold">ms</span>
+                        248<span className="text-xs text-red-500 dark:text-red-400 font-semibold">ms</span>
                       </h4>
-                      <p className="text-xs text-accent flex items-center gap-1">
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
                         <TrendingUp className="h-3 w-3" /> Optimum Operating State
                       </p>
                     </div>
-                    <div className="p-3 rounded-xl border border-red-500/10 bg-red-500/5 text-red-400 shrink-0">
+                    <div className="p-3 rounded-xl border border-red-500/10 bg-red-500/5 text-red-500 dark:text-red-400 shrink-0">
                       <Cpu className="h-5 w-5" />
                     </div>
                   </CardContent>
@@ -791,11 +874,11 @@ export default function SecurityAuditDashboard() {
                 <Card className="bg-card border border-border shadow-sm rounded-lg border-border">
                   <CardContent className="p-5 flex items-center justify-between">
                     <div className="space-y-1">
-                      <p className="text-xs font-bold text-foreground/40 uppercase tracking-wider">IndexedDB Cache State</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">IndexedDB Cache State</p>
                       <h4 className="text-2xl font-black text-foreground font-mono flex items-baseline gap-1">
                         Synced<span className="text-xs text-primary font-semibold font-sans">/Offline OK</span>
                       </h4>
-                      <p className="text-xs text-primary/80 flex items-center gap-1">
+                      <p className="text-xs text-primary flex items-center gap-1 font-semibold">
                         <Database className="h-3 w-3" /> Multi-Tab Session Active
                       </p>
                     </div>
@@ -808,13 +891,13 @@ export default function SecurityAuditDashboard() {
                 <Card className="bg-card border border-border shadow-sm rounded-lg border-border">
                   <CardContent className="p-5 flex items-center justify-between">
                     <div className="space-y-1">
-                      <p className="text-xs font-bold text-foreground/40 uppercase tracking-wider">Failed login alerts</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Failed login alerts</p>
                       <h4 className="text-2xl font-black text-foreground font-mono">
-                        {failedLogins.length} <span className="text-xs font-semibold text-foreground/45 font-sans">Blocked</span>
+                        {failedLogins.length} <span className="text-xs font-semibold text-muted-foreground font-sans">Blocked</span>
                       </h4>
-                      <p className="text-xs text-foreground/40">Filtered in real-time</p>
+                      <p className="text-xs text-muted-foreground font-medium">Filtered in real-time</p>
                     </div>
-                    <div className="p-3 rounded-xl border border-border text-foreground/60 shrink-0">
+                    <div className="p-3 rounded-xl border border-border text-foreground/80 shrink-0">
                       <ShieldAlert className="h-5 w-5" />
                     </div>
                   </CardContent>
@@ -835,7 +918,7 @@ export default function SecurityAuditDashboard() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-5 h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                       <AreaChart data={latencyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorOcr" x1="0" y1="0" x2="0" y2="1">
@@ -880,8 +963,9 @@ export default function SecurityAuditDashboard() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-5 h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                       <BarChart data={dbOperationsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                         <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" fontSize={9} />
                         <YAxis stroke="rgba(255,255,255,0.3)" fontSize={9} />
@@ -948,9 +1032,9 @@ export default function SecurityAuditDashboard() {
             >
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <SummaryCard label="Total Sessions" value={loginEvents.length} icon={LogIn} color="bg-primary/10 text-primary border-primary/20" />
-                <SummaryCard label="Unique Users" value={new Set(loginEvents.map((e: any) => e.uid)).size} icon={User} color="bg-primary/10 text-accent border-primary/20" />
-                <SummaryCard label="Desktop Sessions" value={loginEvents.filter((e: any) => e.device === 'Desktop').length} icon={Monitor} color="bg-emerald-500/10 text-accent border-emerald-500/20" />
-                <SummaryCard label="Mobile Sessions" value={loginEvents.filter((e: any) => e.device === 'Mobile').length} icon={Smartphone} color="bg-amber-500/10 text-amber-400 border-amber-500/20" />
+                <SummaryCard label="Unique Users" value={new Set(loginEvents.map((e: any) => e.uid)).size} icon={User} color="bg-primary/10 text-primary border-primary/20" />
+                <SummaryCard label="Desktop Sessions" value={loginEvents.filter((e: any) => e.device === 'Desktop').length} icon={Monitor} color="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" />
+                <SummaryCard label="Mobile Sessions" value={loginEvents.filter((e: any) => e.device === 'Mobile').length} icon={Smartphone} color="bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-500/20" />
               </div>
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-foreground/30" />
@@ -995,9 +1079,9 @@ export default function SecurityAuditDashboard() {
             >
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <SummaryCard label="Total Sessions" value={sessions.length} icon={Monitor} color="bg-primary/10 text-primary border-primary/20" />
-                <SummaryCard label="Active" value={sessions.filter((s: any) => s.status === "active").length} icon={CheckCircle} color="bg-emerald-500/10 text-accent border-emerald-500/20" />
-                <SummaryCard label="Revoked" value={sessions.filter((s: any) => s.status === "revoked").length} icon={Lock} color="bg-rose-500/10 text-rose-400 border-rose-500/20" />
-                <SummaryCard label="Unique Users" value={new Set(sessions.map((s: any) => s.uid)).size} icon={User} color="bg-violet-500/10 text-violet-400 border-violet-500/20" />
+                <SummaryCard label="Active" value={sessions.filter((s: any) => s.status === "active").length} icon={CheckCircle} color="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" />
+                <SummaryCard label="Revoked" value={sessions.filter((s: any) => s.status === "revoked").length} icon={Lock} color="bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-500/20" />
+                <SummaryCard label="Unique Users" value={new Set(sessions.map((s: any) => s.uid)).size} icon={User} color="bg-violet-500/10 text-violet-500 dark:text-violet-400 border-violet-500/20" />
               </div>
 
               <div className="relative">
@@ -1100,8 +1184,8 @@ export default function SecurityAuditDashboard() {
             >
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <SummaryCard label="Total Requests" value={reactivations.length} icon={RefreshCw} color="bg-primary/10 text-primary border-primary/20" />
-                <SummaryCard label="Pending" value={reactivations.filter((r: any) => r.status === "pending").length} icon={Clock} color="bg-amber-500/10 text-amber-400 border-amber-500/20" />
-                <SummaryCard label="Approved" value={reactivations.filter((r: any) => r.status === "approved").length} icon={CheckCircle} color="bg-emerald-500/10 text-accent border-emerald-500/20" />
+                <SummaryCard label="Pending" value={reactivations.filter((r: any) => r.status === "pending").length} icon={Clock} color="bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-500/20" />
+                <SummaryCard label="Approved" value={reactivations.filter((r: any) => r.status === "approved").length} icon={CheckCircle} color="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" />
               </div>
 
               <Card className="bg-card border border-border shadow-sm rounded-lg overflow-hidden border-border">
@@ -1122,32 +1206,32 @@ export default function SecurityAuditDashboard() {
                       {reactivations.map((req: any) => (
                         <div key={req.id} className="flex items-start gap-4 px-5 py-4 hover: transition-colors">
                           <div className={cn("p-2.5 rounded-lg border shrink-0",
-                            req.status === "pending" ? "bg-amber-500/10 border-amber-500/20 text-amber-400" :
-                            req.status === "approved" ? "bg-emerald-500/10 border-emerald-500/20 text-accent" :
-                            "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                            req.status === "pending" ? "bg-amber-500/10 border-amber-500/20 text-amber-500 dark:text-amber-400" :
+                            req.status === "approved" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" :
+                            "bg-rose-500/10 border-rose-500/20 text-rose-500 dark:text-rose-400"
                           )}>
                             <RefreshCw className="h-4 w-4" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-xs font-bold text-foreground">{req.fullName || "Unknown"}</span>
-                              <span className="text-xs font-mono text-foreground/30">{req.email}</span>
+                              <span className="text-xs font-mono text-muted-foreground">{req.email}</span>
                               <Badge className={cn("text-xs font-bold uppercase tracking-wider shadow-none border",
-                                req.status === "pending" ? "bg-amber-500/10 text-amber-300 border-amber-500/20" :
-                                req.status === "approved" ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20" :
-                                "bg-rose-500/10 text-rose-300 border-rose-500/20"
+                                req.status === "pending" ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20" :
+                                req.status === "approved" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20" :
+                                "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20"
                               )}>{req.status}</Badge>
                             </div>
-                            <p className="text-xs text-foreground/50 mt-1 leading-relaxed">
-                              <strong className="text-foreground/60">Reason:</strong> {req.reason || "No reason provided."}
+                            <p className="text-xs text-foreground/75 mt-1 leading-relaxed">
+                              <strong className="text-foreground">Reason:</strong> {req.reason || "No reason provided."}
                             </p>
-                            <p className="text-xs text-foreground/25 mt-1.5 font-mono">{formatTimestamp(req.createdAt)}</p>
+                            <p className="text-xs text-muted-foreground mt-1.5 font-mono">{formatTimestamp(req.createdAt)}</p>
                           </div>
                           {req.status === "pending" && (
                             <div className="flex gap-2 shrink-0">
                               <button
                                 onClick={() => handleApproveReactivation(req)}
-                                className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-xs font-bold text-accent transition-colors uppercase cursor-pointer"
+                                className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-xs font-bold text-emerald-600 dark:text-emerald-400 transition-colors uppercase cursor-pointer"
                               >
                                 Approve
                               </button>
@@ -1187,7 +1271,7 @@ export default function SecurityAuditDashboard() {
                   <button
                     onClick={handleSaveMatrix}
                     disabled={isSavingMatrix}
-                    className="px-4 py-1.5 rounded-lg bg-primary hover:bg-primary text-xs font-bold text-foreground transition-colors uppercase cursor-pointer shadow-sm disabled:opacity-50"
+                    className="px-4 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-xs font-bold text-primary-foreground transition-colors uppercase cursor-pointer shadow-sm disabled:opacity-50"
                   >
                     {isSavingMatrix ? "Syncing..." : "Save Matrix"}
                   </button>
@@ -1333,7 +1417,7 @@ export default function SecurityAuditDashboard() {
                       <button
                         type="submit"
                         disabled={isSubmittingDelegation}
-                        className="w-full h-9 rounded-xl bg-primary hover:bg-primary text-xs font-bold text-foreground transition-colors uppercase cursor-pointer shadow-sm disabled:opacity-50"
+                        className="w-full h-9 rounded-xl bg-primary hover:bg-primary/90 text-xs font-bold text-primary-foreground transition-colors uppercase cursor-pointer shadow-sm disabled:opacity-50"
                       >
                         {isSubmittingDelegation ? "Creating..." : "Create Delegation"}
                       </button>
@@ -1392,6 +1476,163 @@ export default function SecurityAuditDashboard() {
                   </CardContent>
                 </Card>
               </div>
+            </motion.div>
+          )}
+          {activeTab === "access-review" && (
+            <motion.div
+
+              key="access-review"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15 }}
+              className="space-y-6"
+            >
+              {/* Access Review Summary Header */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card p-5 rounded-xl border border-border">
+                <div>
+                  <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-emerald-400" />
+                    Quarterly User Access Review & Privilege Audit (SOC 2 CC6.1)
+                  </h3>
+                  <p className="text-xs text-foreground/50 mt-1 max-w-2xl">
+                    Mandatory quarterly verification of all accounts holding elevated permissions (<code className="text-primary/80">founder</code>, <code className="text-primary/80">system_admin</code>, <code className="text-primary/80">c_suite</code>, <code className="text-primary/80">manager</code>). Ensures compliance with Principle of Least Privilege.
+                  </p>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    onClick={exportAccessReviewCsv}
+                    variant="outline"
+                    className="h-9 text-xs font-bold border-border hover:bg-secondary flex items-center gap-2 cursor-pointer"
+                  >
+                    <Download className="h-3.5 w-3.5 text-primary" />
+                    Export CSV
+                  </Button>
+                  <Button
+                    onClick={handleQuarterlySignoff}
+                    disabled={isRecordingSignoff}
+                    className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 cursor-pointer"
+                  >
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    {isRecordingSignoff ? "Recording Sign-off..." : "Record Quarterly Sign-off"}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Metrics Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="bg-card border border-border shadow-sm rounded-lg">
+                  <CardContent className="p-4">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total Privileged</p>
+                    <h4 className="text-2xl font-black text-foreground font-mono mt-1">{privilegedUsers.length}</h4>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">Elevated role holders</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-card border border-border shadow-sm rounded-lg">
+                  <CardContent className="p-4">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Founders & Admins</p>
+                    <h4 className="text-2xl font-black text-red-500 dark:text-red-400 font-mono mt-1">
+                      {privilegedUsers.filter(u => u.role === "founder" || u.role === "system_admin").length}
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">Apex access tier</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-card border border-border shadow-sm rounded-lg">
+                  <CardContent className="p-4">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Active Status</p>
+                    <h4 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-1">
+                      {privilegedUsers.filter(u => u.isActive !== false).length}
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">Eligible for sign-in</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-card border border-border shadow-sm rounded-lg">
+                  <CardContent className="p-4">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Next Audit Due</p>
+                    <h4 className="text-lg font-black text-primary font-mono mt-1">Quarterly</h4>
+                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">Schedule on track</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Privileged Users Table */}
+              <Card className="bg-card border border-border shadow-sm rounded-lg overflow-hidden">
+                <CardHeader className="border-b border-border p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <CardTitle className="text-xs uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-2">
+                    <User className="h-3.5 w-3.5" />
+                    Privileged Account Register ({privilegedUsers.length})
+                  </CardTitle>
+                  <div className="w-full sm:w-64">
+                    <Input
+                      placeholder="Search privileged users..."
+                      value={accessReviewSearch}
+                      onChange={e => setAccessReviewSearch(e.target.value)}
+                      className="h-8 text-xs bg-background border-border"
+                    />
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead className="bg-muted/50 border-b border-border text-muted-foreground uppercase font-mono tracking-wider text-[11px]">
+                        <tr>
+                          <th className="p-3 pl-4">Employee</th>
+                          <th className="p-3">Assigned Role</th>
+                          <th className="p-3">Department</th>
+                          <th className="p-3">Last Sign-in IP</th>
+                          <th className="p-3">Status</th>
+                          <th className="p-3 pr-4">Review Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {privilegedUsers
+                          .filter(u => {
+                            if (!accessReviewSearch) return true;
+                            const term = accessReviewSearch.toLowerCase();
+                            return (
+                              (u.fullName || "").toLowerCase().includes(term) ||
+                              (u.email || "").toLowerCase().includes(term) ||
+                              (u.role || "").toLowerCase().includes(term) ||
+                              (u.department || "").toLowerCase().includes(term)
+                            );
+                          })
+                          .map(u => (
+                            <tr key={u.id} className="hover:bg-muted/30 transition-colors">
+                              <td className="p-3 pl-4">
+                                <div className="font-bold text-foreground">{u.fullName || "Unnamed User"}</div>
+                                <div className="text-[11px] font-mono text-muted-foreground">{u.email}</div>
+                              </td>
+                              <td className="p-3">
+                                <Badge className={cn("text-[10px] font-bold uppercase tracking-wider shadow-none border",
+                                  u.role === "founder" ? "bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/25" :
+                                  u.role === "system_admin" ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25" :
+                                  u.role === "c_suite" ? "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/25" :
+                                  "bg-primary/10 text-primary border-primary/25"
+                                )}>
+                                  {u.role}
+                                </Badge>
+                              </td>
+                              <td className="p-3 text-foreground font-medium">{u.department || "OPERATIONS"}</td>
+                              <td className="p-3 font-mono text-muted-foreground">{u.lastLoginIP || "—"}</td>
+                              <td className="p-3">
+                                <Badge className={cn("text-[10px] font-bold uppercase tracking-wider shadow-none border",
+                                  u.isActive !== false ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20" : "bg-rose-500/10 text-rose-300 border-rose-500/20"
+                                )}>
+                                  {u.isActive !== false ? "Active" : "Deactivated"}
+                                </Badge>
+                              </td>
+                              <td className="p-3 pr-4">
+                                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                                  <CheckCircle className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" /> Validated
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
           )}
         </AnimatePresence>

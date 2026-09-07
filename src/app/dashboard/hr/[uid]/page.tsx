@@ -85,8 +85,6 @@ export default function EmployeeProfile() {
   const { uid } = useParams();
   const router = useRouter();
   const { user, role } = useAuth();
-  const adminEmailsEnv = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
-  const adminEmails = adminEmailsEnv.split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
   const [employee, setEmployee] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -607,7 +605,7 @@ export default function EmployeeProfile() {
               <div className="flex items-center gap-3">
                 <h1 className="text-xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
                   {employee.fullName}
-                  {employee.email && adminEmails.includes(employee.email.toLowerCase().trim()) && (
+                  {employee.role && (employee.role === 'founder' || employee.role === 'system_admin' || employee.role === 'system_administrator') && (
                     <span title="Super Admin Override Locked">
                       <Shield className="h-4 w-4 text-primary fill-blue-500/15" />
                     </span>

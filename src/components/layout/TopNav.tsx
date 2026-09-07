@@ -120,8 +120,8 @@ export function TopNav() {
 
   return (
     <>
-      <header className="h-16 border-b border-border bg-card flex items-center justify-between pl-16 lg:pl-8 pr-4 lg:pr-8 z-40 sticky top-0 text-foreground transition-colors">
-        <div className="flex items-center flex-1 gap-4 lg:gap-8">
+      <header className="h-16 border-b border-border bg-card flex items-center justify-between px-4 sm:px-6 lg:px-8 z-40 sticky top-0 text-foreground transition-colors">
+        <div className="flex items-center flex-1 gap-3 sm:gap-4 lg:gap-8 min-w-0">
           
           <div className="hidden lg:block">
             <h2 className="text-sm font-semibold text-foreground tracking-tight">
@@ -132,6 +132,7 @@ export function TopNav() {
             </p>
           </div>
 
+          {/* Desktop & Tablet Search Input */}
           <button 
             onClick={() => setCmdOpen(true)}
             className="hidden md:flex relative w-full max-w-sm items-center gap-2 rounded-xl bg-card border border-border shadow-sm px-4 py-2 text-xs text-muted-foreground/80 hover:text-foreground hover:border-border transition-all cursor-text group"
@@ -142,20 +143,29 @@ export function TopNav() {
               <span className="text-xs">⌘</span>K
             </kbd>
           </button>
+
+          {/* Mobile Search Icon Button (< md) */}
+          <button 
+            onClick={() => setCmdOpen(true)}
+            className="md:hidden flex items-center justify-center w-9 h-9 rounded-xl bg-secondary/80 border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer shadow-sm shrink-0" 
+            aria-label="Search Workspace"
+          >
+            <Search className="h-4 w-4" />
+          </button>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
           {/* Dynamic Role Switcher for Founders / Admins */}
           {(user?.role === "founder" || user?.role === "system_admin") && (
-            <div className="flex items-center gap-1.5 bg-secondary hover:bg-secondary/80 border border-border rounded-xl px-2.5 py-1.5 transition-all text-foreground shadow-sm">
-              <span className="text-xs uppercase font-bold text-primary dark:text-primary tracking-wider">Simulate:</span>
+            <div className="flex items-center gap-1 sm:gap-1.5 bg-secondary hover:bg-secondary/80 border border-border rounded-xl px-2 py-1 sm:px-2.5 sm:py-1.5 transition-all text-foreground shadow-sm">
+              <span className="hidden sm:inline text-xs uppercase font-bold text-primary dark:text-primary tracking-wider">Simulate:</span>
               <select
                 value={simulatedRole || user?.role || "founder"}
                 onChange={(e) => {
                   const val = e.target.value;
                   setSimulatedRole(val === user?.role ? null : val);
                 }}
-                className="bg-transparent text-xs font-bold text-foreground border-0 outline-none focus:ring-0 cursor-pointer pr-1 py-0 scrollbar-hide select-none max-w-[130px] overflow-hidden truncate"
+                className="bg-transparent text-xs font-bold text-foreground border-0 outline-none focus:ring-0 cursor-pointer pr-1 py-0 scrollbar-hide select-none max-w-[85px] sm:max-w-[130px] overflow-hidden truncate"
                 style={{
                   colorScheme: theme
                 }}
@@ -174,7 +184,7 @@ export function TopNav() {
           {/* Theme Toggler */}
           <button 
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="text-muted-foreground hover:text-foreground p-2 rounded-xl hover:bg-secondary/80 border border-transparent hover:border-border transition-all cursor-pointer"
+            className="text-muted-foreground hover:text-foreground p-1.5 sm:p-2 rounded-xl hover:bg-secondary/80 border border-transparent hover:border-border transition-all cursor-pointer"
             title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
           >
             {theme === "light" ? <Moon className="h-4.5 w-4.5" /> : <Sun className="h-4.5 w-4.5" />}

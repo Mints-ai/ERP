@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Megaphone, Pin, CheckCircle2, AlertCircle } from "lucide-react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 const DEPARTMENTS = [
   "OPERATIONS",
@@ -208,7 +209,7 @@ export default function Announcements() {
         
         {isManagerOrAbove && (
           <Dialog open={isPostOpen} onOpenChange={setIsPostOpen}>
-            <DialogTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold h-10 px-5 bg-primary hover:bg-blue-700 text-foreground shadow-md transition-all hover:translate-y-[-1px]">
+            <DialogTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold h-10 px-5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:translate-y-[-1px] cursor-pointer">
               Post Announcement
             </DialogTrigger>
             <DialogContent className="max-w-3xl bg-background border-border rounded-2xl shadow-xl text-foreground">
@@ -283,7 +284,7 @@ export default function Announcements() {
               
               <DialogFooter className="gap-2 sm:gap-0">
                 <Button variant="outline" onClick={() => setIsPostOpen(false)} className="rounded-xl border-border text-foreground bg-transparent hover:">Cancel</Button>
-                <Button onClick={handlePost} disabled={isSubmitting || !title} className="bg-primary hover:bg-blue-700 text-foreground rounded-xl font-semibold">
+                <Button onClick={handlePost} disabled={isSubmitting || !title} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold cursor-pointer">
                   {isSubmitting ? "Posting..." : "Publish Announcement"}
                 </Button>
               </DialogFooter>
@@ -341,7 +342,7 @@ export default function Announcements() {
                 </CardHeader>
                 <CardContent className="pt-4">
                   <div className="prose prose-invert prose-sm max-w-none text-foreground/80" 
-                       dangerouslySetInnerHTML={{ __html: ann.content }} />
+                       dangerouslySetInnerHTML={{ __html: sanitizeHtml(ann.content || '') }} />
                 </CardContent>
               </Card>
             );

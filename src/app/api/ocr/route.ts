@@ -1,48 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { requireAuth } from "@/lib/serverAuth";
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
-/**
- * POST /api/ocr
- *
- * AI-powered receipt scanner using OpenAI Vision (gpt-4o-mini).
- * Falls back to a structured error with a Discord telemetry alert when the service is unavailable.
- *
- * Body: { imageBase64: string }
- * Returns: { success: true, data: { amount, date, vendor } }
- */
+const MAX_IMAGE_BASE64_LENGTH = 7 * 1024 * 1024; // Approx 5MB image
+
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const limit = rateLimit(`ocr_${ip}`, { windowMs: 60 * 1000, max: 5 });
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: "Too many OCR requests. Please wait a minute before scanning again." },
+        { status: 429 }
+      );
+    }
+
+    const { user, response: authResponse } = await requireAuth(req);
+    if (!user) {
+      return authResponse!;
+    }
+
     const { imageBase64 } = await req.json();
 
     if (!imageBase64) {
       return NextResponse.json({ error: "No image provided" }, { status: 400 });
     }
 
-    // Check if API key is configured — return a degraded-mode response instead of crashing
+    if (typeof imageBase64 !== 'string' || imageBase64.length > MAX_IMAGE_BASE64_LENGTH) {
+      return NextResponse.json({ error: "Image file exceeds maximum allowable size (5MB)." }, { status: 413 });
+    }
+
+    // Check if API key is configured
     if (!process.env.OPENAI_API_KEY) {
       console.warn("[ocr] OPENAI_API_KEY is not set — OCR service unavailable.");
-
-      // Fire a Discord alert to notify the engineering team
-      try {
-        await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/discord-alert`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            eventType: "ocr_unavailable",
-            embeds: [{
-              title: "🔴 OCR Service Unavailable",
-              description: "A user attempted to scan a receipt but `OPENAI_API_KEY` is not configured on the server.",
-              color: 0xe53e3e,
-              timestamp: new Date().toISOString(),
-              footer: { text: "Mints Global ERP · Finance Module" }
-            }]
-          }),
-        });
-      } catch (_) { /* non-blocking */ }
-
       return NextResponse.json(
         {
-          error: "OCR service is not configured. Please add OPENAI_API_KEY to your .env.local file.",
+          error: "OCR service is not configured. Please contact the administrator.",
           degraded: true,
         },
         { status: 503 }
@@ -52,7 +46,7 @@ export async function POST(req: NextRequest) {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Fast, cost-efficient vision model
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
@@ -85,32 +79,12 @@ export async function POST(req: NextRequest) {
       throw new Error("No content received from OpenAI Vision");
     }
 
-    // Strip markdown code fences if the model returns them despite instructions
     const cleanContent = content.replace(/```json/g, "").replace(/```/g, "").trim();
     const extractedData = JSON.parse(cleanContent);
 
     return NextResponse.json({ success: true, data: extractedData });
   } catch (error: any) {
     console.error("[ocr] Error processing receipt:", error);
-
-    // Dispatch a Discord alert for any unexpected failures
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/discord-alert`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          eventType: "ocr_error",
-          embeds: [{
-            title: "⚠️ OCR Processing Error",
-            description: `Receipt scan failed with: \`${error.message}\``,
-            color: 0xed8936,
-            timestamp: new Date().toISOString(),
-            footer: { text: "Mints Global ERP · Finance Module" }
-          }]
-        }),
-      });
-    } catch (_) { /* non-blocking */ }
-
     return NextResponse.json(
       { error: error.message || "Failed to process receipt" },
       { status: 500 }

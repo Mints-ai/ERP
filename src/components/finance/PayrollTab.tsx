@@ -70,7 +70,7 @@ export function PayrollTab({ employeesList, user }: PayrollTabProps) {
                         <td className="font-bold text-foreground flex items-center gap-2.5 py-3">
                           <Avatar className="h-7 w-7 border border-border">
                             <AvatarImage src={emp.profilePhotoURL} />
-                            <AvatarFallback className="bg-primary text-xs font-bold text-foreground">
+                            <AvatarFallback className="bg-primary text-xs font-bold text-primary-foreground">
                               {emp.fullName ? emp.fullName.split(" ").map((n: any) => n[0]).join("") : "EM"}
                             </AvatarFallback>
                           </Avatar>
@@ -105,7 +105,7 @@ export function PayrollTab({ employeesList, user }: PayrollTabProps) {
                 <div className="flex items-center gap-3 border border-border p-3 rounded-xl">
                   <Avatar className="h-10 w-10 border border-border">
                     <AvatarImage src={selectedEmpPayroll.profilePhotoURL} />
-                    <AvatarFallback className="bg-primary text-xs font-bold text-foreground">
+                    <AvatarFallback className="bg-primary text-xs font-bold text-primary-foreground">
                       {selectedEmpPayroll.fullName ? selectedEmpPayroll.fullName.split(" ").map((n: any) => n[0]).join("") : "EM"}
                     </AvatarFallback>
                   </Avatar>
@@ -188,7 +188,7 @@ export function PayrollTab({ employeesList, user }: PayrollTabProps) {
 
                     await logPayslipGeneration(user?.uid, selectedEmpPayroll.id, selectedEmpPayroll.fullName, payrollPeriod, net);
                   }}
-                  className="w-full bg-primary hover:bg-primary text-foreground font-bold h-10 py-0 flex items-center justify-center gap-1.5 shadow-glow-indigo rounded-xl cursor-pointer"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-10 py-0 flex items-center justify-center gap-1.5 shadow-sm rounded-xl cursor-pointer"
                 >
                   <FileDown className="h-4 w-4" /> Download Official Payslip
                 </Button>

@@ -134,18 +134,24 @@ export const subscribeToCompanySettings = (callback: (currency: string) => void)
     if (docSnap.exists()) {
       callback(docSnap.data().currency || "USD");
     }
+  }, (err) => {
+    console.warn("Error subscribing to company settings:", err);
   });
 };
 
 export const subscribeToClients = (callback: (clients: any[]) => void) => {
   return onSnapshot(collection(db, "clients"), (snap) => {
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  }, (err) => {
+    console.warn("Error subscribing to clients:", err);
   });
 };
 
 export const subscribeToEmployees = (callback: (employees: any[]) => void) => {
   return onSnapshot(collection(db, "employees"), (snap) => {
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  }, (err) => {
+    console.warn("Error subscribing to employees:", err);
   });
 };
 
@@ -153,6 +159,8 @@ export const subscribeToInvoices = (callback: (invoices: any[]) => void) => {
   const q = query(collection(db, "invoices"), orderBy("createdAt", "desc"));
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  }, (err) => {
+    console.warn("Error subscribing to invoices:", err);
   });
 };
 
@@ -160,6 +168,8 @@ export const subscribeToExpenses = (callback: (expenses: any[]) => void) => {
   const q = query(collection(db, "expenses"), orderBy("createdAt", "desc"));
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  }, (err) => {
+    console.warn("Error subscribing to expenses:", err);
   });
 };
 

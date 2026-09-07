@@ -22,6 +22,7 @@ import { Settings, Users, Building2, Calendar, ShieldAlert, UploadCloud, Plus, T
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { sanitizeCsvCell } from "@/lib/securityUtils";
 
 const PERMISSION_LABELS: Record<string, string> = {
   VIEW_ALL_EMPLOYEES:   "View All Employee Records",
@@ -557,13 +558,13 @@ export default function SettingsDashboard() {
           ? new Date(log.createdAt.seconds * 1000).toLocaleString() 
           : "Just now";
         return [
-          log.id,
-          log.actorId,
-          `"${actor.name.replace(/"/g, '""')}"`,
-          log.action,
-          log.targetCollection || "system",
-          `"${desc.replace(/"/g, '""')}"`,
-          dateString
+          sanitizeCsvCell(log.id),
+          sanitizeCsvCell(log.actorId),
+          sanitizeCsvCell(actor.name),
+          sanitizeCsvCell(log.action),
+          sanitizeCsvCell(log.targetCollection || "system"),
+          sanitizeCsvCell(desc),
+          sanitizeCsvCell(dateString)
         ];
       });
 
@@ -767,21 +768,21 @@ export default function SettingsDashboard() {
                       </div>
 
                       {/* Criteria feedback list */}
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1.5 text-xs font-semibold text-muted-foreground">
-                        <div className={cn("flex items-center gap-1", newPassword.length >= 8 ? "text-accent" : "opacity-40")}>
-                          <div className={cn("w-1.5 h-1.5 rounded-full", newPassword.length >= 8 ? "bg-emerald-400" : "bg-muted-foreground/20")} />
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 pt-2 text-xs font-semibold">
+                        <div className={cn("flex items-center gap-1.5 transition-colors", newPassword.length >= 8 ? "text-emerald-700 dark:text-emerald-300 font-bold" : "text-muted-foreground/75")}>
+                          <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", newPassword.length >= 8 ? "bg-emerald-500" : "bg-muted-foreground/40")} />
                           At least 8 characters
                         </div>
-                        <div className={cn("flex items-center gap-1", /[a-z]/.test(newPassword) && /[A-Z]/.test(newPassword) ? "text-accent" : "opacity-40")}>
-                          <div className={cn("w-1.5 h-1.5 rounded-full", /[a-z]/.test(newPassword) && /[A-Z]/.test(newPassword) ? "bg-emerald-400" : "bg-muted-foreground/20")} />
+                        <div className={cn("flex items-center gap-1.5 transition-colors", /[a-z]/.test(newPassword) && /[A-Z]/.test(newPassword) ? "text-emerald-700 dark:text-emerald-300 font-bold" : "text-muted-foreground/75")}>
+                          <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", /[a-z]/.test(newPassword) && /[A-Z]/.test(newPassword) ? "bg-emerald-500" : "bg-muted-foreground/40")} />
                           Case mix (aA)
                         </div>
-                        <div className={cn("flex items-center gap-1", /\d/.test(newPassword) ? "text-accent" : "opacity-40")}>
-                          <div className={cn("w-1.5 h-1.5 rounded-full", /\d/.test(newPassword) ? "bg-emerald-400" : "bg-muted-foreground/20")} />
+                        <div className={cn("flex items-center gap-1.5 transition-colors", /\d/.test(newPassword) ? "text-emerald-700 dark:text-emerald-300 font-bold" : "text-muted-foreground/75")}>
+                          <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", /\d/.test(newPassword) ? "bg-emerald-500" : "bg-muted-foreground/40")} />
                           Contains number (0-9)
                         </div>
-                        <div className={cn("flex items-center gap-1", /[^A-Za-z0-9]/.test(newPassword) ? "text-accent" : "opacity-40")}>
-                          <div className={cn("w-1.5 h-1.5 rounded-full", /[^A-Za-z0-9]/.test(newPassword) ? "bg-emerald-400" : "bg-muted-foreground/20")} />
+                        <div className={cn("flex items-center gap-1.5 transition-colors", /[^A-Za-z0-9]/.test(newPassword) ? "text-emerald-700 dark:text-emerald-300 font-bold" : "text-muted-foreground/75")}>
+                          <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", /[^A-Za-z0-9]/.test(newPassword) ? "bg-emerald-500" : "bg-muted-foreground/40")} />
                           Special symbol (!@#)
                         </div>
                       </div>
@@ -803,7 +804,7 @@ export default function SettingsDashboard() {
                   {confirmPassword.length > 0 && (
                     <div className="flex items-center gap-1 text-xs font-bold">
                       {newPassword === confirmPassword ? (
-                        <span className="text-accent shadow-glow-emerald">✓ Passwords match</span>
+                        <span className="text-emerald-700 dark:text-emerald-300 font-bold">✓ Passwords match</span>
                       ) : (
                         <span className="text-rose-400">✗ Passwords do not match</span>
                       )}
@@ -816,7 +817,7 @@ export default function SettingsDashboard() {
                   <Button 
                     type="submit" 
                     disabled={updatingPassword}
-                    className="bg-primary hover:bg-blue-700 text-foreground font-bold rounded-xl h-10 px-6 shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl h-10 px-6 shadow-sm flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {updatingPassword ? (
                       <>
@@ -859,7 +860,7 @@ export default function SettingsDashboard() {
                   <div className="flex flex-col sm:flex-row gap-5 items-center">
                     <Avatar className="h-16 w-16 border border-border shadow-sm bg-secondary rounded-xl shrink-0">
                       <AvatarImage src={prefPhoto} />
-                      <AvatarFallback className="bg-primary text-foreground text-lg font-bold">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-lg font-bold">
                         {prefName ? prefName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : "U"}
                       </AvatarFallback>
                     </Avatar>
@@ -997,7 +998,7 @@ export default function SettingsDashboard() {
                 </div>
 
                 <div className="pt-6 border-t border-border flex justify-end">
-                  <Button onClick={handleSavePreferences} className="bg-primary hover:bg-blue-700 text-foreground shadow-md px-8 font-bold rounded-xl h-11">Save Preferences</Button>
+                  <Button onClick={handleSavePreferences} className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md px-8 font-bold rounded-xl h-11 cursor-pointer">Save Preferences</Button>
                 </div>
               </div>
             </div>
@@ -1011,7 +1012,7 @@ export default function SettingsDashboard() {
                   <h3 className="font-bold text-lg text-foreground">Team Accounts</h3>
                   <p className="text-sm text-muted-foreground">Manage roles and access for all staff.</p>
                 </div>
-                <Link href="/dashboard/hr/new" className="inline-flex items-center justify-center rounded-lg text-sm font-bold h-10 px-4 py-2 bg-primary hover:bg-blue-700 text-foreground shadow-md transition-colors">
+                <Link href="/dashboard/hr/new" className="inline-flex items-center justify-center rounded-lg text-sm font-bold h-10 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-colors cursor-pointer">
                   <Plus className="mr-2 h-4 w-4" /> Create Account
                 </Link>
               </div>
@@ -1108,7 +1109,7 @@ export default function SettingsDashboard() {
                           </div>
                           <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full",
                             selectedRole === key 
-                              ? "bg-primary text-foreground" 
+                              ? "bg-primary text-primary-foreground" 
                               : "bg-muted text-muted-foreground border border-border"
                           )}>
                             {count} {count === 1 ? "user" : "users"}
@@ -1149,7 +1150,7 @@ export default function SettingsDashboard() {
                             </div>
                             <div>
                               {hasAccess ? (
-                                <Badge className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-accent border border-emerald-500/20 font-bold text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+                                <Badge className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 font-bold text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                   Granted
                                 </Badge>
@@ -1253,7 +1254,7 @@ export default function SettingsDashboard() {
                 </div>
 
                 <div className="pt-6 flex justify-end">
-                  <Button onClick={handleSaveCompanySettings} disabled={savingCompany} className="bg-primary hover:bg-blue-700 text-foreground shadow-md px-8 font-bold rounded-xl h-11">
+                  <Button onClick={handleSaveCompanySettings} disabled={savingCompany} className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md px-8 font-bold rounded-xl h-11 cursor-pointer">
                     {savingCompany ? "Saving Changes..." : "Save Changes"}
                   </Button>
                 </div>
@@ -1288,7 +1289,7 @@ export default function SettingsDashboard() {
                       className="bg-background text-foreground border-border font-bold"
                     />
                   </div>
-                  <Button className="bg-primary hover:bg-blue-700 text-foreground shadow-md font-bold rounded-xl h-11 px-6" onClick={handleAddHoliday} disabled={!newHoliday.name || !newHoliday.date}>
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md font-bold rounded-xl h-11 px-6 cursor-pointer" onClick={handleAddHoliday} disabled={!newHoliday.name || !newHoliday.date}>
                     <Plus className="h-4 w-4 mr-2" /> Add Date
                   </Button>
                 </div>
@@ -1453,7 +1454,7 @@ export default function SettingsDashboard() {
                             <div key={log.id} className="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex items-start gap-4">
                               <Avatar className="h-10 w-10 shrink-0 border border-border">
                                 <AvatarImage src={actor.avatar} />
-                                <AvatarFallback className="bg-primary text-foreground font-bold text-sm">{actor.initials}</AvatarFallback>
+                                <AvatarFallback className="bg-primary text-primary-foreground font-bold text-sm">{actor.initials}</AvatarFallback>
                               </Avatar>
                               
                               <div className="flex-1 min-w-0">
@@ -1497,7 +1498,7 @@ export default function SettingsDashboard() {
                                 <div className="relative">
                                   <Avatar className="h-9 w-9 border border-border">
                                     <AvatarImage src={emp.profilePhotoURL} />
-                                    <AvatarFallback className="bg-primary text-foreground font-bold text-xs">{initials}</AvatarFallback>
+                                    <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">{initials}</AvatarFallback>
                                   </Avatar>
                                   <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white animate-pulse" />
                                 </div>
@@ -1642,7 +1643,7 @@ export default function SettingsDashboard() {
                           }
                         }}
                         disabled={savingWebhook}
-                        className="bg-primary hover:bg-blue-700 text-foreground font-bold cursor-pointer"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold cursor-pointer"
                       >
                         {savingWebhook ? "Saving..." : "Save Webhook Settings"}
                       </Button>

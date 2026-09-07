@@ -776,7 +776,7 @@ export function AttendanceHistory() {
                   type="button"
                   disabled={savingOverride}
                   onClick={handleSaveOverride}
-                  className="h-9 px-4 text-xs font-semibold bg-primary hover:bg-blue-700 text-foreground shadow-sm rounded-xl border-0 cursor-pointer flex items-center justify-center gap-1.5"
+                  className="h-9 px-4 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm rounded-xl border-0 cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   {savingOverride ? (
                     <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>

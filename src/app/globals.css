@@ -82,33 +82,33 @@
   --card-foreground: #f0f4ee;
   --popover: #121813;
   --popover-foreground: #f0f4ee;
-  --primary: #708238;
-  --primary-foreground: #fcfdfb;
+  --primary: #5c7430;
+  --primary-foreground: #ffffff;
   --secondary: #1c241e;
-  --secondary-foreground: #8fa87b;
+  --secondary-foreground: #9eb88d;
   --muted: #1c241e;
   --muted-foreground: #96a899;
   --accent: #1c241e;
   --accent-foreground: #f0f4ee;
   --destructive: #dc2626;
-  --destructive-foreground: #FFFFFF;
+  --destructive-foreground: #ffffff;
   --border: #253128;
   --input: #1c241e;
-  --ring: #708238;
-  --chart-1: #708238;
+  --ring: #5c7430;
+  --chart-1: #5c7430;
   --chart-2: #8fa87b;
-  --chart-3: #55663b;
+  --chart-3: #425522;
   --chart-4: #a3bfa2;
   --chart-5: #d97706;
   --radius: 8px;
   --sidebar: #121813;
   --sidebar-foreground: #f0f4ee;
-  --sidebar-primary: #708238;
-  --sidebar-primary-foreground: #fcfdfb;
+  --sidebar-primary: #5c7430;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #1c241e;
   --sidebar-accent-foreground: #f0f4ee;
   --sidebar-border: #253128;
-  --sidebar-ring: #708238;
+  --sidebar-ring: #5c7430;
 }
 
 html.light {
@@ -118,36 +118,43 @@ html.light {
   --color-blue-800: #cdd6cb;
   --color-blue-750: #b5c2b3;
   --color-blue-700: #9cb09b;
-  --color-blue-600: #708238; /* keep brand olive */
-  --color-blue-500: #55663b; /* darker brand olive for contrast */
-  --color-blue-400: #3b4729;
-  --color-blue-300: #222918;
+  --color-blue-600: #4a6326; /* keep brand forest olive */
+  --color-blue-500: #3b501e; /* darker brand olive for contrast */
+  --color-blue-400: #2c3c16;
+  --color-blue-300: #1d270e;
 
-  --background: #f5f7f4;
-  --foreground: #1a241b;
+  --background: #f8faf7;
+  --foreground: #141f16;
   --card: #ffffff;
-  --card-foreground: #1a241b;
+  --card-foreground: #141f16;
   --popover: #ffffff;
-  --popover-foreground: #1a241b;
-  --secondary: #e9ede8;
-  --secondary-foreground: #55663b;
-  --muted: #e1e7e0;
-  --muted-foreground: #596c5c;
-  --accent: #e9ede8;
-  --accent-foreground: #1a241b;
-  --border: #cdd6cb;
+  --popover-foreground: #141f16;
+  --primary: #4a6326;
+  --primary-foreground: #ffffff;
+  --secondary: #eef2eb;
+  --secondary-foreground: #385223;
+  --muted: #eef2eb;
+  --muted-foreground: #5a6e5b;
+  --accent: #e5ece0;
+  --accent-foreground: #141f16;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #d2ded0;
   --input: #ffffff;
-  --ring: #708238;
+  --ring: #4a6326;
 
   --sidebar: #ffffff;
-  --sidebar-foreground: #1a241b;
-  --sidebar-border: #cdd6cb;
-  --sidebar-accent: #e9ede8;
-  --sidebar-accent-foreground: #1a241b;
+  --sidebar-foreground: #141f16;
+  --sidebar-primary: #4a6326;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-border: #d2ded0;
+  --sidebar-accent: #eef2eb;
+  --sidebar-accent-foreground: #141f16;
+  --sidebar-ring: #4a6326;
 
-  --color-text-primary: #1a241b;
-  --color-text-secondary: #4a5c4d;
-  --color-text-muted: #738776;
+  --color-text-primary: #141f16;
+  --color-text-secondary: #3b4e3d;
+  --color-text-muted: #5a6e5b;
 }
 
 /* ─── Base ─────────────────────────────────────────── */
@@ -543,39 +550,10 @@ html.light .recharts-tooltip-wrapper .recharts-default-tooltip {
   color: var(--foreground) !important;
 }
 
-/* ─── Global Light Mode Color Utility Overrides ─── */
-html.light .text-white {
-  color: var(--foreground) !important;
-}
-html.light .text-white\/40 {
-  color: var(--color-text-muted) !important;
-}
-html.light .text-white\/50 {
-  color: var(--color-text-secondary) !important;
-}
-html.light .text-white\/60 {
-  color: var(--color-text-secondary) !important;
-}
-html.light .text-white\/70 {
-  color: var(--color-text-primary) !important;
-}
-html.light .text-white\/80 {
-  color: var(--color-text-primary) !important;
-}
-html.light .text-white\/90 {
-  color: var(--color-text-primary) !important;
-}
-html.light .text-white\/20 {
-  color: var(--color-text-muted) !important;
-  opacity: 0.65 !important;
-}
-html.light .text-white\/30 {
-  color: var(--color-text-muted) !important;
-  opacity: 0.8 !important;
-}
-html.light .text-white\/10 {
-  color: var(--color-text-muted) !important;
-  opacity: 0.45 !important;
+/* ─── Global Light Mode Utility Overrides ─── */
+/* In light mode, clamp raw white text ONLY when outside solid buttons, badges, and dark containers */
+html.light :not(.bg-primary):not(.btn-primary):not(.bg-destructive):not(.bg-black):not(.bg-blue-600):not(.bg-emerald-600):not(.bg-emerald-700):not(.bg-red-600):not(.bg-slate-900):not(.bg-slate-800):not([data-slot="button"]):not([class*="bg-primary"]):not([class*="btn-primary"]) > .text-white {
+  color: var(--foreground);
 }
 
 html.light .border-white\/10 {
@@ -643,61 +621,157 @@ html.light .bg-blue-900 {
 
 /* ─── Light Mode: Info & status banners ─── */
 html.light .bg-blue-950\/40 {
-  background-color: rgba(112,130,56,0.08) !important;
+  background-color: rgba(74, 99, 38, 0.08) !important;
 }
 html.light .bg-blue-950\/20 {
-  background-color: rgba(112,130,56,0.06) !important;
+  background-color: rgba(74, 99, 38, 0.06) !important;
 }
 html.light .bg-blue-950\/90 {
-  background-color: rgba(245,247,244,0.97) !important;
+  background-color: rgba(248, 250, 247, 0.97) !important;
 }
 
-/* ─── Light Mode: Chat inactive state buttons (slate-300 → muted-foreground) ─── */
+/* ─── Light Mode: Chat inactive state buttons ─── */
 html.light .text-slate-300 {
   color: var(--muted-foreground) !important;
 }
 html.light .bg-slate-500\/20 {
-  background-color: rgba(89,108,92,0.12) !important;
-}
-html.light .text-slate-300 {
-  color: var(--muted-foreground) !important;
+  background-color: rgba(90, 110, 91, 0.12) !important;
 }
 html.light .text-slate-100 {
   color: var(--foreground) !important;
 }
-html.light .text-blue-100 {
-  color: var(--primary-foreground) !important;
-}
 
-/* ─── Light Mode: Blue accent badges to olive ─── */
+/* ─── Light Mode: Blue accent badges to forest olive ─── */
 html.light .bg-blue-100 {
-  background-color: rgba(112,130,56,0.12) !important;
+  background-color: rgba(74, 99, 38, 0.12) !important;
 }
 html.light .text-blue-700 {
-  color: #55663b !important;
+  color: #3b501e !important;
 }
 html.light .border-blue-200 {
-  border-color: rgba(112,130,56,0.25) !important;
+  border-color: rgba(74, 99, 38, 0.25) !important;
 }
 
-/* ─── Light Mode: Success toasts adjust ─── */
+/* ─── Light Mode: Success / Toast adjustments ─── */
 html.light .bg-emerald-950\/70 {
-  background-color: rgba(16,185,129,0.1) !important;
+  background-color: rgba(16, 185, 129, 0.1) !important;
   color: #065f46 !important;
 }
 html.light .bg-amber-950\/70 {
-  background-color: rgba(245,158,11,0.1) !important;
+  background-color: rgba(245, 158, 11, 0.1) !important;
   color: #78350f !important;
 }
 html.light .bg-red-950\/70 {
-  background-color: rgba(239,68,68,0.1) !important;
+  background-color: rgba(239, 68, 68, 0.1) !important;
   color: #7f1d1d !important;
 }
 html.light .text-emerald-100 { color: #065f46 !important; }
 html.light .text-amber-100   { color: #78350f !important; }
 html.light .text-red-100     { color: #7f1d1d !important; }
 
-/* ─── Light Mode: Files page empty state ─── */
-html.light .text-slate-300 {
-  color: var(--muted-foreground) !important;
+/* ─── Global Contrast & Text Visibility Enhancements (WCAG AA Compliance) ─── */
+/* In dark mode, text-accent is bright sage green (#a3c98f) */
+.text-accent,
+[class*="text-accent"] {
+  color: #a3c98f !important;
 }
+/* In light mode, text-accent is rich forest olive (#385223) */
+html.light .text-accent,
+html.light [class*="text-accent"] {
+  color: #385223 !important;
+}
+
+/* Low-opacity text clamps for general content */
+html.light [class*="text-foreground/10"],
+html.light [class*="text-foreground/15"],
+html.light [class*="text-foreground/20"],
+html.light [class*="text-foreground/25"],
+html.light [class*="text-foreground/30"],
+html.light [class*="text-foreground/35"],
+html.light [class*="text-foreground/40"],
+html.light [class*="text-foreground/45"],
+html.light [class*="text-foreground/50"] {
+  color: #4a5c4d !important;
+}
+
+/* ─── Universal Button & Dark Container Text Contrast Guarantee ─── */
+/* All solid primary buttons, links, triggers, and active pills MUST render crisp light text in both light and dark modes */
+.bg-primary,
+button.bg-primary,
+a.bg-primary,
+.btn-primary,
+[data-slot="button"][data-variant="default"],
+[data-slot="button"]:not([data-variant]),
+.bg-destructive,
+button.bg-destructive,
+a.bg-destructive,
+[data-state="active"].bg-primary,
+[data-state="active"][class*="bg-primary"],
+.text-primary-foreground,
+html.light .text-primary-foreground {
+  color: #ffffff !important;
+}
+
+.bg-primary *,
+button.bg-primary *,
+a.bg-primary *,
+.btn-primary *,
+[data-slot="button"][data-variant="default"] *,
+[data-slot="button"]:not([data-variant]) *,
+.bg-destructive *,
+button.bg-destructive *,
+a.bg-destructive *,
+[data-state="active"].bg-primary *,
+[data-state="active"][class*="bg-primary"] * {
+  color: #ffffff !important;
+}
+
+html.light .bg-primary,
+html.light button.bg-primary,
+html.light a.bg-primary,
+html.light .btn-primary,
+html.light [data-slot="button"][data-variant="default"],
+html.light [data-slot="button"]:not([data-variant]),
+html.light .bg-destructive,
+html.light button.bg-destructive,
+html.light a.bg-destructive,
+html.light [data-state="active"].bg-primary,
+html.light [data-state="active"][class*="bg-primary"] {
+  color: #ffffff !important;
+}
+
+html.light .bg-primary *,
+html.light button.bg-primary *,
+html.light a.bg-primary *,
+html.light .btn-primary *,
+html.light [data-slot="button"][data-variant="default"] *,
+html.light [data-slot="button"]:not([data-variant]) *,
+html.light .bg-destructive *,
+html.light button.bg-destructive *,
+html.light a.bg-destructive *,
+html.light [data-state="active"].bg-primary *,
+html.light [data-state="active"][class*="bg-primary"] * {
+  color: #ffffff !important;
+}
+
+/* Low-opacity background tints retain colored accent text */
+.bg-primary\/5, .bg-primary\/10, .bg-primary\/15, .bg-primary\/20, .bg-primary\/25, .bg-primary\/30,
+button.bg-primary\/5, button.bg-primary\/10, button.bg-primary\/15, button.bg-primary\/20,
+a.bg-primary\/5, a.bg-primary\/10, a.bg-primary\/15, a.bg-primary\/20 {
+  color: var(--primary) !important;
+}
+.bg-primary\/5 *, .bg-primary\/10 *, .bg-primary\/15 *, .bg-primary\/20 *,
+.bg-primary\/25 *, .bg-primary\/30 *,
+button.bg-primary\/5 *, button.bg-primary\/10 *, button.bg-primary\/15 *, button.bg-primary\/20 *,
+a.bg-primary\/5 *, a.bg-primary\/10 *, a.bg-primary\/15 *, a.bg-primary\/20 * {
+  color: inherit !important;
+}
+
+html.light .bg-primary\/5, html.light .bg-primary\/10, html.light .bg-primary\/15, html.light .bg-primary\/20,
+html.light .bg-primary\/25, html.light .bg-primary\/30,
+html.light button.bg-primary\/5, html.light button.bg-primary\/10, html.light button.bg-primary\/15, html.light button.bg-primary\/20,
+html.light a.bg-primary\/5, html.light a.bg-primary\/10, html.light a.bg-primary\/15, html.light a.bg-primary\/20 {
+  color: #385223 !important;
+}
+
+

@@ -455,7 +455,7 @@ export default function ProjectDetail() {
                                   onClick={() => handleToggleTaskStatus(t.id, t.status)}
                                   className={cn("w-5 h-5 rounded-md border flex items-center justify-center transition-colors shrink-0 cursor-pointer",
                                     isTaskDone 
-                                      ? "bg-primary border-primary text-foreground" 
+                                      ? "bg-primary border-primary text-primary-foreground" 
                                       : "border-border/80 bg-transparent text-transparent"
                                   )}
                                 >

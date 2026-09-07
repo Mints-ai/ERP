@@ -163,7 +163,7 @@ export function GlobalTimer() {
   if (!user) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    <div className="fixed bottom-20 right-4 sm:right-6 lg:bottom-6 lg:right-6 z-40 flex flex-col items-end">
       <AnimatePresence>
         {isOpen && (
           <motion.div 
@@ -171,7 +171,7 @@ export function GlobalTimer() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="mb-4 bg-background/95 rounded-2xl shadow-xl border border-border overflow-hidden w-[320px]"
+            className="mb-4 bg-background/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border overflow-hidden w-[calc(100vw-32px)] sm:w-[320px] max-w-[320px]"
           >
             <div className="border-b border-border text-foreground p-3 flex justify-between items-center">
               <div className="flex items-center gap-2 font-bold text-sm">
@@ -256,7 +256,7 @@ export function GlobalTimer() {
       >
         {isRunning ? (
           <>
-            <Square className="w-4 h-4 fill-current text-muted-foreground" />
+            <Square className="w-4 h-4 fill-current text-primary-foreground" />
             <span className="font-mono text-primary-foreground">{formatTime(elapsedSeconds)}</span>
           </>
         ) : (

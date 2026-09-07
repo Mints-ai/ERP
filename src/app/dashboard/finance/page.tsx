@@ -103,10 +103,10 @@ export default function FinanceDashboard() {
 
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="mb-6 border border-border shadow-inner p-1 rounded-xl flex flex-wrap h-auto gap-2">
-            <TabsTrigger value="overview" className="text-xs py-1.5 px-4 font-bold rounded-lg text-foreground/40 data-[state=active]:bg-primary data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all cursor-pointer">Executive Summary</TabsTrigger>
-            <TabsTrigger value="invoices" className="text-xs py-1.5 px-4 font-bold rounded-lg text-foreground/40 data-[state=active]:bg-primary data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all cursor-pointer">Invoices</TabsTrigger>
-            <TabsTrigger value="expenses" className="text-xs py-1.5 px-4 font-bold rounded-lg text-foreground/40 data-[state=active]:bg-primary data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all cursor-pointer">Expenses</TabsTrigger>
-            <TabsTrigger value="payroll" className="text-xs py-1.5 px-4 font-bold rounded-lg text-foreground/40 data-[state=active]:bg-primary data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all cursor-pointer">Payroll & Payslips</TabsTrigger>
+            <TabsTrigger value="overview" className="text-xs py-1.5 px-4 font-bold rounded-lg text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all cursor-pointer">Executive Summary</TabsTrigger>
+            <TabsTrigger value="invoices" className="text-xs py-1.5 px-4 font-bold rounded-lg text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all cursor-pointer">Invoices</TabsTrigger>
+            <TabsTrigger value="expenses" className="text-xs py-1.5 px-4 font-bold rounded-lg text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all cursor-pointer">Expenses</TabsTrigger>
+            <TabsTrigger value="payroll" className="text-xs py-1.5 px-4 font-bold rounded-lg text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all cursor-pointer">Payroll & Payslips</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">

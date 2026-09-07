@@ -43,14 +43,10 @@ export default function CapacityPlanning() {
       const usersMap = new Map();
       const empsList: any[] = [];
       
-      const adminEmailsEnv = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
-      const adminEmails = adminEmailsEnv.split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
-      
       usersSnap.forEach(docSnap => {
         const d = { ...docSnap.data(), id: docSnap.id } as any;
         const emailLower = d.email?.toLowerCase().trim() || "";
         const isSysAdmin = emailLower === "systemadministrator@mintsglobal.ae" ||
-                           adminEmails.includes(emailLower) ||
                            d.role === "system_administrator" ||
                            d.role === "system_admin" ||
                            d.fullName === "System Administrator";
@@ -269,21 +265,21 @@ export default function CapacityPlanning() {
           <div className="flex p-1 rounded-xl border border-border">
             <button
               onClick={() => setActiveTab("capacity")}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${ activeTab === "capacity" ? "bg-primary text-foreground shadow-md shadow-indigo-600/20" : "text-foreground/50 hover:text-foreground" }`}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${ activeTab === "capacity" ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" : "text-muted-foreground hover:text-foreground" }`}
             >
               <Users className="h-3.5 w-3.5" />
               Resource Heatmap
             </button>
             <button
               onClick={() => setActiveTab("timesheet")}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${ activeTab === "timesheet" ? "bg-primary text-foreground shadow-md shadow-indigo-600/20" : "text-foreground/50 hover:text-foreground" }`}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${ activeTab === "timesheet" ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" : "text-muted-foreground hover:text-foreground" }`}
             >
               <FileSpreadsheet className="h-3.5 w-3.5" />
               Timesheet Matrix
             </button>
             <button
               onClick={() => setActiveTab("gantt")}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${ activeTab === "gantt" ? "bg-primary text-foreground shadow-md shadow-indigo-600/20" : "text-foreground/50 hover:text-foreground" }`}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${ activeTab === "gantt" ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" : "text-muted-foreground hover:text-foreground" }`}
             >
               <GanttChartSquare className="h-3.5 w-3.5" />
               Gantt Timeline

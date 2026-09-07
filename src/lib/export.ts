@@ -30,9 +30,17 @@ export const exportToExcel = async (data: any[], filename: string, sheetName: st
       };
     });
     
-    // Add data rows
+    // Add data rows with formula injection protection
     data.forEach(row => {
-      worksheet.addRow(row);
+      const sanitizedRow: Record<string, any> = {};
+      for (const [k, v] of Object.entries(row)) {
+        if (typeof v === 'string' && /^[=+\-@\t\r]/.test(v)) {
+          sanitizedRow[k] = `'${v}`;
+        } else {
+          sanitizedRow[k] = v;
+        }
+      }
+      worksheet.addRow(sanitizedRow);
     });
     
     // Make header row bold

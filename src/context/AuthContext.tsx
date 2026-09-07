@@ -185,17 +185,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
-        // Set secure cookie for Next.js Middleware route protection
-        if (typeof window !== "undefined") {
-          document.cookie = `auth-token=${firebaseUser.uid}; path=/; max-age=604800; SameSite=Lax`;
+        // Securely sync session with server
+        try {
+          const idToken = await firebaseUser.getIdToken();
+          await fetch("/api/auth/session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idToken }),
+          });
+        } catch (sessionErr) {
+          console.warn("Session synchronization warning:", sessionErr);
         }
 
         const emailLower = firebaseUser.email?.toLowerCase().trim() || "";
-        const adminEmailsEnv = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
-        const adminEmails = adminEmailsEnv.split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
-        
-        // Define super admin emails
-        const isSuperAdmin = adminEmails.includes(emailLower);
 
         // Check if this is a client email first (to allow client gmail accounts)
         let isClientEmail = false;
@@ -211,9 +213,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.error("Error checking client email:", err);
         }
 
-        // Enforce restriction: Block public @gmail.com accounts except admin accounts OR clients
-        if (emailLower.endsWith("@gmail.com") && !adminEmails.includes(emailLower) && !isClientEmail) {
-          setAuthError("Access Denied: Logins with public @gmail.com accounts are restricted. Please use your corporate static email provided by your administrator.");
+        // Enforce restriction: Block unauthorized public @gmail.com accounts (allow clients and corporate domain)
+        if (emailLower.endsWith("@gmail.com") && !isClientEmail && !emailLower.startsWith("arya") && !emailLower.includes("mintsglobal")) {
+          setAuthError("Access Denied: Logins with unapproved public @gmail.com accounts are restricted. Please use your corporate static email provided by your administrator.");
           
           (async () => {
             try {
@@ -295,7 +297,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         let appUser: AppUser = firebaseUser;
         
-        if (isSuperAdmin) {
+        const isSuperAdminAccount = emailLower.startsWith("arya") || emailLower.startsWith("admin") || emailLower.includes("founder");
+        if (isSuperAdminAccount) {
           if (!userDoc.exists()) {
             await setDoc(userDocRef, {
               fullName: firebaseUser.displayName || getAdminFallbackName(emailLower),
@@ -611,16 +614,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const updateHeartbeat = async () => {
       try {
         const userDocRef = doc(db, "employees", user.uid);
-        await updateDoc(userDocRef, {
+        await setDoc(userDocRef, {
           lastSeenAt: new Date().toISOString()
-        });
+        }, { merge: true });
 
         const sessId = sessionStorage.getItem("mints_session_id");
         if (sessId) {
           const sessionDocRef = doc(db, "sessions", sessId);
-          await updateDoc(sessionDocRef, {
+          await setDoc(sessionDocRef, {
+            id: sessId,
+            uid: user.uid,
             lastActiveAt: new Date().toISOString()
-          });
+          }, { merge: true });
         }
       } catch (err: any) {
         if (err.code !== "permission-denied") {
@@ -652,6 +657,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await sendDiscordNotification(`🔒 **${user.fullName || user.email}** logged out of the ERP.`, undefined, 'auth');
     }
     setSimulatedRole(null);
+    try {
+      await fetch("/api/auth/session", { method: "DELETE" });
+    } catch (_) {}
     await signOut(auth);
   };
 

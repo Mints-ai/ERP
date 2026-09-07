@@ -3,18 +3,25 @@ import { NextResponse } from 'next/server';
 
 import { addDays, isBefore } from 'date-fns';
 
+import { rateLimit, getClientIp } from '@/lib/rateLimit';
+
 // This is required to force Vercel to treat this as a dynamic endpoint for cron jobs
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-  // Validate authorization (Optional: Vercel Cron adds a CRON_SECRET header)
+  const ip = getClientIp(request);
+  const limit = rateLimit(`cron_${ip}`, { windowMs: 60 * 1000, max: 20 });
+  if (!limit.success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
+  // Mandatory CRON_SECRET authorization: fail closed if unset or mismatch
+  const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get('authorization');
-  if (
-    process.env.CRON_SECRET &&
-    authHeader !== `Bearer ${process.env.CRON_SECRET}`
-  ) {
-    return new NextResponse('Unauthorized', { status: 401 });
+
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized: CRON_SECRET is required and must match.' }, { status: 401 });
   }
 
   try {

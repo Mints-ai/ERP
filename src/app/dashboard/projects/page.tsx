@@ -121,8 +121,8 @@ export default function ProjectsList() {
               onClick={() => setView("kanban")}
               className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center transition-all cursor-pointer", 
                 view === "kanban" 
-                  ? "bg-primary text-foreground shadow-sm" 
-                  : "text-foreground/40 hover:text-foreground/80"
+                  ? "bg-primary text-primary-foreground shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               <Kanban className="w-3.5 h-3.5 mr-1.5" /> Board
@@ -131,8 +131,8 @@ export default function ProjectsList() {
               onClick={() => setView("table")}
               className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center transition-all cursor-pointer", 
                 view === "table" 
-                  ? "bg-primary text-foreground shadow-sm" 
-                  : "text-foreground/40 hover:text-foreground/80"
+                  ? "bg-primary text-primary-foreground shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               <ListIcon className="w-3.5 h-3.5 mr-1.5" /> List
@@ -141,8 +141,8 @@ export default function ProjectsList() {
               onClick={() => setView("timeline")}
               className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center transition-all cursor-pointer", 
                 view === "timeline" 
-                  ? "bg-primary text-foreground shadow-sm" 
-                  : "text-foreground/40 hover:text-foreground/80"
+                  ? "bg-primary text-primary-foreground shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               <Clock className="w-3.5 h-3.5 mr-1.5" /> Timeline

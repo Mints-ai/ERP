@@ -20,8 +20,6 @@ import { cn } from "@/lib/utils";
 
 export default function EmployeeDirectory() {
   const { role } = useAuth();
-  const adminEmailsEnv = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
-  const adminEmails = adminEmailsEnv.split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
