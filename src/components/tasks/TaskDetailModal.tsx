@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MessageSquare, Clock, Check, X, Paperclip, Plus, AlertCircle, FileText, Download, ShieldCheck, Users, CheckCircle, ListTodo } from "lucide-react";
+import { MessageSquare, Clock, Check, X, Paperclip, Plus, AlertCircle, FileText, Download, ShieldCheck, Users, CheckCircle, ListTodo, Target, Play, Send, LogOut } from "lucide-react";
 import { Task, TaskPriority, TaskRemark, TaskAttachment } from "@/types/task";
 import { useAuth } from "@/context/AuthContext";
 import { 
@@ -12,7 +12,9 @@ import {
   validateAttachmentFile,
   updateTask,
   updateTaskStatus,
-  submitTaskForReview
+  submitTaskForReview,
+  getSessionElapsedSeconds,
+  formatFocusDuration
 } from "@/lib/task-services";
 import { db, storage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -36,6 +38,8 @@ interface TaskDetailModalProps {
   onClose: () => void;
   employeesList: any[];
   onRecheckTrigger?: (task: Task) => void;
+  nowTick?: number;
+  onFocusAction?: (action: "start" | "resume" | "complete" | "exit", task: Task) => void;
 }
 
 export default function TaskDetailModal({ 
@@ -43,7 +47,9 @@ export default function TaskDetailModal({
   isOpen, 
   onClose, 
   employeesList,
-  onRecheckTrigger 
+  onRecheckTrigger,
+  nowTick = Date.now(),
+  onFocusAction
 }: TaskDetailModalProps) {
   const { user, role } = useAuth();
   const userRole = (role || "").toLowerCase();
@@ -292,13 +298,23 @@ export default function TaskDetailModal({
                     Start Task
                   </button>
                 )}
-                {isAssignee && task.status === "in_progress" && (
-                  <button
-                    onClick={handleSubmitReview}
-                    className="btn-ghost border border-amber-500/30 text-amber-500 hover:bg-amber-500/10 px-3 py-1 rounded text-xs font-bold flex items-center gap-1 cursor-pointer"
-                  >
-                    Submit for Review
-                  </button>
+                {isAssignee && task.status === "in_progress" && !task.focusSession && (
+                  <>
+                    <button
+                      onClick={handleSubmitReview}
+                      className="btn-ghost border border-amber-500/30 text-amber-500 hover:bg-amber-500/10 px-3 py-1 rounded text-xs font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      Submit for Review
+                    </button>
+                    {onFocusAction && (
+                      <button
+                        onClick={() => { onClose(); onFocusAction("start", task); }}
+                        className="btn-ghost border border-primary/40 text-primary hover:bg-primary/10 px-3 py-1 rounded text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Target className="w-3 h-3" /> Start Focus
+                      </button>
+                    )}
+                  </>
                 )}
 
                 {/* Manager / Assigner Decision Controls (Available across all stages) */}
@@ -324,6 +340,55 @@ export default function TaskDetailModal({
                 )}
               </div>
             </div>
+          )}
+
+          {/* Active Focus Session Banner */}
+          {task.focusSession && (
+            (() => {
+              const session = task.focusSession;
+              const elapsed = getSessionElapsedSeconds(session, nowTick);
+              const isMine = session.startedBy === user?.uid || (!session.startedBy && task.assignedTo === user?.uid);
+              const focuserName = employeesList?.find(e => e.id === session.startedBy)?.fullName || session.startedByName || "A teammate";
+
+              return (
+                <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+                      <Target className="w-4 h-4 animate-pulse" />
+                      Focus Session · {session.status === "running" ? "Active" : "Paused"} · {formatFocusDuration(elapsed)}
+                    </span>
+                    <span className="text-[11px] text-foreground/50">
+                      {isMine ? "Your active session" : `Run by ${focuserName}`}
+                    </span>
+                  </div>
+                  {isMine && onFocusAction && (
+                    <div className="flex items-center gap-2 pt-1 border-t border-primary/10">
+                      <button
+                        type="button"
+                        onClick={() => { onClose(); onFocusAction("resume", task); }}
+                        className="btn-primary bg-primary text-primary-foreground px-3 py-1 rounded text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Play className="w-3 h-3 fill-current" /> Resume Workspace
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { onClose(); onFocusAction("complete", task); }}
+                        className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-3 py-1 rounded text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Send className="w-3 h-3" /> Complete Task
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { onClose(); onFocusAction("exit", task); }}
+                        className="border border-rose-500/40 text-rose-400 hover:bg-rose-500/10 px-3 py-1 rounded text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <LogOut className="w-3 h-3" /> Exit Focus
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()
           )}
 
           {/* Description */}

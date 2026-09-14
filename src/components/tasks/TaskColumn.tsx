@@ -17,6 +17,8 @@ interface TaskColumnProps {
   currentUserId?: string;
   onQuickAction?: (action: "start" | "submit" | "approve" | "recheck", task: Task, e: React.MouseEvent) => void;
   canApprove?: boolean;
+  nowTick?: number;
+  onFocusAction?: (action: "resume" | "complete" | "exit", task: Task) => void;
 }
 
 export default function TaskColumn({ 
@@ -30,10 +32,12 @@ export default function TaskColumn({
   isDragDisabled = false,
   currentUserId,
   onQuickAction,
-  canApprove = false
+  canApprove = false,
+  nowTick,
+  onFocusAction
 }: TaskColumnProps) {
   return (
-    <div className="flex flex-col w-[300px] max-h-full rounded-2xl border border-border shadow-sm shrink-0">
+    <div className="flex flex-col w-full sm:w-[300px] max-h-full rounded-2xl border border-border shadow-sm shrink-0">
       <div className="p-3 border-b border-border rounded-t-2xl flex justify-between items-center shrink-0">
         <h3 className="font-bold text-xs text-foreground uppercase tracking-wider">{title}</h3>
         <Badge className="border border-border text-foreground/60 font-mono text-xs">
@@ -65,6 +69,8 @@ export default function TaskColumn({
                 currentUserId={currentUserId}
                 onQuickAction={onQuickAction}
                 canApprove={canApprove}
+                nowTick={nowTick}
+                onFocusAction={onFocusAction}
               />
             ))}
             {provided.placeholder}

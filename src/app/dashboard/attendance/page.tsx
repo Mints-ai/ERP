@@ -400,28 +400,35 @@ export default function AttendancePage() {
           <p className="text-foreground/40 mt-1">Track your daily working hours, break schedules, and overtime metrics live.</p>
         </div>
         
-        <div className="flex items-center gap-4 border border-border bg-card shadow-sm px-4 py-2 rounded-xl">
-          <CalendarIcon className="w-5 h-5 text-primary" />
-          <span className="font-semibold text-foreground/80">{formatDate(currentTime)}</span>
+        <div className="flex items-center gap-2.5 sm:gap-4 border border-border bg-card shadow-sm px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm">
+          <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
+          <span className="font-semibold text-foreground/80 truncate">
+            {mounted ? (
+              <>
+                <span className="hidden sm:inline">{formatDate(currentTime)}</span>
+                <span className="sm:hidden">{currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+              </>
+            ) : ""}
+          </span>
         </div>
       </div>
 
       <Tabs defaultValue="personal" className="w-full flex flex-col min-h-0">
         <TabsList className="mb-6 border border-border p-1 rounded-xl w-full sm:w-fit shrink-0 gap-1 text-foreground flex overflow-x-auto scrollbar-hide flex-nowrap max-w-full justify-start">
-          <TabsTrigger value="personal" className="px-4 py-2 rounded-lg text-sm font-semibold transition-all shrink-0">
+          <TabsTrigger value="personal" className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all shrink-0 whitespace-nowrap">
             My Tracker
           </TabsTrigger>
           {canAccess(role, "VIEW_ALL_EMPLOYEES") && (
-            <TabsTrigger value="company" className="px-4 py-2 rounded-lg text-sm font-semibold transition-all shrink-0">
+            <TabsTrigger value="company" className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all shrink-0 whitespace-nowrap">
               Company Live
             </TabsTrigger>
           )}
           {canAccess(role, "VIEW_ALL_EMPLOYEES") && (
-            <TabsTrigger value="corrections" className="px-4 py-2 rounded-lg text-sm font-semibold transition-all shrink-0">
+            <TabsTrigger value="corrections" className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all shrink-0 whitespace-nowrap">
               Correction Requests
             </TabsTrigger>
           )}
-          <TabsTrigger value="history" className="px-4 py-2 rounded-lg text-sm font-semibold transition-all shrink-0">
+          <TabsTrigger value="history" className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all shrink-0 whitespace-nowrap">
             {canAccess(role, "VIEW_ALL_EMPLOYEES") ? "All History" : "My History"}
           </TabsTrigger>
         </TabsList>

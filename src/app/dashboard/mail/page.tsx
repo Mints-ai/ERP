@@ -340,7 +340,7 @@ export default function SecureMail() {
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-120px)] lg:h-[calc(100vh-120px)] bg-background/40 border border-border rounded-2xl overflow-hidden text-foreground">
       
       {/* 1. Left Folders Navigation */}
-      <div className="w-full lg:w-56 border-b lg:border-b-0 lg:border-r border-border flex flex-col p-4 shrink-0">
+      <div className={cn("w-full lg:w-56 border-b lg:border-b-0 lg:border-r border-border flex flex-col p-4 shrink-0", selectedMail ? "hidden lg:flex" : "flex")}>
         <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
           <DialogTrigger 
             render={
@@ -560,7 +560,7 @@ export default function SecureMail() {
       </div>
 
       {/* 2. Middle Mail List Pane */}
-      <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-border flex flex-col shrink-0 h-[400px] lg:h-auto">
+      <div className={cn("w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-border flex flex-col shrink-0 lg:h-auto", selectedMail ? "hidden lg:flex" : "flex flex-1 min-h-[calc(100vh-280px)]")}>
         
         {/* Search & Priority Pills */}
         <div className="p-4 border-b border-border relative shrink-0 space-y-3">
@@ -673,13 +673,19 @@ export default function SecureMail() {
       </div>
 
       {/* 3. Right Mail Reader Pane */}
-      <div className="flex-1 flex flex-col min-h-[500px] lg:min-h-0">
+      <div className={cn("flex-1 flex flex-col min-h-[500px] lg:min-h-0", selectedMail ? "flex" : "hidden lg:flex")}>
         {selectedMail ? (
           <div className="flex-1 flex flex-col overflow-hidden">
             
             {/* Header controls */}
             <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                <button
+                  onClick={() => setSelectedMail(null)}
+                  className="lg:hidden btn-ghost h-8 py-0 px-2.5 text-xs uppercase font-bold flex items-center gap-1 cursor-pointer border-border hover:text-foreground mr-1"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" /> Back
+                </button>
                 <button
                   onClick={() => handleReplyMail(selectedMail)}
                   className="btn-ghost h-8 py-0 px-3.5 text-xs uppercase font-bold flex items-center gap-1 cursor-pointer border-border hover:text-foreground"

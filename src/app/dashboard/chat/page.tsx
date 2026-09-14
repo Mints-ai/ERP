@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { 
   Hash, Send, Image as ImageIcon, Smile, MoreVertical, MessageSquare, 
   Video, VideoOff, Mic, MicOff, Monitor, PhoneOff, Plus, Users, Building2, Search,
-  Copy, Check, Trash2, X, SmilePlus
+  Copy, Check, Trash2, X, SmilePlus, ChevronLeft
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -31,6 +31,12 @@ export default function Chat() {
   const [loadingChannels, setLoadingChannels] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [activeChannel, setActiveChannel] = useState<string>("");
+  const [mobileView, setMobileView] = useState<"channels" | "chat">("chat");
+
+  const handleSelectChannel = (channelId: string) => {
+    setActiveChannel(channelId);
+    setMobileView("chat");
+  };
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
@@ -401,7 +407,7 @@ export default function Chat() {
     );
 
     if (existing) {
-      setActiveChannel(existing.id);
+      handleSelectChannel(existing.id);
       setIsDMModalOpen(false);
       return;
     }
@@ -422,7 +428,7 @@ export default function Chat() {
         createdAt: serverTimestamp()
       });
 
-      setActiveChannel(docRef.id);
+      handleSelectChannel(docRef.id);
       setIsDMModalOpen(false);
     } catch (e) {
       console.error("Error starting DM:", e);
@@ -450,7 +456,7 @@ export default function Chat() {
         createdAt: serverTimestamp()
       });
 
-      setActiveChannel(docRef.id);
+      handleSelectChannel(docRef.id);
       setGroupName("");
       setSelectedMembers([]);
       setIsGroupModalOpen(false);
@@ -597,7 +603,10 @@ export default function Chat() {
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-120px)] lg:h-[calc(100vh-120px)] bg-card border border-border rounded-xl overflow-hidden shadow-sm text-foreground">
       
       {/* Sidebar Channels */}
-      <div className="w-full lg:w-72 bg-card border-b lg:border-b-0 lg:border-r border-border flex flex-col shrink-0 h-[250px] lg:h-auto">
+      <div className={cn(
+        "w-full lg:w-72 bg-card border-b lg:border-b-0 lg:border-r border-border flex flex-col shrink-0",
+        mobileView === "chat" ? "hidden lg:flex" : "flex flex-1 h-full min-h-[calc(100vh-160px)] lg:min-h-0"
+      )}>
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h2 className="font-bold text-foreground text-lg tracking-tight">Chat</h2>
         </div>
@@ -611,7 +620,7 @@ export default function Chat() {
               {channels.filter(c => c.type === 'global').map(channel => (
                 <button
                   key={channel.id}
-                  onClick={() => setActiveChannel(channel.id)}
+                  onClick={() => handleSelectChannel(channel.id)}
                   className={cn("w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left cursor-pointer",
                     activeChannel === channel.id 
                       ? 'bg-muted text-primary font-semibold' 
@@ -647,7 +656,7 @@ export default function Chat() {
                   .map(channel => (
                     <button
                       key={channel.id}
-                      onClick={() => setActiveChannel(channel.id)}
+                      onClick={() => handleSelectChannel(channel.id)}
                       className={cn("w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left cursor-pointer",
                         activeChannel === channel.id 
                           ? 'bg-muted text-primary font-semibold' 
@@ -714,7 +723,7 @@ export default function Chat() {
               {channels.filter(c => c.type === 'custom_group' && c.members?.includes(user?.uid)).map(channel => (
                 <button
                   key={channel.id}
-                  onClick={() => setActiveChannel(channel.id)}
+                  onClick={() => handleSelectChannel(channel.id)}
                   className={cn("w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left cursor-pointer",
                     activeChannel === channel.id 
                       ? 'bg-muted text-primary font-semibold' 
@@ -782,7 +791,7 @@ export default function Chat() {
                 return (
                   <button
                     key={channel.id}
-                    onClick={() => setActiveChannel(channel.id)}
+                    onClick={() => handleSelectChannel(channel.id)}
                     className={cn("w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left cursor-pointer",
                       activeChannel === channel.id 
                         ? 'bg-muted text-primary font-semibold' 
@@ -804,11 +813,21 @@ export default function Chat() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="w-full lg:flex-1 flex flex-col bg-card overflow-hidden min-h-[500px] lg:min-h-0">
+      <div className={cn(
+        "w-full lg:flex-1 flex flex-col bg-card overflow-hidden min-h-[calc(100vh-160px)] lg:min-h-0",
+        mobileView === "channels" ? "hidden lg:flex" : "flex flex-1 h-full"
+      )}>
         
         {/* Chat Header */}
-        <div className="h-14 border-b border-border flex items-center justify-between px-4 bg-card shrink-0 shadow-sm z-10">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="h-14 border-b border-border flex items-center justify-between px-3 sm:px-4 bg-card shrink-0 shadow-sm z-10">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <button
+              onClick={() => setMobileView("channels")}
+              className="lg:hidden p-1.5 -ml-1 text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary cursor-pointer shrink-0"
+              title="Back to channels"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
             {activeInfo.type === 'dm' ? (
               <div className="relative">
                 <Avatar className="h-8 w-8">

@@ -600,29 +600,29 @@ export default function SettingsDashboard() {
 
       <div className="flex flex-col md:flex-row gap-8 flex-1 items-start">
         
-        {/* Vertical Navigation */}
-        <div className="w-full md:w-64 shrink-0 flex flex-col gap-2">
+        {/* Navigation: Horizontal scroll chip-bar on mobile, Vertical stack on desktop */}
+        <div className="w-full md:w-64 shrink-0 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0 scrollbar-hide">
           <button 
             onClick={() => setActiveTab("preferences")}
-            className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-left border", 
+            className={cn("w-auto md:w-full shrink-0 whitespace-nowrap flex items-center gap-2.5 px-3.5 py-2 md:py-3 rounded-xl font-medium text-xs sm:text-sm transition-all text-left border cursor-pointer", 
               activeTab === "preferences" 
                 ? "bg-primary/20 text-primary/90 dark:text-primary/80 border-primary/25 shadow-sm" 
                 : "text-muted-foreground border-transparent hover:text-foreground hover:bg-secondary/40"
             )}
           >
-            <User className="w-5 h-5" />
+            <User className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
             My Preferences
           </button>
 
           <button 
             onClick={() => setActiveTab("security")}
-            className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-left border", 
+            className={cn("w-auto md:w-full shrink-0 whitespace-nowrap flex items-center gap-2.5 px-3.5 py-2 md:py-3 rounded-xl font-medium text-xs sm:text-sm transition-all text-left border cursor-pointer", 
               activeTab === "security" 
                 ? "bg-primary/20 text-primary/90 dark:text-primary/80 border-primary/25 shadow-sm" 
                 : "text-muted-foreground border-transparent hover:text-foreground hover:bg-secondary/40"
             )}
           >
-            <ShieldCheck className="w-5 h-5" />
+            <ShieldCheck className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
             Security & Password
           </button>
 
@@ -630,46 +630,46 @@ export default function SettingsDashboard() {
             <>
               <button 
                 onClick={() => setActiveTab("users")}
-                className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-left border", 
+                className={cn("w-auto md:w-full shrink-0 whitespace-nowrap flex items-center gap-2.5 px-3.5 py-2 md:py-3 rounded-xl font-medium text-xs sm:text-sm transition-all text-left border cursor-pointer", 
                   activeTab === "users" 
                     ? "bg-primary/20 text-primary/90 dark:text-primary/80 border-primary/25 shadow-sm" 
                     : "text-muted-foreground border-transparent hover:text-foreground hover:bg-secondary/40"
                 )}
               >
-                <Users className="w-5 h-5" />
+                <Users className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
                 User Management
               </button>
               <button 
                 onClick={() => setActiveTab("roles")}
-                className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-left border", 
+                className={cn("w-auto md:w-full shrink-0 whitespace-nowrap flex items-center gap-2.5 px-3.5 py-2 md:py-3 rounded-xl font-medium text-xs sm:text-sm transition-all text-left border cursor-pointer", 
                   activeTab === "roles" 
                     ? "bg-primary/20 text-primary/90 dark:text-primary/80 border-primary/25 shadow-sm" 
                     : "text-muted-foreground border-transparent hover:text-foreground hover:bg-secondary/40"
                 )}
               >
-                <Shield className="w-5 h-5" />
+                <Shield className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
                 Roles & Permissions
               </button>
               <button 
                 onClick={() => setActiveTab("company")}
-                className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-left border", 
+                className={cn("w-auto md:w-full shrink-0 whitespace-nowrap flex items-center gap-2.5 px-3.5 py-2 md:py-3 rounded-xl font-medium text-xs sm:text-sm transition-all text-left border cursor-pointer", 
                   activeTab === "company" 
                     ? "bg-primary/20 text-primary/90 dark:text-primary/80 border-primary/25 shadow-sm" 
                     : "text-muted-foreground border-transparent hover:text-foreground hover:bg-secondary/40"
                 )}
               >
-                <Building2 className="w-5 h-5" />
+                <Building2 className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
                 Company Info
               </button>
               <button 
                 onClick={() => setActiveTab("holidays")}
-                className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-left border", 
+                className={cn("w-auto md:w-full shrink-0 whitespace-nowrap flex items-center gap-2.5 px-3.5 py-2 md:py-3 rounded-xl font-medium text-xs sm:text-sm transition-all text-left border cursor-pointer", 
                   activeTab === "holidays" 
                     ? "bg-primary/20 text-primary/90 dark:text-primary/80 border-primary/25 shadow-sm" 
                     : "text-muted-foreground border-transparent hover:text-foreground hover:bg-secondary/40"
                 )}
               >
-                <Calendar className="w-5 h-5" />
+                <Calendar className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
                 Holidays
               </button>
             </>
@@ -679,31 +679,31 @@ export default function SettingsDashboard() {
             <>
               <button 
                 onClick={() => setActiveTab("audit")}
-                className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-left border", 
+                className={cn("w-auto md:w-full shrink-0 whitespace-nowrap flex items-center gap-2.5 px-3.5 py-2 md:py-3 rounded-xl font-medium text-xs sm:text-sm transition-all text-left border cursor-pointer", 
                   activeTab === "audit" 
                     ? "bg-primary/20 text-primary/90 dark:text-primary/80 border-primary/25 shadow-sm" 
                     : "text-muted-foreground border-transparent hover:text-foreground hover:bg-secondary/40"
                 )}
               >
-                <ShieldAlert className="w-5 h-5" />
+                <ShieldAlert className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
                 Audit Log
               </button>
               <button 
                 onClick={() => setActiveTab("integrations")}
-                className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-left border", 
+                className={cn("w-auto md:w-full shrink-0 whitespace-nowrap flex items-center gap-2.5 px-3.5 py-2 md:py-3 rounded-xl font-medium text-xs sm:text-sm transition-all text-left border cursor-pointer", 
                   activeTab === "integrations" 
                     ? "bg-primary/20 text-primary/90 dark:text-primary/80 border-primary/25 shadow-sm" 
                     : "text-muted-foreground border-transparent hover:text-foreground hover:bg-secondary/40"
                 )}
               >
-                <Wifi className="w-5 h-5" />
+                <Wifi className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
                 Integrations Center
               </button>
               <Link 
                 href="/dashboard/settings/workflows"
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-left border text-muted-foreground border-transparent hover:text-foreground hover:bg-secondary/40"
+                className="w-auto md:w-full shrink-0 whitespace-nowrap flex items-center gap-2.5 px-3.5 py-2 md:py-3 rounded-xl font-medium text-xs sm:text-sm transition-all text-left border text-muted-foreground border-transparent hover:text-foreground hover:bg-secondary/40 cursor-pointer"
               >
-                <Zap className="w-5 h-5" />
+                <Zap className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
                 Workflow Builder
               </Link>
             </>

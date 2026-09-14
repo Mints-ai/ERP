@@ -21,13 +21,28 @@ export interface TaskAttachment {
   uploadedAt: string;
 }
 
+export interface FocusChecklistItem {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
 export interface FocusSession {
-  isActive: boolean;
-  startTime: string | null;
+  startedBy: string;
+  startedByName: string;
+  startedAt: string;
+  resumedAt: string;
+  status: "running" | "paused";
   elapsedSeconds: number;
+  checklist: FocusChecklistItem[];
   notes: string;
-  checklists: { id: string; text: string; completed: boolean }[];
+  breakCount: number;
+  durationMinutes: number | null;
   lastAutoSaveAt?: string;
+  // Backward compatibility
+  isActive?: boolean;
+  startTime?: string | null;
+  checklists?: { id: string; text: string; completed: boolean }[];
 }
 
 export interface Task {

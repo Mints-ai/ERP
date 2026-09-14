@@ -34,7 +34,7 @@ export default function TicketColumn({
   canManage = false
 }: TicketColumnProps) {
   return (
-    <div className="flex flex-col w-[300px] max-h-full rounded-2xl border border-border shadow-sm shrink-0 bg-card/40">
+    <div className="flex flex-col w-full sm:w-[300px] max-h-full rounded-2xl border border-border shadow-sm shrink-0 bg-card/40">
       {/* Column Header */}
       <div className={cn("flex items-center justify-between p-3 border-b border-border rounded-t-2xl", badgeColor)}>
         <div className="flex items-center gap-2">

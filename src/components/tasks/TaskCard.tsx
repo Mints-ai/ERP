@@ -2,9 +2,10 @@ import { Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Lock, Trash2, CheckSquare, MessageSquare, Clock, Check, X } from "lucide-react";
+import { Lock, Trash2, CheckSquare, MessageSquare, Clock, Check, X, Target, Play, Send, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Task, TaskPriority } from "@/types/task";
+import { getSessionElapsedSeconds, formatFocusDuration } from "@/lib/task-services";
 import React from "react";
 
 const PRIORITY_COLORS: Record<TaskPriority, string> = {
@@ -24,6 +25,8 @@ interface TaskCardProps {
   currentUserId?: string;
   onQuickAction?: (action: "start" | "submit" | "approve" | "recheck", task: Task, e: React.MouseEvent) => void;
   canApprove?: boolean;
+  nowTick?: number;
+  onFocusAction?: (action: "resume" | "complete" | "exit", task: Task) => void;
 }
 
 export default function TaskCard({ 
@@ -35,7 +38,9 @@ export default function TaskCard({
   isDragDisabled = false,
   currentUserId,
   onQuickAction,
-  canApprove = false
+  canApprove = false,
+  nowTick = Date.now(),
+  onFocusAction
 }: TaskCardProps) {
   const isOverdue = (dateString?: string | null) => {
     if (!dateString) return false;
@@ -157,6 +162,61 @@ export default function TaskCard({
                   </div>
                 )}
               </div>
+            )}
+
+            {/* Active Focus Session Block */}
+            {task.focusSession && (
+              (() => {
+                const session = task.focusSession;
+                const elapsed = getSessionElapsedSeconds(session, nowTick);
+                const isMine = session.startedBy === currentUserId || (!session.startedBy && task.assignedTo === currentUserId);
+                const focuserName = employeesList.find(e => e.id === session.startedBy)?.fullName || session.startedByName || "A teammate";
+
+                if (!isMine) {
+                  return (
+                    <div className="mt-2 pt-2 border-t border-border/40 flex items-center gap-1.5 text-[11px] font-bold text-foreground/60">
+                      <Target className="w-3 h-3 text-primary shrink-0" />
+                      <span className="truncate">
+                        {focuserName} is in Focus Mode · {session.status === "running" ? "Active" : "Paused"} · {formatFocusDuration(elapsed)}
+                      </span>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="mt-2 pt-2 border-t border-border/40 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+                    <div className="text-[11px] font-bold text-primary flex items-center gap-1.5">
+                      <Target className="w-3 h-3 animate-pulse" />
+                      Focus Mode · {session.status === "running" ? "Active" : "Paused"} · {formatFocusDuration(elapsed)}
+                    </div>
+                    {onFocusAction && (
+                      <div className="grid grid-cols-3 gap-1">
+                        <button
+                          type="button"
+                          onClick={() => onFocusAction("resume", task)}
+                          className="h-6 rounded-md border border-primary/40 text-primary hover:bg-primary/10 text-[10px] font-bold flex items-center justify-center gap-0.5 cursor-pointer transition-colors"
+                        >
+                          <Play className="w-2.5 h-2.5 fill-current" /> Resume
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onFocusAction("complete", task)}
+                          className="h-6 rounded-md bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-[10px] font-bold flex items-center justify-center gap-0.5 cursor-pointer transition-colors"
+                        >
+                          <Send className="w-2.5 h-2.5" /> Complete
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onFocusAction("exit", task)}
+                          className="h-6 rounded-md border border-rose-500/40 text-rose-400 hover:bg-rose-500/10 text-[10px] font-bold flex items-center justify-center gap-0.5 cursor-pointer transition-colors"
+                        >
+                          <LogOut className="w-2.5 h-2.5" /> Exit
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()
             )}
             
             <div className="flex items-center justify-between mt-auto pt-2 border-t border-border">

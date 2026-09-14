@@ -13,7 +13,7 @@ import {
   getDocs,
   onSnapshot
 } from "firebase/firestore";
-import { Task, TaskStatus, TaskRemark, FocusSession } from "@/types/task";
+import { Task, TaskStatus, TaskRemark, FocusSession, FocusChecklistItem } from "@/types/task";
 
 const TASKS_COLLECTION = "tasks";
 
@@ -164,7 +164,34 @@ export const subscribeToRemarks = (taskId: string, callback: (remarks: TaskRemar
   });
 };
 
-// --- FOCUS SESSION ---
+// --- FOCUS SESSION HELPERS & OPERATIONS (from testerp) ---
+
+export function getSessionElapsedSeconds(session: FocusSession, now: number): number {
+  if (session.status === "running") {
+    const resumedAtMs = new Date(session.resumedAt || session.startedAt).getTime();
+    return (session.elapsedSeconds || 0) + Math.max(0, Math.floor((now - resumedAtMs) / 1000));
+  }
+  return session.elapsedSeconds || 0;
+}
+
+export function formatFocusDuration(totalSeconds: number): string {
+  const mins = Math.floor(totalSeconds / 60);
+  const hours = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  if (hours > 0) return `${hours}h ${remMins}m`;
+  if (mins > 0) return `${mins}m`;
+  return `${Math.max(0, Math.floor(totalSeconds))}s`;
+}
+
+export function formatFocusTimer(totalSeconds: number): string {
+  const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(safeSeconds / 3600);
+  const m = Math.floor((safeSeconds % 3600) / 60);
+  const s = safeSeconds % 60;
+  const mm = String(m).padStart(2, "0");
+  const ss = String(s).padStart(2, "0");
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
 
 export const saveFocusSession = async (
   taskId: string, 
@@ -182,6 +209,133 @@ export const saveFocusSession = async (
   } catch (error) {
     console.error("Error saving focus session:", error);
     throw error;
+  }
+};
+
+export const startFocusSession = async (
+  taskId: string,
+  session: FocusSession
+): Promise<void> => {
+  try {
+    const taskRef = doc(db, TASKS_COLLECTION, taskId);
+    await updateDoc(taskRef, {
+      status: "in_progress",
+      focusSession: session,
+      updatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Error starting focus session:", error);
+    throw error;
+  }
+};
+
+export const resumeFocusSession = async (
+  taskId: string,
+  currentSession: FocusSession
+): Promise<void> => {
+  try {
+    const taskRef = doc(db, TASKS_COLLECTION, taskId);
+    await updateDoc(taskRef, {
+      focusSession: {
+        ...currentSession,
+        status: "running",
+        resumedAt: new Date().toISOString()
+      },
+      updatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Error resuming focus session:", error);
+    throw error;
+  }
+};
+
+export const pauseFocusSession = async (
+  taskId: string,
+  currentSession: FocusSession,
+  notes: string,
+  checklist: FocusChecklistItem[],
+  now: number
+): Promise<void> => {
+  try {
+    const banked = getSessionElapsedSeconds(currentSession, now);
+    const taskRef = doc(db, TASKS_COLLECTION, taskId);
+    await updateDoc(taskRef, {
+      focusSession: {
+        ...currentSession,
+        notes,
+        checklist,
+        status: "paused",
+        elapsedSeconds: banked,
+        breakCount: (currentSession.breakCount || 0) + 1,
+        lastAutoSaveAt: new Date().toISOString()
+      },
+      updatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Error pausing focus session:", error);
+    throw error;
+  }
+};
+
+export const completeFocusTask = async (
+  taskId: string,
+  skipsReview: boolean = false
+): Promise<void> => {
+  try {
+    const nowIso = new Date().toISOString();
+    const taskRef = doc(db, TASKS_COLLECTION, taskId);
+    await updateDoc(taskRef, {
+      status: skipsReview ? "done" : "review",
+      submittedAt: nowIso,
+      focusSession: null,
+      ...(skipsReview ? { feedback: null, isRecheck: false } : {}),
+      updatedAt: nowIso
+    });
+    fetch("/api/tasks/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "status_changed", taskId, newStatus: skipsReview ? "done" : "review", isRecheck: false }),
+    }).catch(console.error);
+  } catch (error) {
+    console.error("Error completing focus task:", error);
+    throw error;
+  }
+};
+
+export const exitFocusSession = async (taskId: string): Promise<void> => {
+  try {
+    const taskRef = doc(db, TASKS_COLLECTION, taskId);
+    await updateDoc(taskRef, {
+      focusSession: null,
+      updatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Error exiting focus session:", error);
+    throw error;
+  }
+};
+
+export const updateFocusNotes = async (taskId: string, notes: string): Promise<void> => {
+  try {
+    const taskRef = doc(db, TASKS_COLLECTION, taskId);
+    await updateDoc(taskRef, {
+      "focusSession.notes": notes,
+      "focusSession.lastAutoSaveAt": new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Error updating focus notes:", error);
+  }
+};
+
+export const updateFocusChecklist = async (taskId: string, checklist: FocusChecklistItem[]): Promise<void> => {
+  try {
+    const taskRef = doc(db, TASKS_COLLECTION, taskId);
+    await updateDoc(taskRef, {
+      "focusSession.checklist": checklist,
+      "focusSession.lastAutoSaveAt": new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Error updating focus checklist:", error);
   }
 };
 

@@ -70,6 +70,7 @@ export default function TicketsPage() {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [myTicketsOnly, setMyTicketsOnly] = useState(!isManagerOrAbove);
+  const [activeMobileCol, setActiveMobileCol] = useState<TicketStatus>("open");
 
   // Modals State
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -312,22 +313,20 @@ export default function TicketsPage() {
       </div>
 
       {/* Filter & Scope Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 bg-card/60 border border-border rounded-xl">
-        <div className="flex items-center gap-2 flex-grow max-w-sm">
-          <div className="relative w-full">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-foreground/40" />
-            <Input
-              placeholder="Search by title, ticket #, or requester..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 h-8 text-xs border-border bg-card"
-            />
-          </div>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-2.5 bg-card/60 border border-border rounded-xl">
+        <div className="relative w-full sm:max-w-xs flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-foreground/40" />
+          <Input
+            placeholder="Search by title, #, requester..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8 h-8 text-xs border-border bg-card w-full"
+          />
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap w-full sm:w-auto">
           {/* My vs Team Toggle */}
-          <div className="flex items-center bg-muted/40 p-1 rounded-lg border border-border">
+          <div className="flex items-center bg-muted/40 p-1 rounded-lg border border-border shrink-0">
             <button
               onClick={() => setMyTicketsOnly(true)}
               className={cn("px-2.5 py-1 rounded text-xs font-bold transition-all",
@@ -348,7 +347,7 @@ export default function TicketsPage() {
 
           {/* Category Filter */}
           <Select value={filterCategory} onValueChange={(val) => setFilterCategory(val || "all")}>
-            <SelectTrigger className="h-8 text-xs border-border min-w-[120px]">
+            <SelectTrigger className="h-8 text-xs border-border flex-1 sm:flex-initial sm:w-[130px] min-w-0">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent className="bg-background border-border text-foreground">
@@ -363,7 +362,7 @@ export default function TicketsPage() {
 
           {/* Priority Filter */}
           <Select value={filterPriority} onValueChange={(val) => setFilterPriority(val || "all")}>
-            <SelectTrigger className="h-8 text-xs border-border min-w-[110px]">
+            <SelectTrigger className="h-8 text-xs border-border flex-1 sm:flex-initial sm:w-[110px] min-w-0">
               <SelectValue placeholder="All Priorities" />
             </SelectTrigger>
             <SelectContent className="bg-background border-border text-foreground">
@@ -377,16 +376,72 @@ export default function TicketsPage() {
         </div>
       </div>
 
+      {/* Mobile Column Switcher (visible on mobile screens) */}
+      <div className="flex sm:hidden items-center gap-1.5 p-1 bg-card/60 border border-border rounded-xl overflow-x-auto scrollbar-hide shrink-0">
+        {COLUMNS.map(col => {
+          const count = (groupedTickets[col.id] || []).length;
+          const isActive = activeMobileCol === col.id;
+          return (
+            <button
+              key={col.id}
+              onClick={() => setActiveMobileCol(col.id)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer",
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-foreground/50 hover:text-foreground"
+              )}
+            >
+              <span>{col.title}</span>
+              <span className={cn(
+                "text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold",
+                isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-foreground/60"
+              )}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Kanban Columns */}
       {loading ? (
         <div className="flex-1 flex justify-center items-center py-20">
           <Clock className="h-6 w-6 text-primary animate-spin" />
         </div>
       ) : (
-        <div className="flex-1 overflow-x-auto pb-4">
+        <div className="flex-1 pb-4">
           <DragDropContext onDragEnd={onDragEnd}>
-            <div className="flex h-full gap-6 min-w-max items-start">
+            {/* Desktop & Tablet: Multi-column horizontal scroll */}
+            <div className="hidden sm:flex h-full gap-6 min-w-max items-start overflow-x-auto pb-4">
               {COLUMNS.map(column => (
+                <TicketColumn
+                  key={column.id}
+                  id={column.id}
+                  title={column.title}
+                  badgeColor={column.badgeColor}
+                  tickets={groupedTickets[column.id] || []}
+                  onAddClick={() => setIsAddOpen(true)}
+                  onTicketClick={(ticket) => {
+                    setSelectedTicket(ticket);
+                    setIsDetailOpen(true);
+                  }}
+                  onDeleteTicket={(ticket) => {
+                    setCancelTarget(ticket);
+                    setCancellationReason("");
+                    setCancelError("");
+                  }}
+                  isDragDisabled={!isManagerOrAbove}
+                  currentUserId={user?.uid}
+                  onQuickAction={handleQuickAction}
+                  canManage={isManagerOrAbove}
+                />
+              ))}
+            </div>
+
+            {/* Mobile: Active Column Single View */}
+            <div className="sm:hidden w-full">
+              {COLUMNS.filter(c => c.id === activeMobileCol).map(column => (
                 <TicketColumn
                   key={column.id}
                   id={column.id}
