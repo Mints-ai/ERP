@@ -73,11 +73,25 @@ service cloud.firestore {
       allow write: if isAuth() && isManagerOrAbove();
     }
 
-    // Tasks Collection Rules
+    // Tasks Collection Rules (SOC 2 CC6.1 / RBAC Least Privilege)
     match /tasks/{taskId} {
       allow read: if isAuth();
-      allow create: if isAuth() && (isManagerOrAbove() || request.resource.data.assignedTo == request.auth.uid || request.resource.data.assignedBy == request.auth.uid);
-      allow update: if isAuth() && (resource.data.assignedTo == request.auth.uid || resource.data.assignedBy == request.auth.uid || isManagerOrAbove() || (resource.data.teamHeads != null && request.auth.uid in resource.data.teamHeads));
+      // RBAC: Non-managers (interns, standard employees) can only create tasks assigned to themselves.
+      // Delegation and assigning work across the organization requires manager role or above.
+      // Designated team heads on team tasks can create subtasks.
+      allow create: if isAuth() && (
+        isManagerOrAbove() || 
+        (request.resource.data.assignedTo == request.auth.uid && request.resource.data.assignedBy == request.auth.uid) ||
+        (request.resource.data.parentTaskId != null && request.resource.data.teamHeads != null && request.auth.uid in request.resource.data.teamHeads)
+      );
+      // Updates: non-managers cannot tamper with or reassign assignedTo or assignedBy
+      allow update: if isAuth() && (
+        isManagerOrAbove() || 
+        (resource.data.teamHeads != null && request.auth.uid in resource.data.teamHeads) ||
+        ((resource.data.assignedTo == request.auth.uid || resource.data.assignedBy == request.auth.uid) && 
+         request.resource.data.assignedTo == resource.data.assignedTo && 
+         request.resource.data.assignedBy == resource.data.assignedBy)
+      );
       allow delete: if isAuth() && isManagerOrAbove();
 
       match /remarks/{remarkId} {

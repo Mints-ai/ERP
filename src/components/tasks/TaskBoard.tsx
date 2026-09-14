@@ -287,7 +287,8 @@ export default function TaskBoard() {
           monitorManagerIds: monitorManagerIds
         });
       } else {
-        const assigneeId = newTask.assignedTo || user.uid;
+        // Enforce RBAC (CC6.1 / Least Privilege): Non-managers (interns, junior employees) can ONLY assign tasks to themselves
+        const assigneeId = isManagerOrAbove ? (newTask.assignedTo || user.uid) : user.uid;
         const assigneeEmp = employeesList.find(emp => emp.id === assigneeId);
         
         await createTask({
@@ -295,9 +296,9 @@ export default function TaskBoard() {
           description: newTask.description.trim() || "",
           projectId: "general",
           assignedTo: assigneeId,
-          assignedToName: assigneeEmp?.fullName || "Employee",
+          assignedToName: assigneeEmp?.fullName || user.fullName || "Self",
           assignedBy: user.uid,
-          assignedByName: user.fullName || "Manager",
+          assignedByName: user.fullName || "Employee",
           status: addingToStatus,
           priority: newTask.priority,
           dueDate: newTask.dueDate || null,
@@ -1087,28 +1088,51 @@ export default function TaskBoard() {
 
             {assignMode === "individual" ? (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground/70 uppercase tracking-wider">Assign To</label>
-                <Select 
-                  value={newTask.assignedTo || user?.uid || ""} 
-                  onValueChange={(val) => setNewTask({ ...newTask, assignedTo: val as string })}
-                >
-                  <SelectTrigger className="w-full border-border text-foreground h-9 text-xs">
-                    <SelectValue placeholder="Assign task" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border-border text-foreground max-h-60 overflow-y-auto">
-                    <SelectItem value={user?.uid || ""}>Assign to me</SelectItem>
-                    {Object.entries(employeesByDept).map(([dept, emps]) => (
-                      <SelectGroup key={dept}>
-                        <SelectLabel className="font-bold text-primary">{dept}</SelectLabel>
-                        {emps.map(emp => (
-                          <SelectItem key={emp.id} value={emp.id}>
-                            {emp.fullName} {emp.jobTitle ? `- ${emp.jobTitle}` : ""}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-foreground/70 uppercase tracking-wider">Assign To</label>
+                  {!isManagerOrAbove && (
+                    <span className="text-[10px] text-primary/80 font-medium flex items-center gap-1">
+                      <ShieldAlert className="w-3 h-3" /> Self-assignment only (RBAC)
+                    </span>
+                  )}
+                </div>
+                {isManagerOrAbove ? (
+                  <Select 
+                    value={newTask.assignedTo || user?.uid || ""} 
+                    onValueChange={(val) => setNewTask({ ...newTask, assignedTo: val as string })}
+                  >
+                    <SelectTrigger className="w-full border-border text-foreground h-9 text-xs">
+                      <SelectValue placeholder="Assign task" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border-border text-foreground max-h-60 overflow-y-auto">
+                      <SelectItem value={user?.uid || ""}>Assign to me</SelectItem>
+                      {Object.entries(employeesByDept).map(([dept, emps]) => (
+                        <SelectGroup key={dept}>
+                          <SelectLabel className="font-bold text-primary">{dept}</SelectLabel>
+                          {emps.map(emp => (
+                            <SelectItem key={emp.id} value={emp.id}>
+                              {emp.fullName} {emp.jobTitle ? `- ${emp.jobTitle}` : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="flex items-center justify-between p-2.5 rounded-xl border border-border bg-muted/30 text-xs">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-6 h-6 border border-border">
+                        <AvatarFallback className="bg-primary/20 text-primary font-bold text-[10px]">
+                          {(user?.fullName || "ME").substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-bold text-foreground">{user?.fullName || "Myself"} (Self)</span>
+                    </div>
+                    <span className="text-[10px] text-foreground/50 italic flex items-center gap-1">
+                      <Lock className="w-3 h-3" /> Delegation requires Manager role
+                    </span>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-3 p-3 rounded-xl border border-primary/20 bg-primary/5">
