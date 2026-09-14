@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuGroup } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { CommandPalette } from "./CommandPalette";
+import { GlobalTimer } from "./GlobalTimer";
 import { ROLE_META } from "@/lib/permissions";
 
 export function TopNav() {
@@ -120,8 +121,8 @@ export function TopNav() {
 
   return (
     <>
-      <header className="h-16 border-b border-border bg-card flex items-center justify-between px-4 sm:px-6 lg:px-8 z-40 sticky top-0 text-foreground transition-colors">
-        <div className="flex items-center flex-1 gap-3 sm:gap-4 lg:gap-8 min-w-0">
+      <header className="h-16 border-b border-border bg-card flex items-center justify-between px-3 sm:px-6 lg:px-8 z-40 sticky top-0 text-foreground transition-colors">
+        <div className="flex items-center flex-1 gap-2 sm:gap-4 lg:gap-8 min-w-0">
           
           <div className="hidden lg:block">
             <h2 className="text-sm font-semibold text-foreground tracking-tight">
@@ -147,14 +148,17 @@ export function TopNav() {
           {/* Mobile Search Icon Button (< md) */}
           <button 
             onClick={() => setCmdOpen(true)}
-            className="md:hidden flex items-center justify-center w-9 h-9 rounded-xl bg-secondary/80 border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer shadow-sm shrink-0" 
+            className="md:hidden flex items-center justify-center w-8.5 h-8.5 rounded-xl bg-secondary/80 border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer shadow-sm shrink-0" 
             aria-label="Search Workspace"
           >
             <Search className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
+        <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
+          {/* Global Time Tracker */}
+          <GlobalTimer />
+
           {/* Dynamic Role Switcher for Founders / Admins */}
           {(user?.role === "founder" || user?.role === "system_admin") && (
             <div className="flex items-center gap-1 sm:gap-1.5 bg-secondary hover:bg-secondary/80 border border-border rounded-xl px-2 py-1 sm:px-2.5 sm:py-1.5 transition-all text-foreground shadow-sm">
@@ -165,18 +169,18 @@ export function TopNav() {
                   const val = e.target.value;
                   setSimulatedRole(val === user?.role ? null : val);
                 }}
-                className="bg-transparent text-xs font-bold text-foreground border-0 outline-none focus:ring-0 cursor-pointer pr-1 py-0 scrollbar-hide select-none max-w-[85px] sm:max-w-[130px] overflow-hidden truncate"
+                className="bg-transparent text-xs font-bold text-foreground border-0 outline-none focus:ring-0 cursor-pointer pr-1 py-0 scrollbar-hide select-none max-w-[80px] sm:max-w-[130px] overflow-hidden truncate"
                 style={{
                   colorScheme: theme
                 }}
               >
-                <option value="founder" style={{ backgroundColor: theme === "dark" ? "#0b1329" : "#ffffff", color: theme === "dark" ? "#ffffff" : "#0f172a" }}>Founder (Admin)</option>
-                <option value="system_admin" style={{ backgroundColor: theme === "dark" ? "#0b1329" : "#ffffff", color: theme === "dark" ? "#ffffff" : "#0f172a" }}>System Admin</option>
-                <option value="c_suite" style={{ backgroundColor: theme === "dark" ? "#0b1329" : "#ffffff", color: theme === "dark" ? "#ffffff" : "#0f172a" }}>C-Suite</option>
-                <option value="manager" style={{ backgroundColor: theme === "dark" ? "#0b1329" : "#ffffff", color: theme === "dark" ? "#ffffff" : "#0f172a" }}>Manager</option>
-                <option value="senior_employee" style={{ backgroundColor: theme === "dark" ? "#0b1329" : "#ffffff", color: theme === "dark" ? "#ffffff" : "#0f172a" }}>Senior Employee</option>
-                <option value="employee" style={{ backgroundColor: theme === "dark" ? "#0b1329" : "#ffffff", color: theme === "dark" ? "#ffffff" : "#0f172a" }}>Employee</option>
-                <option value="intern" style={{ backgroundColor: theme === "dark" ? "#0b1329" : "#ffffff", color: theme === "dark" ? "#ffffff" : "#0f172a" }}>Intern</option>
+                <option value="founder" style={{ backgroundColor: theme === "dark" ? "#121813" : "#ffffff", color: theme === "dark" ? "#ffffff" : "#141f16" }}>Founder (Admin)</option>
+                <option value="system_admin" style={{ backgroundColor: theme === "dark" ? "#121813" : "#ffffff", color: theme === "dark" ? "#ffffff" : "#141f16" }}>System Admin</option>
+                <option value="c_suite" style={{ backgroundColor: theme === "dark" ? "#121813" : "#ffffff", color: theme === "dark" ? "#ffffff" : "#141f16" }}>C-Suite</option>
+                <option value="manager" style={{ backgroundColor: theme === "dark" ? "#121813" : "#ffffff", color: theme === "dark" ? "#ffffff" : "#141f16" }}>Manager</option>
+                <option value="senior_employee" style={{ backgroundColor: theme === "dark" ? "#121813" : "#ffffff", color: theme === "dark" ? "#ffffff" : "#141f16" }}>Senior Employee</option>
+                <option value="employee" style={{ backgroundColor: theme === "dark" ? "#121813" : "#ffffff", color: theme === "dark" ? "#ffffff" : "#141f16" }}>Employee</option>
+                <option value="intern" style={{ backgroundColor: theme === "dark" ? "#121813" : "#ffffff", color: theme === "dark" ? "#ffffff" : "#141f16" }}>Intern</option>
               </select>
             </div>
           )}

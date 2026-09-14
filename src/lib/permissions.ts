@@ -47,14 +47,14 @@ export function canAccess(role: string | null | undefined, permission: keyof typ
   return (rolesWithAccess as string[]).includes(role);
 }
 
-// Role display names and badge colors
+// Role display names and badge colors with WCAG AA dual-theme contrast
 export const ROLE_META: Record<string, { label: string; color: string }> = {
-  founder:         { label: "Founder",         color: "bg-blue-500/10 text-blue-300 border border-blue-500/20" },
-  system_admin:    { label: "System Admin",    color: "bg-red-500/10 text-red-300 border border-red-500/20" },
-  c_suite:         { label: "C-Suite",          color: "bg-purple-500/10 text-purple-300 border border-purple-500/20" },
-  manager:         { label: "Manager",          color: "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20" },
-  senior_employee: { label: "Senior Employee",  color: "bg-cyan-500/10 text-cyan-300 border border-cyan-500/20" },
-  employee:        { label: "Employee",         color: "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20" },
-  intern:          { label: "Intern",           color: "bg-slate-500/10 text-slate-300 border border-slate-500/20" },
+  founder:         { label: "Founder",         color: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20" },
+  system_admin:    { label: "System Admin",    color: "bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20" },
+  c_suite:         { label: "C-Suite",          color: "bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20" },
+  manager:         { label: "Manager",          color: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20" },
+  senior_employee: { label: "Senior Employee",  color: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-500/20" },
+  employee:        { label: "Employee",         color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20" },
+  intern:          { label: "Intern",           color: "bg-slate-500/10 text-slate-700 dark:text-slate-300 border border-slate-500/20" },
 };
 

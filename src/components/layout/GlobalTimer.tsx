@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Play, Square, X, Clock, ChevronUp, ChevronDown, CheckCircle2 } from "lucide-react";
 import { collection, addDoc, serverTimestamp, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -29,6 +29,22 @@ export function GlobalTimer() {
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  // Close popover when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   // Fetch projects
   useEffect(() => {
@@ -163,109 +179,148 @@ export function GlobalTimer() {
   if (!user) return null;
 
   return (
-    <div className="fixed bottom-20 right-4 sm:right-6 lg:bottom-6 lg:right-6 z-40 flex flex-col items-end">
+    <div ref={popoverRef} className="relative">
+      <button 
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer select-none shrink-0 shadow-sm",
+          isRunning 
+            ? "bg-primary text-primary-foreground border-primary/40 shadow-[0_0_14px_rgba(112,130,56,0.35)] animate-pulse" 
+            : elapsedSeconds > 0
+              ? "bg-secondary text-foreground border-border hover:border-primary/40"
+              : "bg-secondary/70 hover:bg-secondary text-muted-foreground hover:text-foreground border-border"
+        )}
+        title="Global Time Tracker"
+      >
+        {isRunning ? (
+          <>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+            </span>
+            <span className="font-mono font-bold tracking-tight text-white">{formatTime(elapsedSeconds)}</span>
+          </>
+        ) : (
+          <>
+            <Clock className={cn("w-3.5 h-3.5", elapsedSeconds > 0 ? "text-primary" : "text-muted-foreground")} />
+            <span className="hidden sm:inline font-mono">
+              {elapsedSeconds > 0 ? formatTime(elapsedSeconds) : "Timer"}
+            </span>
+          </>
+        )}
+      </button>
+
       <AnimatePresence>
         {isOpen && (
           <motion.div 
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={{ opacity: 0, y: 8, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="mb-4 bg-background/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border overflow-hidden w-[calc(100vw-32px)] sm:w-[320px] max-w-[320px]"
+            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-full right-0 mt-2 z-50 bg-popover text-popover-foreground rounded-2xl shadow-2xl border border-border overflow-hidden w-[310px] sm:w-[330px]"
           >
-            <div className="border-b border-border text-foreground p-3 flex justify-between items-center">
-              <div className="flex items-center gap-2 font-bold text-sm">
-                <Clock className="w-4 h-4 text-primary" />
+            <div className="border-b border-border bg-muted/40 p-3 flex justify-between items-center">
+              <div className="flex items-center gap-2 font-bold text-xs text-foreground">
+                <Clock className="w-3.5 h-3.5 text-primary" />
                 Time Tracker
               </div>
-              <button onClick={() => setIsOpen(false)} className="hover: p-1 rounded-xl transition-colors text-muted-foreground hover:text-foreground">
-                <X className="w-4 h-4" />
+              <button 
+                type="button"
+                onClick={() => setIsOpen(false)} 
+                className="p-1 rounded-lg transition-colors text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
             
-            <div className="p-4 space-y-4">
-              <div className="text-center">
-                <div className={cn("text-4xl font-mono font-black tracking-tight mb-1 transition-colors",
-                  isRunning ? "text-primary" : "text-muted-foreground"
+            <div className="p-4 space-y-3.5">
+              <div className="text-center py-1">
+                <div className={cn("text-3xl font-mono font-black tracking-tight mb-0.5 transition-colors",
+                  isRunning ? "text-primary" : "text-foreground"
                 )}>
                   {formatTime(elapsedSeconds)}
                 </div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold">
-                  {isRunning ? "Tracking..." : "Paused"}
+                <div className="text-[11px] text-muted-foreground uppercase tracking-wider font-bold">
+                  {isRunning ? "● Tracking Active" : elapsedSeconds > 0 ? "❚❚ Paused" : "Ready to Track"}
                 </div>
               </div>
+
+              <div className="flex gap-2">
+                <Button 
+                  type="button"
+                  onClick={handleStartStop}
+                  className={cn(
+                    "flex-1 h-9 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-sm border-0 transition-all active:scale-95",
+                    isRunning 
+                      ? "bg-amber-600 hover:bg-amber-700 text-white" 
+                      : "btn-primary"
+                  )}
+                >
+                  {isRunning ? (
+                    <>
+                      <Square className="w-3.5 h-3.5 fill-current" /> Pause
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-3.5 h-3.5 fill-current" /> {elapsedSeconds > 0 ? "Resume" : "Start"}
+                    </>
+                  )}
+                </Button>
+                {elapsedSeconds > 0 && !isRunning && (
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={handleDiscard}
+                    className="h-9 text-xs font-semibold px-3 text-muted-foreground hover:text-destructive border-border rounded-xl cursor-pointer"
+                  >
+                    Reset
+                  </Button>
+                )}
+              </div>
               
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-muted-foreground uppercase">Project</label>
+              <div className="space-y-2.5 pt-1">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Project</label>
                   <Select value={selectedProjectId} onValueChange={(val) => setSelectedProjectId(val || "")}>
-                    <SelectTrigger className="h-8 text-sm text-foreground border-border rounded-xl">
-                      <SelectValue placeholder="Select a project..." />
+                    <SelectTrigger className="h-8 text-xs text-foreground bg-background border-border rounded-xl">
+                      <SelectValue placeholder="Select project (optional)..." />
                     </SelectTrigger>
-                    <SelectContent className="bg-card text-foreground border-border rounded-xl">
-                      <SelectItem value="internal" className="focus: focus:text-foreground cursor-pointer">Internal / General</SelectItem>
+                    <SelectContent className="bg-popover text-popover-foreground border-border rounded-xl">
+                      <SelectItem value="internal" className="text-xs cursor-pointer">Internal / General</SelectItem>
                       {projects.map(p => (
-                        <SelectItem key={p.id} value={p.id} className="focus: focus:text-foreground cursor-pointer">{p.name}</SelectItem>
+                        <SelectItem key={p.id} value={p.id} className="text-xs cursor-pointer">{p.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-muted-foreground uppercase">What are you working on?</label>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Activity Notes</label>
                   <Input 
                     value={taskDescription}
                     onChange={(e) => setTaskDescription(e.target.value)}
-                    placeholder="E.g., Keyword research for SEO..." 
-                    className="h-8 text-sm text-foreground placeholder:text-foreground/30 border-border rounded-xl focus:border-primary focus:ring-primary"
+                    placeholder="What are you working on?" 
+                    className="h-8 text-xs text-foreground placeholder:text-muted-foreground bg-background border-border rounded-xl focus:border-primary"
                   />
                 </div>
               </div>
               
-              <div className="pt-2 border-t border-border flex justify-between gap-2">
+              <div className="pt-2 border-t border-border flex justify-end">
                 <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleDiscard}
-                  disabled={elapsedSeconds === 0}
-                  className="w-full text-xs h-8 text-muted-foreground hover:text-foreground hover: border-border rounded-xl"
-                >
-                  Discard
-                </Button>
-                <Button 
+                  type="button"
                   onClick={handleSave}
-                  disabled={isSaving || elapsedSeconds === 0 || isRunning}
+                  disabled={isSaving || elapsedSeconds < 60 || isRunning}
                   size="sm" 
-                  className="w-full bg-primary hover:bg-primary/80 text-primary-foreground text-xs h-8 shadow-[0_0_20px_rgba(112,130,56,0.25)] border-0 rounded-xl font-bold cursor-pointer"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-8.5 rounded-xl font-bold cursor-pointer disabled:opacity-40"
                 >
-                  <CheckCircle2 className="w-3 h-3 mr-1" /> Log Time
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Log Time to Worksheet
                 </Button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
- 
-      <button 
-        onClick={handleStartStop}
-        className={cn("flex items-center gap-2 rounded-full px-4 py-3 font-bold shadow-lg transition-all transform hover:scale-105 active:scale-95 border cursor-pointer",
-          isRunning 
-            ? "bg-primary text-primary-foreground border-0 shadow-[0_0_24px_rgba(112,130,56,0.3)] hover:bg-primary/80 animate-pulse-slow" 
-            : " text-foreground border-border hover:shadow-card "
-        )}
-      >
-        {isRunning ? (
-          <>
-            <Square className="w-4 h-4 fill-current text-primary-foreground" />
-            <span className="font-mono text-primary-foreground">{formatTime(elapsedSeconds)}</span>
-          </>
-        ) : (
-          <>
-            <Play className="w-4 h-4 fill-current text-primary" />
-            <span>{elapsedSeconds > 0 ? formatTime(elapsedSeconds) : "Start Timer"}</span>
-          </>
-        )}
-      </button>
     </div>
   );
 }

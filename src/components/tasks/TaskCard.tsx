@@ -154,23 +154,23 @@ export default function TaskCard({
             )}
             
             <div className="flex items-center justify-between mt-auto pt-2 border-t border-border">
-              <div className="flex gap-2 text-foreground/40 text-xs font-bold">
-                <div className="flex items-center gap-1 hover:text-foreground/70 transition-colors">
+              <div className="flex gap-2 text-muted-foreground text-xs font-semibold">
+                <div className="flex items-center gap-1 hover:text-foreground transition-colors">
                   <CheckSquare className="w-3 h-3 text-primary" /> {task.status === "done" ? "1/1" : "0/1"}
                 </div>
-                <div className="flex items-center gap-1 hover:text-foreground/70 transition-colors" title="Remarks">
+                <div className="flex items-center gap-1 hover:text-foreground transition-colors" title="Remarks">
                   <MessageSquare className="w-3 h-3 text-primary" />
                 </div>
               </div>
               
               <div className="flex items-center gap-2">
                 {task.dueDate && (
-                  <div className={cn("flex items-center gap-1 text-xs px-1.5 py-0.5 rounded font-bold uppercase", 
-                    isOverdue(task.dueDate) ? 'bg-rose-950/40 border border-rose-500/20 text-rose-300' : 
-                    isToday(task.dueDate) ? 'bg-amber-950/40 border border-amber-500/20 text-amber-300' : 
-                    ' text-foreground/50 border border-border'
+                  <div className={cn("flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded font-bold uppercase", 
+                    isOverdue(task.dueDate) ? 'bg-rose-500/15 border border-rose-500/30 text-rose-700 dark:text-rose-300' : 
+                    isToday(task.dueDate) ? 'bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300' : 
+                    'bg-secondary/70 text-muted-foreground border border-border'
                   )}>
-                    <Clock className="w-2.5 h-2.5" />
+                    <Clock className="w-3 h-3" />
                     {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                   </div>
                 )}

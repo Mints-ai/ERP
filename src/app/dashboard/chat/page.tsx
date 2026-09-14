@@ -1281,7 +1281,7 @@ export default function Chat() {
                 handleTyping();
               }}
               placeholder={`Type a message in ${activeInfo.name}... (Press Enter to send, Shift+Enter for newline)`}
-              className="w-full bg-transparent border-none focus:ring-0 focus:outline-none resize-none min-h-[56px] p-3 text-sm text-foreground font-medium placeholder:text-muted-foreground/60"
+              className="w-full bg-transparent border-none focus:ring-0 focus:outline-none resize-none min-h-[64px] p-3.5 text-sm text-foreground font-medium placeholder:text-muted-foreground"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -1291,8 +1291,8 @@ export default function Chat() {
             />
             
             {/* Input Toolbar */}
-            <div className="flex items-center justify-between px-3 py-2 border-t border-border/40 bg-muted/20">
-              <div className="flex items-center gap-1">
+            <div className="flex items-center justify-between px-3 py-2 border-t border-border bg-muted/40">
+              <div className="flex items-center gap-1.5">
                 {/* Hidden File Input */}
                 <input 
                   type="file" 
@@ -1306,31 +1306,30 @@ export default function Chat() {
                   onClick={() => fileInputRef.current?.click()} 
                   variant="ghost" 
                   size="icon" 
-                  className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded cursor-pointer"
+                  className="h-8 w-8 text-foreground/80 hover:text-foreground hover:bg-secondary rounded-lg cursor-pointer"
                   title="Attach file or image"
                 >
-                  <ImageIcon className="h-4 w-4" />
+                  <ImageIcon className="h-4.5 w-4.5 text-foreground/80" />
                 </Button>
                 <Button 
                   type="button" 
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)} 
                   variant="ghost" 
                   size="icon" 
-                  className={cn("h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded cursor-pointer", showEmojiPicker && "bg-muted text-primary")}
+                  className={cn("h-8 w-8 text-foreground/80 hover:text-foreground hover:bg-secondary rounded-lg cursor-pointer", showEmojiPicker && "bg-secondary text-primary")}
                   title="Add emoji"
                 >
-                  <Smile className="h-4 w-4" />
+                  <Smile className="h-4.5 w-4.5 text-foreground/80" />
                 </Button>
               </div>
 
               <Button 
                 type="submit" 
                 disabled={!newMessage.trim() && !attachmentPreview} 
-                size="sm" 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground h-7 px-3 rounded-md text-xs font-bold shadow-xs transition-transform active:scale-95 border-none cursor-pointer flex items-center gap-1.5 disabled:opacity-40"
+                className="btn-primary h-8 px-4 rounded-xl text-xs font-bold transition-transform active:scale-95 border-none cursor-pointer flex items-center gap-1.5 disabled:opacity-40"
               >
-                <Send className="h-3 w-3" />
-                Send
+                <Send className="h-3.5 w-3.5 text-white" />
+                <span>Send</span>
               </Button>
             </div>
           </form>

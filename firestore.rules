@@ -22,16 +22,32 @@ service cloud.firestore {
       return getEmployee().role in ['founder', 'system_admin'];
     }
 
-    // Helper function to check if the user is finance admin
+    // Helper function to check if the user is finance admin (Issue #9)
     function isFinanceAdmin() {
-      return getEmployee().role in ['founder', 'system_admin', 'c_suite', 'manager'];
+      return isAuth() && (
+        getEmployee().role in ['founder', 'system_admin'] ||
+        (getEmployee().role in ['c_suite', 'manager'] && (
+          getEmployee().department == 'FINANCE' || 
+          getEmployee().department == 'ACCOUNTING' ||
+          (getEmployee().departments != null && ('FINANCE' in getEmployee().departments || 'ACCOUNTING' in getEmployee().departments))
+        ))
+      );
     }
 
-    // Employees Collection Rules
+    // Employees Collection Rules (Issue #1 & #18)
     // Restricts complete HR data reads to managers/admins or the employee themself
     match /employees/{employeeId} {
       allow read: if isAuth() && (request.auth.uid == employeeId || isManagerOrAbove());
-      allow write: if isAuth() && (request.auth.uid == employeeId || isManagerOrAbove());
+      allow create: if isAuth() && isManagerOrAbove();
+
+      // Self-service update: restricted to safe profile fields only (prevents role elevation)
+      allow update: if isAuth() && request.auth.uid == employeeId
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['displayName', 'fullName', 'phone', 'photoURL', 'profilePhotoURL', 'avatar', 'bio', 'preferences', 'notificationPrefs', 'lastSeenAt', 'updatedAt']);
+
+      // Administrative update: all fields including role, isActive, department
+      allow update: if isAuth() && isManagerOrAbove();
+      allow delete: if isAuth() && isFounderOrAdmin();
     }
 
     // Sessions Collection Rules
@@ -50,9 +66,10 @@ service cloud.firestore {
       allow delete: if isAuth() && isManagerOrAbove();
     }
 
-    // Leave Balances Collection Rules
+    // Leave Balances Collection Rules (Issue #6)
     match /leaveBalances/{balanceId} {
-      allow read: if isAuth();
+      allow get: if isAuth() && (balanceId.matches('^' + request.auth.uid + '_.*') || (resource != null && resource.data.uid == request.auth.uid) || isManagerOrAbove());
+      allow list: if isAuth() && isManagerOrAbove();
       allow write: if isAuth() && isManagerOrAbove();
     }
 
@@ -70,15 +87,20 @@ service cloud.firestore {
       }
     }
 
-    // Tickets Collection Rules
+    // Tickets Collection Rules (Issue #6)
     match /tickets/{ticketId} {
-      allow read: if isAuth();
+      allow get: if isAuth() && (resource.data.createdBy == request.auth.uid || resource.data.assignedTo == request.auth.uid || isManagerOrAbove());
+      allow list: if isAuth() && (isManagerOrAbove() || resource.data.createdBy == request.auth.uid || resource.data.assignedTo == request.auth.uid);
       allow create: if isAuth();
       allow update: if isAuth() && (resource.data.createdBy == request.auth.uid || resource.data.assignedTo == request.auth.uid || isManagerOrAbove());
       allow delete: if isAuth() && (resource.data.createdBy == request.auth.uid || isManagerOrAbove());
 
       match /comments/{commentId} {
-        allow read: if isAuth();
+        allow read: if isAuth() && (
+          get(/databases/$(database)/documents/tickets/$(ticketId)).data.createdBy == request.auth.uid ||
+          get(/databases/$(database)/documents/tickets/$(ticketId)).data.assignedTo == request.auth.uid ||
+          isManagerOrAbove()
+        );
         allow create: if isAuth();
         allow update, delete: if isAuth() && (resource.data.createdBy == request.auth.uid || isManagerOrAbove());
       }
@@ -151,14 +173,12 @@ service cloud.firestore {
       allow write: if isAuth() && isFounderOrAdmin();
     }
 
-    // CRM Leads Collection Rules
+    // CRM Leads Collection Rules (Issue #6)
     match /leads/{leadId} {
-      allow read: if isAuth();
-      allow create, update: if isAuth();
-      allow delete: if isAuth() && isManagerOrAbove();
+      allow read, create, update, delete: if isAuth() && isManagerOrAbove();
 
       match /emails/{emailId} {
-        allow read, write: if isAuth();
+        allow read, write: if isAuth() && isManagerOrAbove();
       }
     }
 
@@ -188,18 +208,30 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Internal Mails Collection Rules
+    // Internal Mails Collection Rules (Issue #10)
     match /internal_mails/{mailId} {
       allow read: if isAuth() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
       allow create: if isAuth() && request.resource.data.senderId == request.auth.uid;
-      allow update, delete: if isAuth() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow update: if isAuth() && (
+        resource.data.senderId == request.auth.uid ||
+        (resource.data.receiverId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'starred', 'deletedByReceiver', 'archived', 'folder', 'updatedAt']))
+      );
+      allow delete: if isAuth() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
     }
 
-    // Chat Channels Collection Rules
+    // Chat Channels Collection Rules (Issue #5)
     match /chatChannels/{channelId} {
       allow read: if isAuth();
       allow create: if isAuth();
-      allow update, delete: if isAuth() && (resource.data.type in ['global', 'department'] || request.auth.uid in resource.data.members || isManagerOrAbove());
+      allow update: if isAuth() && (
+        isManagerOrAbove() || 
+        (resource.data.members != null && request.auth.uid in resource.data.members)
+      );
+      allow delete: if isAuth() && (
+        isFounderOrAdmin() ||
+        (resource.data.type == 'direct' && resource.data.members != null && request.auth.uid in resource.data.members)
+      );
     }
 
     // Chat Messages Collection Rules
@@ -253,10 +285,11 @@ service cloud.firestore {
       allow write: if isAuth() && isManagerOrAbove();
     }
 
-    // Notifications Collection Rules
+    // Notifications Collection Rules (Issue #4)
     match /notifications/{notificationId} {
       allow read: if isAuth() && (resource.data.userId == request.auth.uid || resource.data.userId == 'global' || isManagerOrAbove());
-      allow write: if isAuth();
+      allow create: if isAuth();
+      allow update, delete: if isAuth() && (resource.data.userId == request.auth.uid || isManagerOrAbove());
     }
 
     // Chat Typing Presence Collection Rules
@@ -265,14 +298,16 @@ service cloud.firestore {
       allow write: if isAuth();
     }
 
-    // Login Activity Collection Rules
+    // Login Activity Collection Rules (Issue #8)
     match /loginActivity/{activityId} {
       allow read: if isAuth() && isFounderOrAdmin();
       allow create: if isAuth() || (
         request.resource.data.status == "failed" &&
         request.resource.data.email is string &&
         request.resource.data.email.size() <= 100 &&
-        request.resource.data.uid is string
+        request.resource.data.email.matches('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$') &&
+        request.resource.data.uid is string &&
+        request.resource.data.keys().hasOnly(['uid', 'email', 'fullName', 'role', 'ip', 'browser', 'device', 'platform', 'sessionType', 'status', 'createdAt', 'loginAt'])
       );
       allow update, delete: if false;
     }
@@ -301,10 +336,12 @@ service cloud.firestore {
       allow write: if isAuth() && isManagerOrAbove();
     }
 
-    // Reactivation Requests Collection Rules
+    // Reactivation Requests Collection Rules (Issue #3)
     match /reactivation_requests/{requestId} {
       allow read: if isAuth() && isManagerOrAbove();
-      allow create: if true;
+      allow create: if isAuth() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'reason', 'requestedAt', 'status'])
+        && request.resource.data.reason is string && request.resource.data.reason.size() <= 500;
       allow update, delete: if isAuth() && isManagerOrAbove();
     }
   }

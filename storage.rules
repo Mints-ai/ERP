@@ -18,6 +18,10 @@ service firebase.storage {
       return request.resource.contentType.matches('application/(pdf|msword|vnd.openxmlformats-officedocument.wordprocessingml.document)');
     }
     
+    function isValidAttachmentType() {
+      return request.resource.contentType.matches('image/(jpeg|png|webp|gif)|application/pdf|application/(msword|vnd\\.openxmlformats-officedocument\\..*|vnd\\.ms-excel|vnd\\.ms-powerpoint)|text/(plain|csv)|application/(zip|x-zip-compressed)');
+    }
+    
     // Profile Photos: Anyone logged in can read. Only the user can upload their own with image validation.
     match /profile-photos/{userId}/{fileName} {
       allow read: if isAuth();
@@ -34,12 +38,12 @@ service firebase.storage {
                    && isValidDocumentType();
     }
 
-    // Task Attachments: Max 10MB, safe mime types
+    // Task Attachments: Max 10MB, strict whitelisted safe mime types (Issue #7 & #11)
     match /task_attachments/{taskId}/{fileName} {
       allow read: if isAuth();
       allow write: if isAuth() 
                    && request.resource.size < 10 * 1024 * 1024
-                   && !request.resource.contentType.matches('application/(x-msdownload|x-executable|x-sh|x-bat|javascript)'); 
+                   && isValidAttachmentType(); 
     }
 
     // Default fallback: Deny everything else by default

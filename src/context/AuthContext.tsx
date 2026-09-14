@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       let userIp = "Unknown";
       try {
-        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipRes = await fetch("https://api.ipify.org?format=json", { signal: AbortSignal.timeout(1200) });
         const ipData = await ipRes.json();
         userIp = ipData.ip || "Unknown";
       } catch (e) {
@@ -214,7 +214,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         // Enforce restriction: Block unauthorized public @gmail.com accounts (allow clients and corporate domain)
-        if (emailLower.endsWith("@gmail.com") && !isClientEmail && !emailLower.startsWith("arya") && !emailLower.includes("mintsglobal")) {
+        if (emailLower.endsWith("@gmail.com") && !isClientEmail && !emailLower.includes("mintsglobal")) {
           setAuthError("Access Denied: Logins with unapproved public @gmail.com accounts are restricted. Please use your corporate static email provided by your administrator.");
           
           (async () => {
@@ -276,13 +276,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         const getAdminFallbackName = (email: string) => {
           if (email.startsWith("admin")) return "System Administrator";
-          if (email.startsWith("arya")) return "Arya";
           if (email.includes("anand") || email.includes("binuarjun")) return "Anand Binuarjun";
           return "Binu Arjun Anand";
         };
 
         const getAdminFallbackRole = (email: string) => {
-          if (email.startsWith("arya") || email.includes("binu") || email.includes("founder")) return "founder";
+          if (email.includes("binu") || email.includes("founder")) return "founder";
           return "system_admin";
         };
 
@@ -297,37 +296,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         let appUser: AppUser = firebaseUser;
         
-        const isSuperAdminAccount = emailLower.startsWith("arya") || emailLower.startsWith("admin") || emailLower.includes("founder");
-        if (isSuperAdminAccount) {
-          if (!userDoc.exists()) {
-            await setDoc(userDocRef, {
-              fullName: firebaseUser.displayName || getAdminFallbackName(emailLower),
-              email: emailLower,
-              role: getAdminFallbackRole(emailLower),
-              department: "OPERATIONS",
-              departments: ["OPERATIONS"],
-              jobTitle: getAdminFallbackJobTitle(emailLower),
-              phone: "",
-              isIntern: false,
-              isActive: true,
-              dateJoined: new Date().toISOString(),
-              createdAt: new Date().toISOString()
-            });
-            userDoc = await getDoc(userDocRef);
-          } else {
-            const data = userDoc.data();
-            const expectedRole = getAdminFallbackRole(emailLower);
-            if (data?.role !== expectedRole || data?.isActive !== true) {
-              await setDoc(userDocRef, {
-                ...data,
-                role: expectedRole,
-                isActive: true,
-                fullName: data?.fullName || getAdminFallbackName(emailLower),
-                updatedAt: new Date().toISOString()
-              }, { merge: true });
-              userDoc = await getDoc(userDocRef);
-            }
-          }
+        const isSuperAdminAccount = emailLower.startsWith("admin") || emailLower.includes("founder");
+        if (isSuperAdminAccount && !userDoc.exists()) {
+          // Initial bootstrap only: provision profile if no record exists yet
+          await setDoc(userDocRef, {
+            fullName: firebaseUser.displayName || getAdminFallbackName(emailLower),
+            email: emailLower,
+            role: getAdminFallbackRole(emailLower),
+            department: "OPERATIONS",
+            departments: ["OPERATIONS"],
+            jobTitle: getAdminFallbackJobTitle(emailLower),
+            phone: "",
+            isIntern: false,
+            isActive: true,
+            dateJoined: new Date().toISOString(),
+            createdAt: new Date().toISOString()
+          });
+          userDoc = await getDoc(userDocRef);
         }
         
         if (!userDoc.exists() && firebaseUser.email) {
@@ -645,7 +630,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Removed host domain constraint so employees can sign in with any standard Gmail address!
     try {
       const result = await signInWithPopup(auth, provider);
-      await sendDiscordNotification(`🔓 **${result.user.displayName || result.user.email}** logged in to the ERP via Google.`, undefined, 'auth');
+      sendDiscordNotification(`🔓 **${result.user.displayName || result.user.email}** logged in to the ERP via Google.`, undefined, 'auth').catch(console.error);
     } catch (error: any) {
       console.error("Login failed", error);
       throw error;
@@ -654,7 +639,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   async function logout() {
     if (user) {
-      await sendDiscordNotification(`🔒 **${user.fullName || user.email}** logged out of the ERP.`, undefined, 'auth');
+      sendDiscordNotification(`🔒 **${user.fullName || user.email}** logged out of the ERP.`, undefined, 'auth').catch(console.error);
     }
     setSimulatedRole(null);
     try {

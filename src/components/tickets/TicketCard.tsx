@@ -9,10 +9,10 @@ import { Ticket, TicketPriority } from "@/types/ticket";
 import { cn } from "@/lib/utils";
 
 const PRIORITY_BADGES: Record<TicketPriority, { color: string; label: string }> = {
-  Urgent: { color: "bg-rose-500/20 text-rose-400 border-rose-500/30", label: "Urgent" },
-  High: { color: "bg-amber-500/20 text-amber-400 border-amber-500/30", label: "High" },
-  Normal: { color: "bg-primary/20 text-primary border-primary/30", label: "Normal" },
-  Low: { color: "bg-muted text-foreground/50 border-border", label: "Low" },
+  Urgent: { color: "bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30", label: "Urgent" },
+  High: { color: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30", label: "High" },
+  Normal: { color: "bg-primary/15 text-primary border border-primary/30", label: "Normal" },
+  Low: { color: "bg-muted text-muted-foreground border border-border", label: "Low" },
 };
 
 interface TicketCardProps {

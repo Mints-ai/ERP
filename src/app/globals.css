@@ -619,55 +619,111 @@ html.light .bg-blue-900 {
   background-color: var(--secondary) !important;
 }
 
-/* ─── Light Mode: Info & status banners ─── */
-html.light .bg-blue-950\/40 {
-  background-color: rgba(74, 99, 38, 0.08) !important;
-}
-html.light .bg-blue-950\/20 {
-  background-color: rgba(74, 99, 38, 0.06) !important;
-}
-html.light .bg-blue-950\/90 {
-  background-color: rgba(248, 250, 247, 0.97) !important;
-}
-
-/* ─── Light Mode: Chat inactive state buttons ─── */
-html.light .text-slate-300 {
-  color: var(--muted-foreground) !important;
-}
-html.light .bg-slate-500\/20 {
-  background-color: rgba(90, 110, 91, 0.12) !important;
-}
-html.light .text-slate-100 {
-  color: var(--foreground) !important;
-}
-
-/* ─── Light Mode: Blue accent badges to forest olive ─── */
-html.light .bg-blue-100 {
-  background-color: rgba(74, 99, 38, 0.12) !important;
-}
-html.light .text-blue-700 {
-  color: #3b501e !important;
-}
-html.light .border-blue-200 {
-  border-color: rgba(74, 99, 38, 0.25) !important;
-}
-
-/* ─── Light Mode: Success / Toast adjustments ─── */
-html.light .bg-emerald-950\/70 {
-  background-color: rgba(16, 185, 129, 0.1) !important;
+/* ─── Light Mode: Universal Semantic Color & Contrast Overrides (WCAG AA) ─── */
+/* In light mode, pale pastel text colors automatically adjust to deep accessible tones */
+html.light .text-emerald-100,
+html.light .text-emerald-200,
+html.light .text-emerald-300,
+html.light .text-emerald-400 {
   color: #065f46 !important;
 }
-html.light .bg-amber-950\/70 {
-  background-color: rgba(245, 158, 11, 0.1) !important;
-  color: #78350f !important;
+
+html.light .text-amber-100,
+html.light .text-amber-200,
+html.light .text-amber-300,
+html.light .text-amber-400,
+html.light .text-yellow-300,
+html.light .text-yellow-400 {
+  color: #92400e !important;
 }
-html.light .bg-red-950\/70 {
-  background-color: rgba(239, 68, 68, 0.1) !important;
-  color: #7f1d1d !important;
+
+html.light .text-red-100,
+html.light .text-red-200,
+html.light .text-red-300,
+html.light .text-red-400,
+html.light .text-rose-100,
+html.light .text-rose-200,
+html.light .text-rose-300,
+html.light .text-rose-400 {
+  color: #9f1239 !important;
 }
-html.light .text-emerald-100 { color: #065f46 !important; }
-html.light .text-amber-100   { color: #78350f !important; }
-html.light .text-red-100     { color: #7f1d1d !important; }
+
+html.light .text-blue-100,
+html.light .text-blue-200,
+html.light .text-blue-300,
+html.light .text-blue-400,
+html.light .text-sky-300,
+html.light .text-sky-400 {
+  color: #1e40af !important;
+}
+
+html.light .text-indigo-100,
+html.light .text-indigo-200,
+html.light .text-indigo-300,
+html.light .text-indigo-400 {
+  color: #3730a3 !important;
+}
+
+html.light .text-purple-100,
+html.light .text-purple-200,
+html.light .text-purple-300,
+html.light .text-purple-400,
+html.light .text-violet-300,
+html.light .text-violet-400 {
+  color: #6b21a8 !important;
+}
+
+html.light .text-cyan-100,
+html.light .text-cyan-200,
+html.light .text-cyan-300,
+html.light .text-cyan-400,
+html.light .text-teal-300,
+html.light .text-teal-400 {
+  color: #0e7490 !important;
+}
+
+html.light .text-slate-200,
+html.light .text-slate-300,
+html.light .text-slate-400,
+html.light .text-gray-300,
+html.light .text-gray-400,
+html.light .text-zinc-300,
+html.light .text-zinc-400 {
+  color: #475569 !important;
+}
+
+/* ─── Light Mode: Dark Container Tints Inversion ─── */
+html.light .bg-emerald-950\/70,
+html.light .bg-emerald-950\/40,
+html.light .bg-emerald-950\/20,
+html.light .bg-emerald-950 {
+  background-color: rgba(5, 150, 105, 0.12) !important;
+}
+
+html.light .bg-amber-950\/70,
+html.light .bg-amber-950\/40,
+html.light .bg-amber-950\/20,
+html.light .bg-amber-950 {
+  background-color: rgba(217, 119, 6, 0.12) !important;
+}
+
+html.light .bg-red-950\/70,
+html.light .bg-red-950\/40,
+html.light .bg-red-950\/20,
+html.light .bg-red-950,
+html.light .bg-rose-950\/70,
+html.light .bg-rose-950\/40,
+html.light .bg-rose-950\/20,
+html.light .bg-rose-950 {
+  background-color: rgba(225, 29, 72, 0.12) !important;
+}
+
+html.light .bg-blue-950\/70,
+html.light .bg-blue-950\/40,
+html.light .bg-blue-950\/20,
+html.light .bg-blue-950 {
+  background-color: rgba(37, 99, 235, 0.10) !important;
+}
 
 /* ─── Global Contrast & Text Visibility Enhancements (WCAG AA Compliance) ─── */
 /* In dark mode, text-accent is bright sage green (#a3c98f) */
@@ -681,7 +737,7 @@ html.light [class*="text-accent"] {
   color: #385223 !important;
 }
 
-/* Low-opacity text clamps for general content */
+/* Low-opacity text clamps for readability across light mode */
 html.light [class*="text-foreground/10"],
 html.light [class*="text-foreground/15"],
 html.light [class*="text-foreground/20"],
@@ -690,8 +746,25 @@ html.light [class*="text-foreground/30"],
 html.light [class*="text-foreground/35"],
 html.light [class*="text-foreground/40"],
 html.light [class*="text-foreground/45"],
-html.light [class*="text-foreground/50"] {
+html.light [class*="text-foreground/50"],
+html.light [class*="text-foreground/60"] {
   color: #4a5c4d !important;
+}
+
+html.light [class*="text-muted-foreground/10"],
+html.light [class*="text-muted-foreground/20"],
+html.light [class*="text-muted-foreground/30"],
+html.light [class*="text-muted-foreground/40"],
+html.light [class*="text-muted-foreground/50"] {
+  color: #5a6e5b !important;
+}
+
+/* Dark mode low-opacity text clamps to prevent invisible labels */
+[class*="text-muted-foreground/10"],
+[class*="text-muted-foreground/20"],
+[class*="text-muted-foreground/30"],
+[class*="text-muted-foreground/40"] {
+  color: rgba(150, 168, 153, 0.75);
 }
 
 /* ─── Universal Button & Dark Container Text Contrast Guarantee ─── */
@@ -701,7 +774,6 @@ button.bg-primary,
 a.bg-primary,
 .btn-primary,
 [data-slot="button"][data-variant="default"],
-[data-slot="button"]:not([data-variant]),
 .bg-destructive,
 button.bg-destructive,
 a.bg-destructive,
@@ -717,7 +789,6 @@ button.bg-primary *,
 a.bg-primary *,
 .btn-primary *,
 [data-slot="button"][data-variant="default"] *,
-[data-slot="button"]:not([data-variant]) *,
 .bg-destructive *,
 button.bg-destructive *,
 a.bg-destructive *,
@@ -731,7 +802,6 @@ html.light button.bg-primary,
 html.light a.bg-primary,
 html.light .btn-primary,
 html.light [data-slot="button"][data-variant="default"],
-html.light [data-slot="button"]:not([data-variant]),
 html.light .bg-destructive,
 html.light button.bg-destructive,
 html.light a.bg-destructive,
@@ -745,13 +815,24 @@ html.light button.bg-primary *,
 html.light a.bg-primary *,
 html.light .btn-primary *,
 html.light [data-slot="button"][data-variant="default"] *,
-html.light [data-slot="button"]:not([data-variant]) *,
 html.light .bg-destructive *,
 html.light button.bg-destructive *,
 html.light a.bg-destructive *,
 html.light [data-state="active"].bg-primary *,
 html.light [data-state="active"][class*="bg-primary"] * {
   color: #ffffff !important;
+}
+
+/* Explicit contrast guarantees for outline, ghost, and secondary buttons */
+[data-slot="button"][data-variant="outline"],
+[data-slot="button"][data-variant="ghost"],
+[data-slot="button"][data-variant="secondary"] {
+  color: var(--foreground);
+}
+html.light [data-slot="button"][data-variant="outline"],
+html.light [data-slot="button"][data-variant="ghost"],
+html.light [data-slot="button"][data-variant="secondary"] {
+  color: var(--foreground);
 }
 
 /* Low-opacity background tints retain colored accent text */

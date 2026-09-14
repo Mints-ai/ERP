@@ -30,20 +30,29 @@ export const subscribeToTickets = (
   const normalizedRole = (role || "").toLowerCase();
   const isPrivileged = ["admin", "founder", "c_suite", "system_admin", "manager"].includes(normalizedRole);
 
-  const q = query(
+  if (isPrivileged) {
+    const q = query(
+      collection(db, TICKETS_COLLECTION),
+      orderBy("createdAt", "desc")
+    );
+    return onSnapshot(q, (snapshot) => {
+      const tickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Ticket[];
+      callback(tickets);
+    }, (err) => {
+      console.error("Error subscribing to tickets:", err);
+    });
+  }
+
+  // Non-privileged users query tickets where they are the creator
+  const qCreated = query(
     collection(db, TICKETS_COLLECTION),
-    orderBy("createdAt", "desc")
+    where("createdBy", "==", userId)
   );
 
-  return onSnapshot(q, (snapshot) => {
-    const rawTickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Ticket[];
-
-    // Privileged roles see all tickets; standard users see tickets they requested or are assigned to
-    const filteredTickets = isPrivileged 
-      ? rawTickets 
-      : rawTickets.filter(t => t.createdBy === userId || t.assignedTo === userId);
-
-    callback(filteredTickets);
+  return onSnapshot(qCreated, (snapshot) => {
+    const tickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Ticket[];
+    tickets.sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1));
+    callback(tickets);
   }, (err) => {
     console.error("Error subscribing to tickets:", err);
   });

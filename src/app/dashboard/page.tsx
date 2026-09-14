@@ -351,18 +351,18 @@ export default function DashboardHome() {
 
         {/* Sparkline Stat Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-card border border-border shadow-sm rounded-lg overflow-hidden group border-border">
+          <Card className="bg-card border border-border shadow-sm rounded-lg overflow-hidden group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 z-10 relative">
-              <CardTitle className="text-xs font-bold text-foreground/60 uppercase tracking-wider">Open Tasks</CardTitle>
+              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Open Tasks</CardTitle>
               <CheckCircle2 className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent className="z-10 relative pb-8">
               {stats.openTasks > 0 ? (
                 <div className="stat-number">{stats.openTasks}</div>
               ) : (
-                <div className="text-3xl font-light text-muted-foreground/30 border-2 border-dashed border-border/50 rounded-lg px-4 py-1 inline-block">0</div>
+                <div className="text-3xl font-bold text-muted-foreground/60 border-2 border-dashed border-border rounded-lg px-4 py-1 inline-block">0</div>
               )}
-              <p className="text-xs text-foreground/50 mt-1">Live operational tasks</p>
+              <p className="text-xs text-muted-foreground mt-1">Live operational tasks</p>
             </CardContent>
             <div className="absolute bottom-0 left-0 right-0 h-14 opacity-20 group-hover:opacity-40 transition-opacity">
               {mounted ? (
@@ -383,18 +383,18 @@ export default function DashboardHome() {
 
           {isExecutive && (
             <>
-              <Card className="bg-card border border-border shadow-sm rounded-lg overflow-hidden group border-border">
+              <Card className="bg-card border border-border shadow-sm rounded-lg overflow-hidden group">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 z-10 relative">
-                  <CardTitle className="text-xs font-bold text-foreground/60 uppercase tracking-wider">Active Projects</CardTitle>
+                  <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Active Projects</CardTitle>
                   <Briefcase className="h-5 w-5 text-accent" />
                 </CardHeader>
                 <CardContent className="z-10 relative pb-8">
                   {stats.activeProjects > 0 ? (
                     <div className="stat-number">{stats.activeProjects}</div>
                   ) : (
-                    <div className="text-3xl font-light text-muted-foreground/30 border-2 border-dashed border-border/50 rounded-lg px-4 py-1 inline-block">0</div>
+                    <div className="text-3xl font-bold text-muted-foreground/60 border-2 border-dashed border-border rounded-lg px-4 py-1 inline-block">0</div>
                   )}
-                  <p className="text-xs text-foreground/50 mt-1">Actively loaded projects</p>
+                  <p className="text-xs text-muted-foreground mt-1">Actively loaded projects</p>
                 </CardContent>
                 <div className="absolute bottom-0 left-0 right-0 h-14 opacity-20 group-hover:opacity-40 transition-opacity">
                   {mounted ? (
@@ -407,9 +407,9 @@ export default function DashboardHome() {
                 </div>
               </Card>
 
-              <Card className="bg-card border border-border shadow-sm rounded-lg overflow-hidden group border-border">
+              <Card className="bg-card border border-border shadow-sm rounded-lg overflow-hidden group">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 z-10 relative">
-                  <CardTitle className="text-xs font-bold text-foreground/60 uppercase tracking-wider">Team Size</CardTitle>
+                  <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Team Size</CardTitle>
                   <Users className="h-5 w-5 text-primary" />
                 </CardHeader>
                 <CardContent className="z-10 relative pb-8">
@@ -417,7 +417,7 @@ export default function DashboardHome() {
                     {stats.teamSize > 0 ? (
                       <div className="stat-number">{stats.teamSize}</div>
                     ) : (
-                      <div className="text-3xl font-light text-muted-foreground/30 border-2 border-dashed border-border/50 rounded-lg px-4 py-1 inline-block">0</div>
+                      <div className="text-3xl font-bold text-muted-foreground/60 border-2 border-dashed border-border rounded-lg px-4 py-1 inline-block">0</div>
                     )}
                     {stats.onlineCount > 0 && (
                       <span className="text-xs text-primary font-bold bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
@@ -426,7 +426,7 @@ export default function DashboardHome() {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-foreground/50 mt-1">Onboarded employees</p>
+                  <p className="text-xs text-muted-foreground mt-1">Onboarded employees</p>
                 </CardContent>
                 <div className="absolute bottom-0 left-0 right-0 h-14 opacity-20 group-hover:opacity-40 transition-opacity">
                   {mounted ? (
@@ -447,14 +447,14 @@ export default function DashboardHome() {
             </>
           )}
 
-          <Card className="bg-card border border-border shadow-sm rounded-lg overflow-hidden group border-border">
+          <Card className="bg-card border border-border shadow-sm rounded-lg overflow-hidden group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 z-10 relative">
-              <CardTitle className="text-xs font-bold text-foreground/60 uppercase tracking-wider">Hours Logged</CardTitle>
+              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Hours Logged</CardTitle>
               <Clock className="h-5 w-5 text-accent" />
             </CardHeader>
             <CardContent className="z-10 relative pb-8">
-              <div className="stat-number">0<span className="text-sm text-foreground/40 font-sans ml-0.5">h</span></div>
-              <p className="text-xs text-foreground/50 mt-1">Current operational week</p>
+              <div className="stat-number">0<span className="text-sm text-muted-foreground font-sans ml-0.5">h</span></div>
+              <p className="text-xs text-muted-foreground mt-1">Current operational week</p>
             </CardContent>
             <div className="absolute bottom-0 left-0 right-0 h-14 opacity-20 group-hover:opacity-40 transition-opacity">
               {mounted ? (
