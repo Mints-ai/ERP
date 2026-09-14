@@ -20,7 +20,7 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
+    <div className="flex flex-col h-auto min-h-[calc(100vh-10rem)] lg:h-[calc(100vh-8rem)]">
       <div className="mb-6 flex-shrink-0">
         <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
           <Zap className="h-6 w-6 text-primary fill-primary/10" />

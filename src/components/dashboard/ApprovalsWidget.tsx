@@ -143,7 +143,7 @@ export function ApprovalsWidget() {
                     <p className="text-sm text-muted-foreground">
                       Submitted by <span className="font-medium text-foreground">{item.submittedBy}</span> on {item.date}
                     </p>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
+                    <div className="flex items-center flex-wrap gap-1.5 text-xs text-muted-foreground mt-2">
                       <span className="font-medium">Workflow:</span>
                       {item.requiredApprovals?.map((r: string, i: number) => (
                         <span key={i} className={`flex items-center ${i === item.currentApprovalStep ? "text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded" : (i < item.currentApprovalStep ? "text-emerald-600 line-through opacity-70" : "")}`}>

@@ -303,7 +303,7 @@ export default function CloudDrive() {
           <p className="text-muted-foreground mt-1">Manage agency assets, brand guidelines, and client files.</p>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
           {/* Mode Switcher */}
           <div className="flex bg-muted/50 p-1 rounded-xl border border-border/60 shadow-inner">
             <button

@@ -161,7 +161,7 @@ export function TopNav() {
 
           {/* Dynamic Role Switcher for Founders / Admins */}
           {(user?.role === "founder" || user?.role === "system_admin") && (
-            <div className="flex items-center gap-1 sm:gap-1.5 bg-secondary hover:bg-secondary/80 border border-border rounded-xl px-2 py-1 sm:px-2.5 sm:py-1.5 transition-all text-foreground shadow-sm">
+            <div className="hidden sm:flex items-center gap-1 sm:gap-1.5 bg-secondary hover:bg-secondary/80 border border-border rounded-xl px-2 py-1 sm:px-2.5 sm:py-1.5 transition-all text-foreground shadow-sm">
               <span className="hidden sm:inline text-xs uppercase font-bold text-primary dark:text-primary tracking-wider">Simulate:</span>
               <select
                 value={simulatedRole || user?.role || "founder"}
@@ -203,7 +203,7 @@ export function TopNav() {
                 </button>
               }
             />
-            <SheetContent side="right" className="w-[360px] p-6 border-l border-border bg-popover text-popover-foreground flex flex-col h-full">
+            <SheetContent side="right" className="w-[360px] max-w-[calc(100vw-32px)] p-6 border-l border-border bg-popover text-popover-foreground flex flex-col h-full">
               <SheetHeader className="border-b border-border pb-4 mb-4">
                 <SheetTitle className="flex justify-between items-center text-foreground">
                   <span className="text-base font-bold">Notifications</span>
@@ -273,6 +273,30 @@ export function TopNav() {
               <DropdownMenuSeparator className="bg-border" />
               <DropdownMenuItem onClick={() => user?.uid && router.push(`/dashboard/hr/${user.uid}`)} className="hover:bg-secondary focus:bg-secondary cursor-pointer text-foreground/80 text-xs">Profile</DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push("/dashboard/settings")} className="hover:bg-secondary focus:bg-secondary cursor-pointer text-foreground/80 text-xs">Settings</DropdownMenuItem>
+              {(user?.role === "founder" || user?.role === "system_admin") && (
+                <>
+                  <DropdownMenuSeparator className="bg-border sm:hidden" />
+                  <div className="sm:hidden px-2 py-1.5">
+                    <p className="text-[11px] font-bold text-primary mb-1">Simulate Role</p>
+                    <select
+                      value={simulatedRole || user?.role || "founder"}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSimulatedRole(val === user?.role ? null : val);
+                      }}
+                      className="w-full bg-secondary text-xs font-semibold text-foreground border border-border rounded-lg p-1.5 outline-none"
+                    >
+                      <option value="founder">Founder (Admin)</option>
+                      <option value="system_admin">System Admin</option>
+                      <option value="c_suite">C-Suite</option>
+                      <option value="manager">Manager</option>
+                      <option value="senior_employee">Senior Employee</option>
+                      <option value="employee">Employee</option>
+                      <option value="intern">Intern</option>
+                    </select>
+                  </div>
+                </>
+              )}
               <DropdownMenuSeparator className="bg-border" />
               <DropdownMenuItem onClick={() => logout()} className="text-red-500 focus:bg-secondary focus:text-red-400 cursor-pointer font-semibold text-xs">
                 Log out

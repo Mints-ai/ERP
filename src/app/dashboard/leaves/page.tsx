@@ -535,7 +535,7 @@ export default function LeaveManagement() {
       ) : (
         /* ================= MANAGER VIEW ================= */
         <Tabs defaultValue="pending" className="w-full flex flex-col min-h-0">
-          <TabsList className="mb-6 border border-border p-1 rounded-xl w-fit shrink-0 gap-1 text-foreground">
+          <TabsList className="mb-6 border border-border p-1 rounded-xl w-full sm:w-fit max-w-full overflow-x-auto scrollbar-hide flex-nowrap justify-start shrink-0 gap-1 text-foreground">
             <TabsTrigger value="pending" className="relative px-4 py-2 rounded-lg text-sm font-semibold transition-all">
               Pending Approvals
               {pendingLeaves.length > 0 && (

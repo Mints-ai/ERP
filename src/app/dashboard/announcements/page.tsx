@@ -228,7 +228,7 @@ export default function Announcements() {
                   <EditorContent editor={editor} className="border border-border rounded-xl text-foreground overflow-hidden" />
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-xs font-bold text-foreground/60 uppercase">Target Audience</Label>
                     <Select value={audience} onValueChange={(val) => setAudience(val || "all")}>

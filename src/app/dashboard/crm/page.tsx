@@ -46,7 +46,7 @@ export default function CRMDashboard() {
 
   return (
     <RoleGuard permission="CREATE_PROJECT" fallback={<div className="p-8 text-center text-foreground/40 font-bold uppercase tracking-wider text-xs">Access Denied. Only staff with project management authorization can access the CRM.</div>}>
-      <div className="space-y-6 h-[calc(100vh-120px)] flex flex-col">
+      <div className="space-y-6 h-auto min-h-[calc(100vh-160px)] lg:h-[calc(100vh-120px)] flex flex-col">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
           <div>

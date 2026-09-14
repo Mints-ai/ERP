@@ -218,7 +218,7 @@ export function GlobalTimer() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ duration: 0.15 }}
-            className="absolute top-full right-0 mt-2 z-50 bg-popover text-popover-foreground rounded-2xl shadow-2xl border border-border overflow-hidden w-[310px] sm:w-[330px]"
+            className="absolute top-full right-0 mt-2 z-50 bg-popover text-popover-foreground rounded-2xl shadow-2xl border border-border overflow-hidden w-[310px] sm:w-[330px] max-w-[calc(100vw-24px)]"
           >
             <div className="border-b border-border bg-muted/40 p-3 flex justify-between items-center">
               <div className="flex items-center gap-2 font-bold text-xs text-foreground">

@@ -186,7 +186,7 @@ export default function EmployeeDirectory() {
           />
         </div>
         
-        <div className="flex gap-4 md:w-1/2">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full md:w-1/2">
           <Select value={deptFilter} onValueChange={(val) => setDeptFilter(val || "all")}>
             <SelectTrigger className="flex-1 border-border text-foreground placeholder:text-foreground/20 focus:ring-primary/60 h-9 text-xs rounded-xl">
               <SelectValue placeholder="All Departments" />

@@ -503,16 +503,16 @@ export default function DashboardHome() {
                                 <CardDescription className="text-xs text-foreground/50 mt-1">Clock in for your daily shift.</CardDescription>
                               </div>
                             </CardHeader>
-                            <CardContent className="p-8 h-[300px] flex flex-col items-center justify-center relative overflow-hidden">
+                            <CardContent className="p-4 sm:p-8 h-[300px] flex flex-col items-center justify-center relative overflow-hidden">
                               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-                              <div className="text-6xl font-mono font-bold tracking-wider text-foreground mb-8 tabular-nums z-10">
+                              <div className="text-4xl sm:text-5xl md:text-6xl font-mono font-bold tracking-wider text-foreground mb-6 sm:mb-8 tabular-nums z-10 text-center">
                                 {elapsedTime}
                               </div>
                               <button
                                 onClick={handleClockInOut}
                                 disabled={clockOutLoading}
                                 className={cn(
-                                  "relative px-12 py-4 rounded-full font-bold text-sm uppercase tracking-widest transition-all shadow-lg overflow-hidden z-10",
+                                  "relative px-8 sm:px-12 py-3.5 sm:py-4 rounded-full font-bold text-xs sm:text-sm uppercase tracking-widest transition-all shadow-lg overflow-hidden z-10",
                                   isClockedIn 
                                     ? "bg-red-500/10 text-red-500 border-2 border-red-500/20 hover:bg-red-500 hover:text-white"
                                     : "bg-primary text-primary-foreground hover:brightness-110"
