@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MessageSquare, Clock, Check, X, Paperclip, Plus, AlertCircle, FileText, Download, ShieldCheck, Users } from "lucide-react";
+import { MessageSquare, Clock, Check, X, Paperclip, Plus, AlertCircle, FileText, Download, ShieldCheck, Users, CheckCircle, ListTodo } from "lucide-react";
 import { Task, TaskPriority, TaskRemark, TaskAttachment } from "@/types/task";
 import { useAuth } from "@/context/AuthContext";
 import { 
@@ -10,7 +10,9 @@ import {
   approveTask, 
   createTask, 
   validateAttachmentFile,
-  updateTask
+  updateTask,
+  updateTaskStatus,
+  submitTaskForReview
 } from "@/lib/task-services";
 import { db, storage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -124,6 +126,25 @@ export default function TaskDetailModal({
     }
   };
 
+  const handleStartTask = async () => {
+    try {
+      await updateTaskStatus(task.id, "in_progress");
+      onClose();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    try {
+      const skipsReview = !!task.parentTaskId && task.assignedBy === task.assignedTo;
+      await submitTaskForReview(task.id, skipsReview);
+      onClose();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Secure File Upload Handler (PDF, DOCX, XLSX <= 10MB)
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -146,7 +167,7 @@ export default function TaskDetailModal({
       const downloadUrl = await getDownloadURL(storageRef);
 
       const newAttachment: TaskAttachment = {
-        id: Math.random().toString(36).substring(2, 9),
+        id: `${Date.now()}`,
         name: file.name,
         url: downloadUrl,
         size: file.size,
@@ -177,11 +198,6 @@ export default function TaskDetailModal({
     const todayStr = new Date().toISOString().split("T")[0];
     if (subtaskDueDate && subtaskDueDate < todayStr) {
       setSubtaskDateError("Subtask due date cannot be in the past.");
-      return;
-    }
-
-    if (subtaskDueDate && task.dueDate && subtaskDueDate > task.dueDate) {
-      setSubtaskDateError(`Subtask due date cannot exceed main task deadline (${task.dueDate}).`);
       return;
     }
 
@@ -225,7 +241,8 @@ export default function TaskDetailModal({
   if (!task) return null;
 
   const isAssignerOrAdmin = user?.uid === task.assignedBy || isManagerOrAbove;
-  const canReview = task.status === 'review' && isAssignerOrAdmin;
+  const canManageTask = isAssignerOrAdmin;
+  const showActionBar = canManageTask || (isAssignee && (task.status === "backlog" || task.status === "in_progress"));
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -252,25 +269,59 @@ export default function TaskDetailModal({
         </DialogHeader>
 
         <div className="space-y-5 mt-3 overflow-y-auto flex-1 pr-2 scrollbar-thin">
-          {/* Action Bar for Reviews */}
-          {canReview && (
-            <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 flex items-center justify-between">
+          {/* Action Bar for All Stages */}
+          {showActionBar && (
+            <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 flex items-center justify-between flex-wrap gap-2">
               <span className="text-xs font-bold text-primary flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-primary" /> Task pending review
+                {task.status === "review" && <ShieldCheck className="w-4 h-4 text-primary" />}
+                {task.status === "in_progress" && <Clock className="w-4 h-4 text-amber-500" />}
+                {task.status === "backlog" && <ListTodo className="w-4 h-4 text-foreground/50" />}
+                {task.status === "done" && <CheckCircle className="w-4 h-4 text-emerald-500" />}
+                {task.status === "review" && "Task pending review"}
+                {task.status === "in_progress" && "Task in progress"}
+                {task.status === "backlog" && "Task in backlog"}
+                {task.status === "done" && "Task completed"}
               </span>
-              <div className="flex gap-2">
-                 <button 
-                   onClick={() => onRecheckTrigger && onRecheckTrigger(task)} 
-                   className="btn-ghost border border-amber-500/30 text-amber-500 hover:bg-amber-500/10 px-3 py-1 rounded text-xs font-bold flex items-center gap-1 cursor-pointer"
-                 >
-                   <X className="w-3 h-3" /> Recheck
-                 </button>
-                 <button 
-                   onClick={handleApprove} 
-                   className="btn-primary bg-primary text-primary-foreground px-3 py-1 rounded text-xs font-bold flex items-center gap-1 cursor-pointer"
-                 >
-                   <Check className="w-3 h-3" /> Approve
-                 </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Assignee Actions */}
+                {isAssignee && task.status === "backlog" && (
+                  <button
+                    onClick={handleStartTask}
+                    className="btn-primary bg-primary text-primary-foreground px-3 py-1 rounded text-xs font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    Start Task
+                  </button>
+                )}
+                {isAssignee && task.status === "in_progress" && (
+                  <button
+                    onClick={handleSubmitReview}
+                    className="btn-ghost border border-amber-500/30 text-amber-500 hover:bg-amber-500/10 px-3 py-1 rounded text-xs font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    Submit for Review
+                  </button>
+                )}
+
+                {/* Manager / Assigner Decision Controls (Available across all stages) */}
+                {canManageTask && (
+                  <>
+                    <button 
+                      onClick={() => onRecheckTrigger && onRecheckTrigger(task)} 
+                      className="btn-ghost border border-amber-500/30 text-amber-500 hover:bg-amber-500/10 px-3 py-1 rounded text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      title="Send back for recheck with feedback"
+                    >
+                      <X className="w-3 h-3" /> Recheck
+                    </button>
+                    {task.status !== "done" && (
+                      <button 
+                        onClick={handleApprove} 
+                        className="btn-primary bg-primary text-primary-foreground px-3 py-1 rounded text-xs font-bold flex items-center gap-1 cursor-pointer"
+                        title="Approve and mark as done"
+                      >
+                        <Check className="w-3 h-3" /> Approve
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           )}

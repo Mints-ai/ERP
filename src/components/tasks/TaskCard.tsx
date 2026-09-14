@@ -2,7 +2,7 @@ import { Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Lock, Trash2, CheckSquare, MessageSquare, Clock } from "lucide-react";
+import { Lock, Trash2, CheckSquare, MessageSquare, Clock, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Task, TaskPriority } from "@/types/task";
 import React from "react";
@@ -52,6 +52,8 @@ export default function TaskCard({
   };
 
   const isAssignee = currentUserId && task.assignedTo === currentUserId;
+  const isAssigner = currentUserId && task.assignedBy === currentUserId;
+  const canManageTask = canApprove || isAssigner;
 
   return (
     <Draggable draggableId={task.id} index={index} isDragDisabled={isDragDisabled}>
@@ -115,9 +117,9 @@ export default function TaskCard({
               </p>
             )}
 
-            {/* Workflow Quick Action Buttons */}
+            {/* Workflow Quick Action Buttons (Available on All Stages) */}
             {onQuickAction && (
-              <div className="flex items-center gap-1 mb-2 mt-2" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-1 mb-2 mt-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                 {task.status === "backlog" && isAssignee && (
                   <button
                     onClick={(e) => onQuickAction("start", task, e)}
@@ -134,20 +136,24 @@ export default function TaskCard({
                     Submit for Review
                   </button>
                 )}
-                {task.status === "review" && canApprove && (
+                {canManageTask && (
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={(e) => onQuickAction("approve", task, e)}
-                      className="text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold py-0.5 px-2 rounded border border-emerald-500/20 transition-all"
-                    >
-                      Approve
-                    </button>
-                    <button
                       onClick={(e) => onQuickAction("recheck", task, e)}
-                      className="text-[10px] bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold py-0.5 px-2 rounded border border-rose-500/20 transition-all"
+                      className="text-[10px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-bold py-0.5 px-2 rounded border border-amber-500/20 transition-all flex items-center gap-0.5 cursor-pointer"
+                      title="Send for Recheck with Feedback"
                     >
-                      Recheck
+                      <X className="w-2.5 h-2.5" /> Recheck
                     </button>
+                    {task.status !== "done" && (
+                      <button
+                        onClick={(e) => onQuickAction("approve", task, e)}
+                        className="text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold py-0.5 px-2 rounded border border-emerald-500/20 transition-all flex items-center gap-0.5 cursor-pointer"
+                        title="Approve & Mark as Done"
+                      >
+                        <Check className="w-2.5 h-2.5" /> Approve
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
